@@ -1,0 +1,83 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Course extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'department_id',
+        'program_id', // Added program_id to fillable as courses are linked to programs
+        'code',
+        'title_km',
+        'title_en',
+        'credits',
+        'description',
+        'generation', // 💡 NEW: Add 'generation' to fillable fields
+    ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+    protected static function boot()
+        {
+            parent::boot();
+
+            // This static method runs when a new Course model is CREATED in the database
+            static::created(function (Course $course) {
+                $defaultComponents = GradingCategory::DEFAULT_COMPONENTS;
+                $categoriesToCreate = [];
+                
+                // Prepare data array for efficient batch insertion
+                foreach ($defaultComponents as $component) {
+                    $categoriesToCreate[] = array_merge($component, [
+                        'course_id' => $course->id,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+                
+                // Insert the 4 new components in one query linked to the new course
+                $course->gradingCategories()->insert($categoriesToCreate);
+            });
+        }
+    /**
+     * Get the department that the course belongs to.
+     */
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
+
+    /**
+     * Get the program that the course belongs to.
+     * This method defines the relationship between a Course and a Program.
+     * It assumes that your 'courses' table has a 'program_id' foreign key.
+     */
+    public function program()
+    {
+        return $this->belongsTo(Program::class);
+    }
+
+    /**
+     * Get the course offerings for this course.
+     */
+    public function courseOfferings()
+    {
+        return $this->hasMany(CourseOffering::class);
+    }
+
+    /**
+     * Get the grading categories for this course.
+     */
+    public function gradingCategories()
+    {
+        return $this->hasMany(GradingCategory::class);
+    }
+}
