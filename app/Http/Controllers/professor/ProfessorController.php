@@ -1525,48 +1525,6 @@ public function storeGrades(Request $request, $assessment_id)
         return view('professor.profile.edit', compact('user', 'userProfile'));
     }
 
-    /**
-     * Update the professor's profile in storage.
-     */
-// public function updateProfile(Request $request)
-// {
-//     $user = Auth::user();
-
-//     $validator = Validator::make($request->all(), [
-//         'full_name_km' => 'required|string|max:255',
-//         'full_name_en' => 'nullable|string|max:255',
-//         'gender' => 'required|in:male,female',
-//         'date_of_birth' => 'nullable|date',
-//         'phone_number' => 'nullable|string|max:20',
-//         'telegram_user' => 'nullable|string|max:255', // បន្ថែមចំណុចនេះ
-//         'address' => 'nullable|string|max:255',
-//         'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-//     ]);
-
-//     if ($validator->fails()) {
-//         return redirect()->back()->withErrors($validator)->withInput();
-//     }
-
-//     $userProfile = $user->userProfile()->firstOrNew(['user_id' => $user->id]);
-
-//     // ការគ្រប់គ្រងរូបភាព Profile
-//     if ($request->hasFile('profile_picture')) {
-//         if ($userProfile->profile_picture_url) {
-//             Storage::disk('public')->delete($userProfile->profile_picture_url);
-//         }
-//         $path = $request->file('profile_picture')->store('profile_pictures', 'public');
-//         $userProfile->profile_picture_url = $path;
-//     }
-
-//     // រក្សាទុកទិន្នន័យទាំងអស់ រួមទាំង telegram_user ថ្មី
-//     $userProfile->fill($validator->validated());
-//     $userProfile->save();
-
-//     Session::flash('success', 'ប្រវត្តិរូបរបស់អ្នកត្រូវបានកែប្រែដោយជោគជ័យ!');
-
-//     return redirect()->route('professor.profile.show');
-// }
-
 
 
 public function updateProfile(Request $request)
@@ -1612,11 +1570,11 @@ public function updateProfile(Request $request)
             $userProfile->profile_picture_url = $result->getSecurePath();
 
         } catch (\Exception $e) {
-            Log::error('Cloudinary Upload Error: '.$e->getMessage());
+        Log::error('Cloudinary upload failed: '.$e->getMessage());
 
-            return back()->withErrors([
-                'profile_picture' => 'Upload រូបភាពមិនបាន សូមព្យាយាមម្តងទៀត'
-            ]);
+        return back()->withErrors([
+            'profile_picture' => 'Upload image failed'
+        ]);
         }
     }
 
