@@ -37,15 +37,15 @@
                         <div class="relative">
                             <div class="w-32 h-32 md:w-56 md:h-56 rounded-[2rem] md:rounded-[2.5rem] overflow-hidden border-4 md:border-8 border-white shadow-xl">
 @if ($userProfile->profile_picture_url)
-    <img 
-        src="{{ $userProfile->profile_picture_url }}" 
-        class="object-cover w-full h-full"
-        alt="{{ $user->name }}"
-    >
+<img 
+    src="{{ $userProfile->profile_picture_url }}" 
+    class="object-cover w-full h-full"
+    alt="{{ $user->name }}"
+>
 @else
-    <div class="w-full h-full bg-green-100 flex items-center justify-center text-green-600 text-4xl md:text-6xl font-black">
-        {{ Str::upper(Str::substr($user->name, 0, 1)) }}
-    </div>
+<div class="w-full h-full bg-green-100 flex items-center justify-center text-green-600 text-4xl md:text-6xl font-black">
+    {{ Str::upper(Str::substr($user->name, 0, 1)) }}
+</div>
 @endif
 
                             </div>
