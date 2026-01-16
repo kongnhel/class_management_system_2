@@ -38,27 +38,18 @@ use Illuminate\Support\Str; // បានបន្ថែម
 use Illuminate\Support\Facades\Notification as NotificationFacade; // បានเอา comment ចេញ
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
 use App\Exports\GradebookExport;
 use Maatwebsite\Excel\Facades\Excel;
-
-
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\Shared\Converter;
-
 use Illuminate\Support\Facades\Http;
-
+use Illuminate\Support\Facades\Log;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+
 
 class ProfessorController extends Controller
 {
-
-
-
-
-
-
 
     /**
      * Display the professor dashboard.
