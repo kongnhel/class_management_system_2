@@ -1567,6 +1567,8 @@ public function storeGrades(Request $request, $assessment_id)
 //     return redirect()->route('professor.profile.show');
 // }
 
+
+
 public function updateProfile(Request $request)
 {
     $user = Auth::user();
@@ -1583,32 +1585,50 @@ public function updateProfile(Request $request)
     ]);
 
     if ($validator->fails()) {
-        return redirect()->back()->withErrors($validator)->withInput();
+        return back()->withErrors($validator)->withInput();
     }
 
     $userProfile = $user->userProfile()->firstOrNew(['user_id' => $user->id]);
 
-    // --- ការគ្រប់គ្រងរូបភាព Profile ជាមួយ Cloudinary ---
+    // ✅ Upload Profile Picture (Safe)
     if ($request->hasFile('profile_picture')) {
-        // Upload ទៅ Cloudinary និងរក្សាទុកក្នុង Folder ឈ្មោះ 'profile_pictures'
-        $result = Cloudinary::upload($request->file('profile_picture')->getRealPath(), [
-            'folder' => 'profile_pictures'
-        ]);
-        
-        // យក Secure URL (HTTPS) ទៅរក្សាទុកក្នុង Database
-        $userProfile->profile_picture_url = $result->getSecurePath();
-        
-        // ចំណាំ៖ អ្នកមិនចាំបាច់លុបរូបភាពចាស់ចេញពី Storage::disk ទៀតទេ ព្រោះយើងឈប់ប្រើវាហើយ
+
+        // 🛑 Guard: Cloudinary មិន config
+        if (!config('cloudinary.cloud_name')) {
+            return back()->withErrors([
+                'profile_picture' => 'Cloudinary មិនទាន់បានកំណត់ (ENV missing)'
+            ]);
+        }
+
+        try {
+            $result = Cloudinary::upload(
+                $request->file('profile_picture')->getRealPath(),
+                [
+                    'folder' => 'profile_pictures',
+                    'resource_type' => 'image',
+                ]
+            );
+
+            $userProfile->profile_picture_url = $result->getSecurePath();
+
+        } catch (\Exception $e) {
+            Log::error('Cloudinary Upload Error: '.$e->getMessage());
+
+            return back()->withErrors([
+                'profile_picture' => 'Upload រូបភាពមិនបាន សូមព្យាយាមម្តងទៀត'
+            ]);
+        }
     }
 
-    // រក្សាទុកទិន្នន័យផ្សេងៗ
+    // រក្សាទុកព័ត៌មានផ្សេងៗ
     $userProfile->fill($validator->validated());
     $userProfile->save();
 
-    Session::flash('success', 'ប្រវត្តិរូបរបស់អ្នកត្រូវបានកែប្រែដោយជោគជ័យ!');
-
-    return redirect()->route('professor.profile.show');
+    return redirect()
+        ->route('professor.profile.show')
+        ->with('success', 'ប្រវត្តិរូបរបស់អ្នកត្រូវបានកែប្រែដោយជោគជ័យ!');
 }
+
 
 public function toggleClassLeader($offeringId, $studentUserId)
 {
