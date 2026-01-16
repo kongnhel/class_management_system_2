@@ -12,16 +12,27 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-av
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 RUN a2enmod rewrite
 
-# ៣. ចម្លងកូដចូលក្នុង Container
-WORKDIR /var/www/html
-COPY . .
 
 # ៤. ដំឡើង Composer ឱ្យបានត្រឹមត្រូវ (នេះជាចំណុចដែលបាត់)
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader
 
 # ៥. កំណត់សិទ្ធិឱ្យ Folder storage និង cache
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs
 
-# ៦. បើក Port 80
+# ២. ចម្លងកូដចូល
+WORKDIR /var/www/html
+COPY . .
+
+# ៣. ដំឡើង PHP Dependencies
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+RUN composer install --no-dev --optimize-autoloader
+
+# ៤. ដំឡើង NPM Dependencies និង Build Vite Assets (នេះជាដំណោះស្រាយ)
+RUN npm install
+RUN npm run build
+
+# ៥. កំណត់សិទ្ធិ និងបើក Port 80
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 EXPOSE 80
