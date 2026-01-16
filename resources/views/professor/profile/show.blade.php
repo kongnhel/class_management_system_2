@@ -36,13 +36,18 @@
                     <div class="lg:col-span-4 flex flex-col items-center">
                         <div class="relative">
                             <div class="w-32 h-32 md:w-56 md:h-56 rounded-[2rem] md:rounded-[2.5rem] overflow-hidden border-4 md:border-8 border-white shadow-xl">
-                                @if ($userProfile->profile_picture_url)
-                                    <img src="{{ asset('storage/' . $userProfile->profile_picture_url) }}" class="object-cover w-full h-full">
-                                @else
-                                    <div class="w-full h-full bg-green-100 flex items-center justify-center text-green-600 text-4xl md:text-6xl font-black">
-                                        {{ Str::upper(Str::substr($user->name, 0, 1)) }}
-                                    </div>
-                                @endif
+@if ($userProfile->profile_picture_url)
+    <img 
+        src="{{ $userProfile->profile_picture_url }}" 
+        class="object-cover w-full h-full"
+        alt="{{ $user->name }}"
+    >
+@else
+    <div class="w-full h-full bg-green-100 flex items-center justify-center text-green-600 text-4xl md:text-6xl font-black">
+        {{ Str::upper(Str::substr($user->name, 0, 1)) }}
+    </div>
+@endif
+
                             </div>
                             <div class="absolute -bottom-3 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-4 py-1 rounded-full shadow-lg font-bold text-[10px] md:text-sm uppercase whitespace-nowrap">
                                 <i class="fas fa-chalkboard-teacher mr-1"></i> {{ __('សាស្រ្តាចារ្យ') }}
