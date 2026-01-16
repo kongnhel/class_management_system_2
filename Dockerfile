@@ -1,38 +1,37 @@
-# ប្រើ PHP ជាមួយ Apache ដើម្បីឱ្យវាងាយស្រួលដំឡើង
+# ១. ប្រើ PHP ជាមួយ Apache
 FROM php:8.2-apache
 
-# ១. ដំឡើង System Dependencies ដែលចាំបាច់
+# ២. ដំឡើង System Dependencies ដែលចាំបាច់
 RUN apt-get update && apt-get install -y \
-    libpng-dev libjpeg-dev libfreetype6-dev zip git unzip \
+    libpng-dev libjpeg-dev libfreetype6-dev zip git unzip curl \
     && docker-php-ext-install pdo pdo_mysql gd
 
-# ២. កំណត់ Document Root ទៅកាន់ folder public របស់ Laravel
+# ៣. ដំឡើង Node.js និង NPM (សម្រាប់ Build Vite)
+RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs
+
+# ៤. កំណត់ Document Root ទៅកាន់ folder public របស់ Laravel
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 RUN a2enmod rewrite
 
-
-# ៤. ដំឡើង Composer ឱ្យបានត្រឹមត្រូវ (នេះជាចំណុចដែលបាត់)
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-RUN composer install --no-dev --optimize-autoloader
-
-# ៥. កំណត់សិទ្ធិឱ្យ Folder storage និង cache
-RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y nodejs
-
-# ២. ចម្លងកូដចូល
+# ៥. កំណត់ Folder ធ្វើការ
 WORKDIR /var/www/html
+
+# ៦. ចម្លងកូដទាំងអស់ចូល (ត្រូវធ្វើជំហាននេះមុនពេល Run Composer)
 COPY . .
 
-# ៣. ដំឡើង PHP Dependencies
+# ៧. ដំឡើង Composer ឱ្យបានត្រឹមត្រូវ
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader
 
-# ៤. ដំឡើង NPM Dependencies និង Build Vite Assets (នេះជាដំណោះស្រាយ)
+# ៨. ដំឡើង NPM និង Build Vite Assets (ដោះស្រាយបញ្ហា Vite Manifest Not Found)
 RUN npm install
 RUN npm run build
 
-# ៥. កំណត់សិទ្ធិ និងបើក Port 80
+# ៩. កំណត់សិទ្ធិឱ្យ Folder storage និង cache (សំខាន់សម្រាប់ Laravel)
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+
+# ១០. បើក Port 80
 EXPOSE 80
