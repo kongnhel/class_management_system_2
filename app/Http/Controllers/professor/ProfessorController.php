@@ -1560,11 +1560,7 @@ public function storeGrades(Request $request, $assessment_id)
 
 
 
-// ១. ប្រាកដថាអ្នកមាន Use Facades ទាំងនេះនៅផ្នែកខាងលើនៃឯកសារ
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+
 
 public function updateProfile(Request $request)
 {
