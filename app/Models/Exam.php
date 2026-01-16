@@ -39,14 +39,18 @@ class Exam extends Model
     /**
      * Get the exam results for this exam.
      */
-    public function examResults()
-    {
-        return $this->hasMany(ExamResult::class);
-    }
+   // ក្នុង file app/Models/Exam.php
+
+public function examResults()
+{
+    return $this->hasMany(ExamResult::class, 'assessment_id');
+}
+    
     // In Exam.php
 public function grade()
 {
-    return $this->hasOne(ExamResult::class, 'exam_id')
-                ->where('student_user_id', Auth::id());
+    return $this->hasOne(ExamResult::class, 'assessment_id')
+                ->where('assessment_type', 'exam') // បញ្ជាក់ថាជាប្រភេទ exam
+                ->where('student_user_id', \Illuminate\Support\Facades\Auth::id());
 }
 }

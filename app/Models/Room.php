@@ -24,8 +24,7 @@ class Room extends Model
     protected $fillable = [
         'room_number',
         'capacity',
-        'wifi_name',
-        'wifi_password',
+        'wifi_qr_code', // ប្តូរមកប្រើ field នេះវិញ
         'location_of_room',
         'type_of_room',
     ];

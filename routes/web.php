@@ -9,19 +9,83 @@ use App\Http\Controllers\admin\CourseController;
 use App\Http\Controllers\admin\CourseOfferingController;
 use App\Http\Controllers\admin\AnnouncementController;
 use App\Http\Controllers\admin\RoomController;
-
 use App\Http\Controllers\GradeController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\StudentProfileController;
 use App\Http\Controllers\ProfessorProfileController;
 use App\Http\Controllers\professor\ProfessorController;
 use App\Http\Controllers\professor\QuizController;
+use App\Http\Controllers\professor\StudentQuizController;
 use App\Http\Controllers\ProfileController;
 use App\Models\StudentCourseEnrollment;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\StudentNotificationController;
+use Kreait\Laravel\Firebase\Facades\Firebase;
+use Kreait\Firebase\Factory;
+use App\Http\Controllers\TelegramController;
+
+Route::get('/test-telegram', function() {
+    Artisan::call('schedule:run');
+    return "Telegram testing triggered!";
+});
+
+Route::get('/test-telegram', function () {
+    $token = env('TELEGRAM_BOT_TOKEN');
+    
+    // ដាក់ Chat ID របស់អ្នក (អ្នកអាចរកបានតាមរយៈការ Chat ទៅកាន់ @userinfobot ក្នុង Telegram)
+    // ឬប្រើ Chat ID របស់សិស្សដែលអ្នកបានរក្សាទុកក្នុង Database
+    $chatId = "1581124755"; 
+
+    $response = Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+        'chat_id' => $chatId,
+        'text'    => "<b>សួស្តី!</b> នេះគឺជាការតេស្តចេញពី Laravel ទៅកាន់ Telegram Bot។ 🚀",
+        'parse_mode' => 'HTML'
+    ]);
+
+    return $response->json();
+});
+
+Route::get('/test-firebase', function () {
+    try {
+        // បញ្ជាក់ឱ្យច្បាស់ថាប្រើ project ឈ្មោះ 'app'
+        $firebase = Firebase::project('app');
+        $auth = $firebase->auth();
+        
+        $users = $auth->listUsers();
+        return "ការតភ្ជាប់ជោគជ័យ!";
+    } catch (\Exception $e) {
+        return "ការតភ្ជាប់បរាជ័យ: " . $e->getMessage();
+    }
+});
+
+Route::get('/save-data', function () {
+    try {
+        // បញ្ជាក់ Path ឱ្យចំ File .json តែម្តង
+        $filePath = base_path('storage/app/firebase/classmanagementsystem.json');
+
+        // ឆែកមើលថា តើ File ហ្នឹងមានពិតមែនឬអត់
+        if (!file_exists($filePath)) {
+            return "រកមិនឃើញឯកសារ JSON តាមផ្លូវនេះទេ: " . $filePath;
+        }
+
+        $factory = (new Factory)
+            ->withServiceAccount($filePath)
+            ->withDatabaseUri('https://classmanagementsystem-cd57f-default-rtdb.firebaseio.com/');
+
+        $database = $factory->createDatabase();
+        $database->getReference('test_connection')->set([
+            'status' => 'success',
+            'message' => 'តភ្ជាប់បានជោគជ័យហើយ!',
+            'time' => now()->toDateTimeString()
+        ]);
+
+        return "អបអរសាទរ! ទិន្នន័យបានចូលទៅដល់ Firebase ហើយ។";
+    } catch (\Exception $e) {
+        return "នៅតែមានបញ្ហា: " . $e->getMessage();
+    }
+});
 /*
 |--------------------------------------------------------------------------
 | Public Routes
@@ -152,7 +216,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 | Professor Routes (Protected by 'role:professor' middleware)
 |--------------------------------------------------------------------------
 */
+// Route::get('/export-grades/{offering_id}', [ProfessorController::class, 'exportGrades'])
+//     ->name('professor.grades.export')
+//     ->middleware('auth'); // បន្ថែមនេះដើម្បីសុវត្ថិភាពទិន្នន័យ
+
+
     Route::middleware(['auth', 'role:professor'])->prefix('professor')->name('professor.')->group(function () {
+
+
+
         Route::get('/dashboard', [ProfessorController::class, 'dashboard'])->name('dashboard');
         Route::get('/view-departments', [ProfessorController::class, 'viewDepartments'])->name('view-departments');
         Route::get('/view-programs', [ProfessorController::class, 'viewPrograms'])->name('view-programs');
@@ -166,23 +238,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/course-offering/{offering_id}/exams', [ProfessorController::class, 'manageExams'])->name('manage-exams');
         Route::post('/course-offering/{offering_id}/exams', [ProfessorController::class, 'storeExam'])->name('store-exam');
 
-        Route::get('/course-offering/{offering_id}/quizzes', [ProfessorController::class, 'manageQuizQuestions'])->name('manage-quizzes');
-        Route::post('/course-offering/{offering_id}/quizzes', [ProfessorController::class, 'storeQuiz'])->name('store-quiz');
-        Route::get('/course-offering/{offering_id}/quizzes/{quiz}/edit', [ProfessorController::class, 'editQuiz'])->name('edit-quiz');
-        Route::put('/course-offering/{offering_id}/quizzes/{quiz}', [ProfessorController::class, 'updateQuiz'])->name('update-quiz');
-        Route::delete('/course-offering/{offering_id}/quizzes/{quiz}', [ProfessorController::class, 'deleteQuiz'])->name('delete-quiz');
-
         Route::get('/professor/all-grades', [GradeController::class, 'allGrades'])->name('grades.all');
         Route::get('/courses/{courseOffering}/grades/manage', [GradeController::class, 'manageGrades'])->name('grades.manage');
         Route::post('/courses/{courseOffering}/grades/store', [GradeController::class, 'storeOrUpdate'])->name('grades.storeOrUpdate');
         Route::get('/professor/courses', [GradeController::class, 'professorCourses'])->name('professor.courses');
         Route::get('/professor/grades/{courseOffering}', [GradeController::class, 'manageGrades'])->name('grades.manage');
         Route::post('/professor/grades/{courseOffering}/store', [GradeController::class, 'storeOrUpdateGrades'])->name('grades.storeOrUpdate');
-
-        Route::get('/all-grades', [ProfessorController::class, 'allGrades'])->name('all-grades');
-        Route::get('/all-assignments', [ProfessorController::class, 'allAssignments'])->name('all-assignments');
-        Route::get('/all-exams', [ProfessorController::class, 'allExams'])->name('all-exams');
-        Route::get('/all-quizzes', [ProfessorController::class, 'allQuizzes'])->name('all-quizzes');
 
         Route::get('/course-offerings/{offering_id}/assignments/{assignment}/edit', [ProfessorController::class, 'editAssignment'])->name('assignments.edit');
         Route::put('/course-offerings/{offering_id}/assignments/{assignment}', [ProfessorController::class, 'updateAssignment'])->name('assignments.update');
@@ -205,9 +266,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/professor/course-offerings/{courseOffering}/students/{student}', [ProfessorController::class, 'showStudentProfile'])->name('students.show');
         Route::get('/students/{student}', [ProfessorController::class, 'showStudentProfile'])->name('professor.students.show');
         Route::get('/professor/profile/create', [ProfessorProfileController::class, 'create'])->name('profile.create');
-        Route::post('/professor/profile', [ProfessorProfileController::class, 'store'])->name('profile.store');
-        Route::get('/professor/profile/edit', [ProfessorProfileController::class, 'edit'])->name('profile.edit');
-        Route::put('/professor/profile', [ProfessorProfileController::class, 'update'])->name('profile.update');
+        // Route::post('/professor/profile', [ProfessorProfileController::class, 'store'])->name('profile.store');
+        // Route::get('/professor/profile/edit', [ProfessorProfileController::class, 'edit'])->name('profile.edit');
+        // Route::put('/professor/profile', [ProfessorProfileController::class, 'update'])->name('profile.update');
         Route::get('/notifications', [ProfessorController::class, 'notificationsIndex'])->name('notifications.index');
         Route::get('/course-offerings/{courseOffering}/students', [ProfessorController::class, 'getStudentsForCourseOffering'])->name('course_offerings.students');
         Route::get('/notifications/create', [ProfessorController::class, 'createNotificationForm'])->name('notifications.create');
@@ -222,39 +283,99 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/course-offerings/{offering_id}/assessments/create', [ProfessorController::class, 'createAssessmentForm'])->name('assessments.create');
         Route::post('/course-offerings/{offering_id}/assessments', [ProfessorController::class, 'storeAssessment'])->name('assessments.store');
         Route::get('/assessments/{assessment_id}/grades/edit', [ProfessorController::class, 'showGradeEntryForm'])->name('grades.edit');
-        Route::delete('/assessments/{id}', [ProfessorController::class, 'destroyAssessment'])->name('assessments.destroy');
+        // Route::delete('/assessments/{id}', [ProfessorController::class, 'destroyAssessment'])->name('assessments.destroy');
         Route::post('/assessments/{assessment_id}/grades', [ProfessorController::class, 'storeGradesForAssessment'])->name('grades.store');
         Route::get('/course-offering/{offering_id}/assignments', [ProfessorController::class, 'manageAssignments'])->name('manage-assignments');
         Route::post('/course-offering/{offering_id}/assignments', [ProfessorController::class, 'storeAssignment'])->name('assignments.store');
-
-        Route::get('/course-offering/{offering_id}/quizzes', [QuizController::class, 'index'])->name('manage-quizzes');
-        Route::get('/course-offering/{offering_id}/quizzes/create', [QuizController::class, 'create'])->name('create-quiz');
-        Route::post('/course-offering/{offering_id}/quizzes', [QuizController::class, 'stor e'])->name('store-quiz');
-        Route::get('/course-offering/{offering_id}/quizzes/{quiz}/edit', [QuizController::class, 'edit'])->name('edit-quiz');
-        Route::put('/course-offering/{offering_id}/quizzes/{quiz}', [QuizController::class, 'update'])->name('update-quiz');
-        Route::delete('/course-offering/{offering_id}/quizzes/{quiz}', [QuizController::class, 'delete'])->name('delete-quiz');
-
-        Route::get('/quizzes/{quiz}/questions', [ProfessorController::class, 'manageQuizQuestions'])->name('quizzes.questions.index');
-        Route::post('/quizzes/{quiz}/questions', [ProfessorController::class, 'storeQuizQuestion'])->name('quizzes.questions.store');
-        Route::post('/questions/{question}/options', [ProfessorController::class, 'storeQuizOption'])->name('quizzes.options.store');
-        Route::delete('/options/{option}', [ProfessorController::class, 'destroyQuizOption'])->name('quizzes.options.destroy');
 
         Route::post('/announcements/{announcement}/mark-as-read', [ProfessorController::class, 'markAsRead'])->name('announcements.markAsRead');
         Route::get('/profile', [ProfessorController::class, 'showProfile'])->name('profile.show');
         Route::get('/profile/edit', [ProfessorController::class, 'editProfile'])->name('profile.edit');
         Route::put('/profile', [ProfessorController::class, 'updateProfile'])->name('profile.update');
 
-        // Route::get('/course-offering/{offering_id}/quizzes', [ProfessorController::class, 'manageQuizzes'])->name('manage-quizzes');
-        // Route::get('/course-offering/{offering_id}/quizzes/create', [ProfessorController::class, 'createQuiz'])->name('quizzes.create');
-        // Route::post('/course-offering/{offering_id}/quizzes', [ProfessorController::class, 'storeQuiz'])->name('quizzes.store');
-        // Route::get('/course-offering/{offering_id}/quizzes/{quiz}/edit', [ProfessorController::class, 'editQuiz'])->name('quizzes.edit');
-        // Route::put('/course-offering/{offering_id}/quizzes/{quiz}', [ProfessorController::class, 'updateQuiz'])->name('quizzes.update');
-        // Route::delete('/course-offering/{offering_id}/quizzes/{quiz}', [ProfessorController::class, 'destroyQuiz'])->name('quizzes.destroy');
-
         Route::get('/quizzes/{quiz}/questions', [ProfessorController::class, 'manageQuizQuestions'])->name('quizzes.questions.index');
         Route::post('/quizzes/{quiz}/questions', [ProfessorController::class, 'storeQuizQuestion'])->name('quizzes.questions.store');
 
+        Route::controller(QuizController::class)->group(function () {
+            // Quizzes (Index, Store, Update, Delete)
+            Route::get('/my-course-offerings/{offering_id}/quizzes', 'index')->name('quizzes.index');
+            Route::post('/my-course-offerings/{offering_id}/quizzes', 'store')->name('quizzes.store');
+            
+            Route::put('/my-course-offerings/{offering_id}/quizzes/{quiz}', 'update')->name('quizzes.update');
+            Route::delete('/my-course-offerings/{offering_id}/quizzes/{quiz}', 'destroy')->name('quizzes.destroy');
+            
+            // New: Route to manage questions for a specific quiz
+            Route::get('/my -course-offerings/{offering_id}/quizzes/{quiz}/questions', 'manageQuestions')->name('quizzes.manage-questions');
+
+            Route::post('/telegram/webhook', [TelegramController::class, 'handle']);
+
+
+    Route::post('/professor/send-grade-telegram/{enrollment_id}', [ProfessorController::class, 'sendGradeTelegram'])
+    ->name('send_grade_telegram');
+Route::post('/professor/course-offering/{id}/send-all-telegram', [ProfessorController::class, 'sendAllTelegram'])->name('send_all_telegram');
+
+
+Route::post('/update-telegram', [ProfessorController::class, 'updateTelegram'])->name('update_telegram');
+
+        });
+
+Route::patch('/professor/course-offering/{offering_id}/student/{student_user_id}/toggle-leader', 
+    [ProfessorController::class, 'toggleClassLeader']
+)->name('toggleClassLeader');
+
+        // ទំព័រសម្រាប់បង្ហាញបញ្ជីឈ្មោះស្រង់វត្តមាន
+Route::get('/course-offerings/{courseOffering}/attendance', [ProfessorController::class, 'attendanceIndex'])->name('attendance.index');
+
+// Route សម្រាប់ Save ទិន្នន័យវត្តមាន
+Route::post('/course-offerings/{courseOffering}/attendance', [ProfessorController::class, 'attendanceStore'])->name('attendance.store');
+
+Route::get('/course-offerings/{courseOffering}/attendance-report', [ProfessorController::class, 'attendanceReport'])
+    ->name('attendance.report');
+              // Route::get('/course-offering/{offering_id}/quizzes', [QuizController::class, 'index'])->name('manage-quizzes');
+        // Route::get('/course-offering/{offering_id}/quizzes/create', [QuizController::class, 'create'])->name('create-quiz');
+        // Route::post('/course-offering/{offering_id}/quizzes', [QuizController::class, 'stor e'])->name('store-quiz');
+        // Route::get('/course-offering/{offering_id}/quizzes/{quiz}/edit', [QuizController::class, 'edit'])->name('edit-quiz');
+        // Route::put('/course-offering/{offering_id}/quizzes/{quiz}', [QuizController::class, 'update'])->name('update-quiz');
+        // Route::delete('/course-offering/{offering_id}/quizzes/{quiz}', [QuizController::class, 'delete'])->name('delete-quiz');
+
+Route::post('/professor/grades/store/{assessment_id}', [ProfessorController::class, 'updateGrades'])
+     ->name('professor.grades.store');
+Route::delete('/assessments/{id}', [ProfessorController::class, 'destroyAssessment'])->name('assessments.destroy');
+        Route::get('/assessments/{id}/edit/{type}',
+            [ProfessorController::class, 'assessmentEdit']
+        )->name('assessments.edit');
+
+        Route::put('/assessments/{id}/{type}',
+            [ProfessorController::class, 'update']
+        )->name('assessments.update');
+
+// ដាក់ក្នុង Route Group របស់ Professor
+// Route::get('assessment/{id}/export-csv', [GradeController::class, 'exportCSV'])->name('grades.export');
+// Route::post('/assessment/{id}/import-csv', [GradeController::class, 'importCSV'])->name('grades.import');
+// Ensure this group is inside your 'professor' prefix/name group
+Route::prefix('grades')->name('grades.')->group(function () {
+    
+    // This will now be named: professor.grades.edit-attendance
+    Route::get('/edit/{student_id}/{course_id}', [GradeController::class, 'editAttendance'])
+        ->name('edit-attendance');
+
+    Route::post('/attendance/update', [GradeController::class, 'updateAttendanceScore'])
+        ->name('update-attendance');
+});
+Route::get('/course-offering/{course_offering}/grades', [GradeController::class, 'index'])
+        ->name('course-offering.grades');
+
+    // Route សម្រាប់កែវត្តមានដែលអ្នកមានស្រាប់
+    Route::prefix('grades')->name('grades.')->group(function () {
+        Route::get('/edit/{student_id}/{course_id}', [GradeController::class, 'editAttendance'])
+            ->name('edit-attendance');
     });
+        
+    });
+Route::get('/course-offerings/{offering_id}/export-docx', [ProfessorController::class, 'exportStudentsDocx'])
+    ->name('professor.students.export-docx');
+Route::get('/course-offerings/{offering_id}/export-gradebook', [ProfessorController::class, 'exportGradebookDocx'])
+    ->name('professor.grades.export-docx');
 
 
     Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')->group(function () {
@@ -283,10 +404,34 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('/notifications/{id}/read', [StudentController::class, 'markAsRead'])->name('notifications.read');
         Route::patch('/announcements/{id}/read', [StudentController::class, 'markAnnouncementAsRead'])->name('announcements.read');
         Route::patch('/notifications/read-all', [StudentController::class, 'markAllAsRead'])->name('notifications.readAll');
+
+        Route::get('/class-leader/course/{courseOffering}/attendance', [StudentController::class, 'leaderAttendance'])
+        ->name('leader.attendance');
+    // បន្ថែម Route ថ្មីនេះសម្រាប់ Save ទិន្នន័យ (POST)
+    Route::post('/class-leader/course/{courseOffering}/attendance', [StudentController::class, 'storeLeaderAttendance'])
+        ->name('leader.attendance.store');
+    // បង្ហាញរបាយការណ៍ (Report)
+    // ត្រូវប្រាកដថា name() គឺ 'leader.report' (ព្រោះវាបូកជាមួយ prefix name 'student.')
+    Route::get('/leader/attendance-report/{courseOffering}', [StudentController::class, 'leaderAttendanceReport'])
+        ->name('leader.report');
+Route::post('/student/update-telegram', [App\Http\Controllers\StudentController::class, 'updateTelegram'])
+    ->name('update_telegram');
+    
     });
 
     Route::get('/check-time', function() {
         dd(now()->toDateTimeString(), config('app.timezone'));
     });
+
+
+
+
+// Route::get('assessment/{id}/export-excel', [GradeController::class, 'exportExcel'])->name('grades.export');
+// Route::post('assessment/{id}/import-excel', [GradeController::class, 'importExcel'])->name('grades.import');
+
+Route::get('assessment/{id}/export-csv', [GradeController::class, 'exportCSV'])->name('grades.export');
+Route::post('/assessment/{id}/import-csv', [GradeController::class, 'importCSV'])->name('grades.import');
+
+
 
 require __DIR__.'/auth.php';

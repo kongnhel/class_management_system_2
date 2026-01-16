@@ -17,9 +17,8 @@ return [
     'name' => env('APP_NAME', 'Class Management System'),
 
 
-
     /*
-    |--------------------------------------------------------------------------
+    |
     | Application Environment
     |--------------------------------------------------------------------------
     |
@@ -106,6 +105,7 @@ return [
         ...array_filter(
             explode(',', env('APP_PREVIOUS_KEYS', ''))
         ),
+        
     ],
 
     /*

@@ -224,8 +224,114 @@ class User extends Authenticatable
         return $this->hasMany(CourseOffering::class, 'lecturer_user_id');
     }
 
+    public function hasRole($role)
+{
+    // ឧបមាថាអ្នកមាន column ឈ្មោះ 'role' នៅក្នុង table 'users'
+    // បើអ្នកប្រើតារាងផ្សេង សូមកែសម្រួលលក្ខខណ្ឌខាងក្រោម
+    return $this->role === $role;
+}
+public function enrolledCourses()
+{
+    return $this->belongsToMany(
+        \App\Models\CourseOffering::class, 
+        'student_course_enrollments', 
+        'student_user_id', 
+        'course_offering_id'
+    );
+}
+
+/**
+ * Relationship ទៅកាន់តារាងវត្តមាន
+ * ប្រើដើម្បីរាប់ចំនួនវត្តមានក្នុងរបាយការណ៍
+ */
+public function attendances()
+{
+    return $this->hasMany(\App\Models\AttendanceRecord::class, 'student_user_id');
+}
     // You may also have other relationships here, like department() or program()
     // You can also add the studentCourseEnrollments relationship here for consistency
     
+// app/Models/User.php
+
+
+
+/**
+ * គណនាពិន្ទុវត្តមាន (១៥%)
+ */
+// នៅក្នុង User.php Model
+// public function getAttendanceScoreByCourse($course_id)
+// {
+//     $maxScore = 15;
+
+//     // រាប់អវត្តមាន តែរាប់ចំពោះតែមុខវិជ្ជាដែលយើងចង់ដឹងប៉ុណ្ណោះ
+//     $absentCount = $this->attendanceRecords()
+//                         ->where('course_offering_id', $course_id) 
+//                         ->where('status', 'absent')
+//                         ->count();
+
+//     $deduction = floor($absentCount / 2); 
+//     $score = $maxScore - $deduction;
+
+//     return max(0, $score);
+// }
+
+public function getFinalAttendanceScore($course_id)
+{
+    $enrollment = \App\Models\StudentCourseEnrollment::where('student_user_id', $this->id)
+                    ->where('course_offering_id', $course_id)
+                    ->first();
+
+    // បើមានពិន្ទុដែលគ្រូបញ្ចូលដោយដៃ យកពិន្ទុដៃ
+    if ($enrollment && $enrollment->attendance_score_manual !== null) {
+        return $enrollment->attendance_score_manual;
+    }
+
+    // បើគ្មានទេ ប្រើ System គណនា
+    return $this->getAttendanceScoreByCourse($course_id);
+}
+
+/**
+ * គណនាពិន្ទុវត្តមានស្វ័យប្រវត្តិ (Auto Calculation)
+ */
+public function getAttendanceScoreByCourse($course_id)
+{
+    $maxScore = 15; // ពិន្ទុពេញ ១៥
+
+    // រាប់ចំនួនអវត្តមាន (Absent) ក្នុងមុខវិជ្ជាជាក់លាក់
+    $absentCount = $this->attendanceRecords()
+                        ->where('course_offering_id', $course_id) 
+                        ->where('status', 'absent')
+                        ->count();
+
+    // រូបមន្ត៖ អវត្តមាន ២ ដង ដក ១ ពិន្ទុ
+    $deduction = floor($absentCount / 2); 
+    $score = $maxScore - $deduction;
+
+    return max(0, $score);
+}
+// នៅក្នុង Student Model
+public function calculateAutoAttendanceScore($courseOfferingId) {
+    $totalSessions = Attendance::where('course_offering_id', $courseOfferingId)->count();
+    $presentSessions = Attendance::where('course_offering_id', $courseOfferingId)
+                        ->where('student_id', $this->id)
+                        ->where('status', 'present')
+                        ->count();
+                        
+    if($totalSessions == 0) return 0;
+    
+    $attendanceWeight = 15; // ឬទាញពី $courseOffering->attendance_weight
+    return ($presentSessions / $totalSessions) * $attendanceWeight;
+}
+/**
+ * យកពិន្ទុចុងក្រោយ (Manual Override vs Auto)
+ */
+
+/**
+ * បន្ថែម Relationship ទៅកាន់តារាង StudentProgramEnrollment
+ */
+// public function programEnrollments()
+// {
+//     return $this->hasMany(\App\Models\StudentProgramEnrollment::class, 'student_user_id');
+// }
 
 }

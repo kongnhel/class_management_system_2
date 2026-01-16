@@ -1,149 +1,190 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between px-4 sm:px-6 lg:px-8">
-            <h2 class="font-bold text-4xl text-gray-900 leading-tight mb-2 md:mb-0">
-                {{ __('ពិន្ទុរបស់ខ្ញុំ') }} <i class="fas fa-chart-line text-green-600 ml-2"></i>
-            </h2>
-            {{-- <a href="#" class="inline-flex items-center px-6 py-3 bg-green-600 border border-transparent rounded-full font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 active:bg-green-900 focus:outline-none focus:border-green-900 focus:ring ring-green-300 disabled:opacity-25 transition ease-in-out duration-150 shadow-lg">
-                <i class="fas fa-chart-pie mr-2"></i> {{ __('មើលទិដ្ឋភាពទូទៅ') }}
-            </a> --}}
+        <div class="flex items-center justify-between px-4 sm:px-0">
+            <div>
+                <h2 class="font-black text-2xl md:text-3xl text-slate-900 tracking-tight flex items-center gap-3">
+                    <span class="p-2 bg-indigo-600 text-white rounded-xl shadow-lg shadow-indigo-200">
+                        <i class="fas fa-graduation-cap"></i>
+                    </span>
+                    {{ __('ពិន្ទុរបស់ខ្ញុំ') }}
+                </h2>
+                <p class="text-[10px] text-slate-400 mt-2 font-black uppercase tracking-[0.2em] leading-none">Academic Performance Tracking</p>
+            </div>
+            <div class="hidden sm:flex flex-col items-end">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ __('ឆមាសទី ១') }}</span>
+                <span class="text-sm font-bold text-indigo-600">ឆ្នាំសិក្សា ២០២៤-២០២៥</span>
+            </div>
         </div>
     </x-slot>
 
-    <div class="py-12 bg-gray-50 min-h-screen">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-2xl sm:rounded-3xl p-8 lg:p-12 border border-gray-100">
-                <h3 class="text-3xl font-extrabold text-gray-800 mb-8 pb-4 border-b-2 border-green-500">{{ __('កំណត់ត្រាពិន្ទុ') }}</h3>
+    @php
+        $colorPalette = [
+            'blue'    => ['bg' => 'bg-blue-50',    'text' => 'text-blue-600',    'border' => 'border-blue-100',    'accent' => 'bg-blue-500'],
+            'indigo'  => ['bg' => 'bg-indigo-50',  'text' => 'text-indigo-600',  'border' => 'border-indigo-100',  'accent' => 'bg-indigo-500'],
+            'purple'  => ['bg' => 'bg-purple-50',  'text' => 'text-purple-600',  'border' => 'border-purple-100',  'accent' => 'bg-purple-500'],
+            'rose'    => ['bg' => 'bg-rose-50',    'text' => 'text-rose-600',    'border' => 'border-rose-100',    'accent' => 'bg-rose-500'],
+            'emerald' => ['bg' => 'bg-emerald-50', 'text' => 'text-emerald-600', 'border' => 'border-emerald-100', 'accent' => 'bg-emerald-500'],
+            'amber'   => ['bg' => 'bg-amber-50',   'text' => 'text-amber-600',   'border' => 'border-amber-100',   'accent' => 'bg-amber-500'],
+            'cyan'    => ['bg' => 'bg-cyan-50',    'text' => 'text-cyan-600',    'border' => 'border-cyan-100',    'accent' => 'bg-cyan-500'],
+        ];
+        $colorKeys = array_keys($colorPalette);
+    @endphp
 
-                @if (session('success'))
-                    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-6 mb-8 rounded-lg shadow-md font-medium" role="alert">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <i class="fas fa-check-circle text-green-500 text-2xl"></i>
-                            </div>
-                            <div class="ml-4 text-sm md:text-base">
-                                <p>{{ session('success') }}</p>
-                            </div>
-                        </div>
+    <div class="py-8 bg-[#f8fafc] min-h-screen font-['Battambang']">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+            {{-- Summary Dashboard --}}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center gap-5 transition-transform hover:scale-[1.02]">
+                    <div class="bg-amber-100 w-16 h-16 rounded-2xl flex items-center justify-center text-amber-600 shadow-inner">
+                        <i class="fas fa-trophy text-2xl"></i>
                     </div>
-                @endif
+                    <div>
+                        <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest">{{ __('ចំណាត់ថ្នាក់') }}</p>
+                        <h4 class="text-3xl font-black text-slate-800 italic">#{{ $overallRank ?? '1' }}</h4>
+                    </div>
+                </div>
 
-               {{-- 1. DESKTOP/TABLET VERSION (Traditional Table - HIDDEN on mobile) --}}
-                <div id="screen-grades" class="hidden md:block overflow-x-auto rounded-2xl shadow-xl border border-gray-200">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gradient-to-r from-green-600 to-purple-700 text-white">
-                            <tr>
-                                <th class="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider rounded-tl-2xl">{{ __('មុខវិជ្ជា') }}</th>
-                                <th class="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider">{{ __('ប្រភេទវាយតម្លៃ') }}</th>
-                                <th class="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider">{{ __('ពិន្ទុ') }}</th>
-                                <th class="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider">{{ __('ពិន្ទុអតិបរមា') }}</th>
-                                <th class="px-6 py-4 text-left text-sm font-bold uppercase tracking-wider rounded-tr-2xl">{{ __('កាលបរិច្ឆេទ') }}</th>
+                <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center gap-5 transition-transform hover:scale-[1.02]">
+                    <div class="bg-emerald-100 w-16 h-16 rounded-2xl flex items-center justify-center text-emerald-600 shadow-inner">
+                        <i class="fas fa-chart-pie text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest">{{ __('មធ្យមភាគ') }}</p>
+                        <h4 class="text-3xl font-black text-slate-800">{{ number_format($averageScore ?? 0, 2) }}</h4>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex items-center gap-5 transition-transform hover:scale-[1.02]">
+                    <div class="bg-rose-100 w-16 h-16 rounded-2xl flex items-center justify-center text-rose-600 shadow-inner">
+                        <i class="fas fa-star text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest">{{ __('និទ្ទេសសរុប') }}</p>
+                        <h4 class="text-3xl font-black text-slate-800">{{ $overallGrade ?? 'A' }}</h4>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Main Grades Table --}}
+            <div class="bg-white border border-slate-100 rounded-[3rem] shadow-xl shadow-slate-200/50 overflow-hidden">
+                <div class="px-10 py-8 border-b border-slate-50 flex justify-between items-center bg-white">
+                    <h3 class="text-xl font-black text-slate-800 uppercase italic tracking-tighter">{{ __('តារាងលទ្ធផលសិក្សា') }}</h3>
+                    <div class="flex gap-2">
+                        <button class="p-2 text-slate-400 hover:text-indigo-600 transition-colors"><i class="fas fa-download"></i></button>
+                        <button class="p-2 text-slate-400 hover:text-indigo-600 transition-colors"><i class="fas fa-print"></i></button>
+                    </div>
+                </div>
+
+                {{-- DESKTOP TABLE --}}
+                <div class="hidden md:block">
+                    <table class="min-w-full">
+                        <thead>
+                            <tr class="bg-slate-50/50 border-b border-slate-50">
+                                <th class="px-10 py-5 text-left text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">{{ __('មុខវិជ្ជា') }}</th>
+                                <th class="px-6 py-5 text-center text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">{{ __('ប្រភេទ') }}</th>
+                                <th class="px-6 py-5 text-center text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">{{ __('និទ្ទេស') }}</th>
+                                <th class="px-10 py-5 text-center text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">{{ __('ពិន្ទុទទួលបាន') }}</th>
+                                <th class="px-10 py-5 text-center text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">{{ __('កាលបរិច្ឆេទ') }}</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tbody class="divide-y divide-slate-50">
                             @forelse ($grades as $grade)
-                                <tr class="hover:bg-gray-100 transition-colors duration-200">
-                                    <td class="px-6 py-4 whitespace-nowrap text-base font-semibold text-gray-900">{{ $grade->course_title_km ?? 'N/A' }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-medium">{{ $grade->assessment_type }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                        <span class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-semibold leading-5 border shadow-sm
-                                            @if($grade->score >= 10)
-                                                bg-green-100 text-green-800 border-green-300
-                                            @elseif($grade->score >= 7)
-                                                bg-yellow-100 text-yellow-800 border-yellow-300
-                                            @else
-                                                bg-red-100 text-red-800 border-red-300
-                                            @endif">
-                                            {{ $grade->score }}
+                                @php
+                                    $courseName = $grade->course_title_en ?? 'Unknown';
+                                    // ជ្រើសរើសពណ៌ខុសៗគ្នាតាមឈ្មោះមុខវិជ្ជា
+                                    $colorIndex = abs(crc32($courseName)) % count($colorKeys);
+                                    $ui = $colorPalette[$colorKeys[$colorIndex]];
+                                    $maxScore = $grade->max_score ?? 100;
+                                    $percentage = ($maxScore > 0) ? (($grade->score ?? 0) / $maxScore) * 100 : 0;
+                                @endphp
+                                <tr class="hover:bg-slate-50/80 transition-all group">
+                                    <td class="px-10 py-6">
+                                        <div class="flex items-center gap-4">
+                                            <div class="{{ $ui['bg'] }} {{ $ui['text'] }} w-12 h-12 rounded-2xl flex items-center justify-center font-black border {{ $ui['border'] }} shadow-sm text-lg">
+                                                {{ substr($courseName, 0, 1) }}
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-black text-slate-800 group-hover:{{ $ui['text'] }} transition-colors">{{ $courseName }}</div>
+                                                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">ID: #{{ $grade->id ?? '000' }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-6 text-center">
+                                        <span class="text-[10px] font-black uppercase px-3 py-1 rounded-full {{ $ui['bg'] }} {{ $ui['text'] }} border {{ $ui['border'] }}">
+                                            {{ $grade->assessment_type ?? 'Exam' }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-medium">{{ $grade->max_score }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ \Carbon\Carbon::parse($grade->date)->format('d-M-Y') }}</td>
+                                    <td class="px-6 py-6 text-center">
+                                        <div class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-900 text-white text-xs font-black shadow-md">
+                                            {{ $grade->grade ?? 'B' }}
+                                        </div>
+                                    </td>
+                                    <td class="px-10 py-6">
+                                        <div class="flex flex-col items-center min-w-[120px]">
+                                            <div class="flex items-baseline gap-1">
+                                                <span class="text-lg font-black text-slate-800">{{ number_format($grade->score ?? 0, 1) }}</span>
+                                                <span class="text-[10px] font-bold text-slate-300">/ {{ $maxScore }}</span>
+                                            </div>
+                                            <div class="w-full h-1.5 bg-slate-100 rounded-full mt-2 overflow-hidden max-w-[100px]">
+                                                <div class="h-full {{ $ui['accent'] }} rounded-full shadow-sm transition-all duration-1000" style="width: {{ $percentage }}%"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-10 py-6 text-center">
+                                        <span class="text-[11px] font-bold text-slate-400 bg-slate-50 px-3 py-1 rounded-lg">
+                                            {{ \Carbon\Carbon::parse($grade->date)->format('d M, Y') }}
+                                        </span>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-6 py-16 text-center text-gray-500 font-medium bg-gray-50">
-                                        <div class="flex flex-col items-center justify-center">
-                                            <svg class="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1a9 9 0 1118 0c0 4.97-4.03 9-9 9S0 18.97 0 14z"></path>
-                                            </svg>
-                                            <p class="text-lg font-semibold text-gray-800">{{ __('មិនទាន់មានកំណត់ត្រាពិន្ទុនៅឡើយទេ') }}</p>
-                                            <p class="mt-1 text-sm text-gray-500">{{ __('ពិន្ទុរបស់អ្នកនឹងបង្ហាញនៅទីនេះនៅពេលដែលសាស្រ្តាចារ្យបានបញ្ចូល។') }}</p>
-                                        </div>
+                                    <td colspan="5" class="py-24 text-center">
+                                        <i class="fas fa-inbox text-4xl text-slate-100 mb-4 block"></i>
+                                        <span class="text-slate-300 font-black uppercase tracking-widest">{{ __('មិនទាន់មានទិន្នន័យពិន្ទុ') }}</span>
                                     </td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
-{{-- 2. MOBILE CARD VERSION (Stacked Cards - SHOWN on mobile) --}}
-                <div id="mobile-grades" class="block md:hidden space-y-4">
-                    @forelse ($grades as $grade)
+
+                {{-- MOBILE VIEW --}}
+                <div class="md:hidden p-6 space-y-4 bg-slate-50/50">
+                    @foreach ($grades as $grade)
                         @php
-                            // Determine color classes based on score, mirroring table logic
-                            $scoreBgClass = '';
-                            $scoreTextClass = '';
-                            if ($grade->score >= 10) {
-                                $scoreBgClass = 'bg-green-100 border-green-300';
-                                $scoreTextClass = 'text-green-800';
-                            } elseif ($grade->score >= 7) {
-                                $scoreBgClass = 'bg-yellow-100 border-yellow-300';
-                                $scoreTextClass = 'text-yellow-800';
-                            } else {
-                                $scoreBgClass = 'bg-red-100 border-red-300';
-                                $scoreTextClass = 'text-red-800';
-                            }
+                            $courseName = $grade->course_title_en ?? 'Unknown';
+                            $colorIndex = abs(crc32($courseName)) % count($colorKeys);
+                            $ui = $colorPalette[$colorKeys[$colorIndex]];
                         @endphp
-                        
-                        <div class="grade-card bg-white border border-gray-200 rounded-xl shadow-lg p-5 space-y-3">
-                            
-                            {{-- Subject Name --}}
-                            <div class="flex justify-between items-start border-b pb-3">
-                                <p class="text-lg font-extrabold text-green-700 leading-tight">
-                                    {{ $grade->course_title_km ?? 'N/A' }}
-                                </p>
+                        <div class="bg-white rounded-[2rem] p-6 shadow-sm border-2 {{ $ui['border'] }}">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="{{ $ui['bg'] }} {{ $ui['text'] }} w-10 h-10 rounded-xl flex items-center justify-center font-black border {{ $ui['border'] }}">
+                                        {{ substr($courseName, 0, 1) }}
+                                    </div>
+                                    <h4 class="text-sm font-black text-slate-800">{{ $courseName }}</h4>
+                                </div>
+                                <div class="bg-slate-900 text-white text-[10px] font-black px-2 py-1 rounded-lg">
+                                    {{ $grade->grade ?? 'A' }}
+                                </div>
                             </div>
-
-                            {{-- Details Grid --}}
-                            <div class="grid grid-cols-2 gap-y-2 gap-x-4 text-sm">
-                                
-                                {{-- Assessment Type --}}
-                                <p class="font-medium text-gray-500">{{ __('ប្រភេទវាយតម្លៃ:') }}</p>
-                                <p class="text-blue-500 font-semibold text-right">{{ $grade->assessment_type }}</p>
-
-                                {{-- Score --}}
-                                <p class="font-medium text-gray-500">{{ __('ពិន្ទុ:') }}</p>
-                                <p class="text-gray-800 font-semibold text-right">
-                                    <span class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-semibold leading-5 border shadow-sm {{ $scoreBgClass }} {{ $scoreTextClass }}">
-                                        {{ $grade->score }}
-                                    </span>
-                                </p>
-
-                                {{-- Max Score --}}
-                                <p class="font-medium text-gray-500">{{ __('ពិន្ទុអតិបរមា:') }}</p>
-                                <p class="text-gray-800 font-semibold text-right">{{ $grade->max_score }}</p>
-                                
-                                {{-- Date --}}
-                                <p class="font-medium text-gray-500">{{ __('កាលបរិច្ឆេទ:') }}</p>
-                                <p class="text-gray-800 font-semibold text-right">{{ \Carbon\Carbon::parse($grade->date)->format('d-M-Y') }}</p>
-
+                            <div class="flex justify-between items-end border-t border-slate-50 pt-4">
+                                <span class="text-[9px] font-black {{ $ui['text'] }} uppercase tracking-widest bg-white px-2 py-1 rounded-md border {{ $ui['border'] }}">
+                                    {{ $grade->assessment_type }}
+                                </span>
+                                <div class="text-right">
+                                    <div class="text-xs text-slate-400 font-bold uppercase mb-1">Score</div>
+                                    <span class="text-xl font-black text-slate-800">{{ number_format($grade->score ?? 0, 1) }}</span>
+                                    <span class="text-[10px] font-bold text-slate-300">/{{ $grade->max_score ?? 100 }}</span>
+                                </div>
                             </div>
                         </div>
-                    @empty
-                        {{-- Empty state for mobile --}}
-                        <div class="py-16 text-center text-gray-500 font-medium bg-gray-50 rounded-2xl shadow-xl border border-gray-200">
-                             <div class="flex flex-col items-center justify-center">
-                                <svg class="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1a9 9 0 1118 0c0 4.97-4.03 9-9 9S0 18.97 0 14z"></path>
-                                </svg>
-                                <p class="text-lg font-semibold text-gray-800">{{ __('មិនទាន់មានកំណត់ត្រាពិន្ទុនៅឡើយទេ') }}</p>
-                                <p class="mt-1 text-sm text-gray-500">{{ __('ពិន្ទុរបស់អ្នកនឹងបង្ហាញនៅទីនេះនៅពេលដែលសាស្រ្តាចារ្យបានបញ្ចូល។') }}</p>
-                            </div>
-                        </div>
-                    @endforelse
+                    @endforeach
                 </div>
+
                 @if ($grades->hasPages())
-                    <div class="mt-8">
+                    <div class="px-10 py-6 bg-white border-t border-slate-50">
                         {{ $grades->links() }}
                     </div>
                 @endif

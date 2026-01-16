@@ -1,272 +1,173 @@
 <x-app-layout>
-<x-slot name="header">
-    <div class="flex flex-col md:flex-row items-center justify-between">
-        <h2 class="font-semibold text-2xl md:text-3xl text-gray-900 leading-tight mb-4 md:mb-0">
-            {{ __('កាលវិភាគរបស់ខ្ញុំ') }}
-        </h2>
-    </div>
-
-    {{-- NEW WRAPPER FOR HORIZONTAL SCROLL (Filter Buttons) --}}
-    <div class="w-full mt-4 md:mt-0 overflow-x-auto whitespace-nowrap pb-2">
-        <div class="inline-flex space-x-2 sm:space-x-4">
-            {{-- The buttons will now stay on one line and scroll horizontally on small screens --}}
-            <button data-day-kh="ទាំងអស់" data-day-en="all"
-                class="day-filter-btn px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-300 shadow-sm whitespace-nowrap">
-                ទាំងអស់
-            </button>
-            <button data-day-kh="ច័ន្ទ" data-day-en="Monday"
-                class="day-filter-btn px-4 py-2 bg-white text-gray-800 rounded-md hover:bg-green-50 transition duration-300 shadow-sm whitespace-nowrap">
-                ច័ន្ទ
-            </button>
-            <button data-day-kh="អង្គារ" data-day-en="Tuesday"
-                class="day-filter-btn px-4 py-2 bg-white text-gray-800 rounded-md hover:bg-green-50 transition duration-300 shadow-sm whitespace-nowrap">
-                អង្គារ
-            </button>
-            <button data-day-kh="ពុធ" data-day-en="Wednesday"
-                class="day-filter-btn px-4 py-2 bg-white text-gray-800 rounded-md hover:bg-green-50 transition duration-300 shadow-sm whitespace-nowrap">
-                ពុធ
-            </button>
-            <button data-day-kh="ព្រហស្បតិ៍" data-day-en="Thursday"
-                class="day-filter-btn px-4 py-2 bg-white text-gray-800 rounded-md hover:bg-green-50 transition duration-300 shadow-sm whitespace-nowrap">
-                ព្រហស្បតិ៍
-            </button>
-            <button data-day-kh="សុក្រ" data-day-en="Friday"
-                class="day-filter-btn px-4 py-2 bg-white text-gray-800 rounded-md hover:bg-green-50 transition duration-300 shadow-sm whitespace-nowrap">
-                សុក្រ
-            </button>
-            <button data-day-kh="សៅរ៍" data-day-en="Saturday"
-                class="day-filter-btn px-4 py-2 bg-white text-gray-800 rounded-md hover:bg-green-50 transition duration-300 shadow-sm whitespace-nowrap">
-                សៅរ៍
-            </button>
-            <button data-day-kh="អាទិត្យ" data-day-en="Sunday"
-                class="day-filter-btn px-4 py-2 bg-white text-gray-800 rounded-md hover:bg-green-50 transition duration-300 shadow-sm whitespace-nowrap">
-                អាទិត្យ
+    <x-slot name="header">
+        {{-- Header Section --}}
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4 no-print px-2">
+            <div>
+                <h2 class="font-black text-3xl text-gray-900 leading-tight">
+                    {{ __('កាលវិភាគសិក្សា') }}
+                </h2>
+                <p class="text-sm text-gray-500 font-medium mt-1">{{ __('ពិនិត្យ និងគ្រប់គ្រងម៉ោងសិក្សារបស់អ្នក') }}</p>
+            </div>
+            
+            <button onclick="window.print()" 
+                class="inline-flex items-center px-8 py-3 bg-green-600 text-white font-bold rounded-2xl shadow-lg shadow-green-100 hover:bg-green-700 hover:-translate-y-0.5 transition-all duration-200">
+                <i class="fas fa-print mr-2 text-lg"></i>
+                <span>{{ __('បោះពុម្ពកាលវិភាគ') }}</span>
             </button>
         </div>
-    </div>
-</x-slot>
 
-    <div class="py-10 bg-gray-100 font-['Battambang']">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-xl sm:rounded-2xl p-8">
-<div class="flex items-center justify-between mb-6">
-    <h3 class="text-3xl font-extrabold text-gray-800 mb-8">កាលវិភាគសិក្សា</h3>
-                        <div class="mb-6 flex justify-end no-print">
-                <button onclick="window.print()" 
-                    class="px-6 py-3 bg-green-600 text-white font-bold text-lg rounded-xl shadow-lg hover:bg-green-700 transition-colors duration-200 flex items-center space-x-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2z" />
-                    </svg>
-                    <span>{{ __('បោះពុម្ព') }}</span>
-                </button>
+        {{-- Day Filter Tabs --}}
+        <div class="w-full mt-8 overflow-x-auto no-print scrollbar-hide">
+            <div class="inline-flex p-1.5 bg-gray-100 rounded-2xl space-x-1 border border-gray-200/50">
+                <button data-day-en="all" class="day-filter-btn px-8 py-2.5 rounded-xl text-sm font-black transition-all duration-300 bg-white text-green-700 shadow-md">ទាំងអស់</button>
+                @foreach(['Monday' => 'ច័ន្ទ', 'Tuesday' => 'អង្គារ', 'Wednesday' => 'ពុធ', 'Thursday' => 'ព្រហស្បតិ៍', 'Friday' => 'សុក្រ', 'Saturday' => 'សៅរ៍', 'Sunday' => 'អាទិត្យ'] as $en => $kh)
+                    <button data-day-en="{{ $en }}" class="day-filter-btn px-8 py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:text-green-600 transition-all underline-offset-4">{{ $kh }}</button>
+                @endforeach
             </div>
+        </div>
+    </x-slot>
 
-</div>
+    <div class="py-10 bg-[#fcfdfe] font-['Battambang'] min-h-screen">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
+            <div class="no-print">
                 @php
-                    function getDayColorClasses($day) {
+                    function getDayColor($day) {
                         return [
-                            'Monday' => 'text-blue-600 bg-blue-50 border-blue-200',
-                            'Tuesday' => 'text-green-600 bg-green-50 border-green-200',
-                            'Wednesday' => 'text-yellow-600 bg-yellow-50 border-yellow-200',
-                            'Thursday' => 'text-purple-600 bg-purple-50 border-purple-200',
-                            'Friday' => 'text-pink-600 bg-pink-50 border-pink-200',
-                            'Saturday' => 'text-orange-600 bg-orange-50 border-orange-200',
-                            'Sunday' => 'text-red-600 bg-red-50 border-red-200', // Weekend day
-                        ][$day] ?? 'text-gray-600';
+                            'Monday' => 'bg-blue-600', 'Tuesday' => 'bg-green-600',
+                            'Wednesday' => 'bg-amber-500', 'Thursday' => 'bg-purple-600',
+                            'Friday' => 'bg-pink-600', 'Saturday' => 'bg-orange-600',
+                            'Sunday' => 'bg-red-600',
+                        ][$day] ?? 'bg-gray-600';
                     }
                 @endphp
 
-                {{-- ✅ Screen Version (Table - HIDDEN on mobile, SHOWN on desktop) --}}
-                <div id="screen-timetable" class="hidden md:block overflow-x-auto rounded-xl shadow-lg">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gradient-to-r from-green-500 to-green-600">
-                            <tr>
-                                <th
-                                    class="px-6 py-4 text-left text-sm font-bold text-white uppercase tracking-wider rounded-tl-xl">
-                                    មុខវិជ្ជា</th>
-                                <th class="px-6 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">
-                                    សាស្រ្តាចារ្យ</th>
-                                <th class="px-6 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">ថ្ងៃ
-                                </th>
-                                <th class="px-6 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">ម៉ោងចាប់ផ្តើម
-                                </th>
-                                <th class="px-6 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">ម៉ោងបញ្ចប់
-                                </th>
-                                <th
-                                    class="px-6 py-4 text-left text-sm font-bold text-white uppercase tracking-wider rounded-tr-xl">
-                                    បន្ទប់</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @php
-                                // Mapping ថ្ងៃទៅលេខសម្រាប់ order
-                                $dayOrder = [
-                                    'Monday' => 1,
-                                    'Tuesday' => 2,
-                                    'Wednesday' => 3,
-                                    'Thursday' => 4,
-                                    'Friday' => 5,
-                                    'Saturday' => 6,
-                                    'Sunday' => 7,
-                                ];
-                                // Sort by ថ្ងៃ -> ម៉ោងចាប់ផ្តើម
-                                $schedules = $schedules->sortBy(function ($schedule) use ($dayOrder) {
-                                    return sprintf(
-                                        '%02d-%s',
-                                        $dayOrder[$schedule->day_of_week] ?? 99,
-                                        $schedule->start_time,
-                                    );
-                                });
-                            @endphp
-
-                            @forelse ($schedules as $schedule)
-                                @php
-                                    $dayColorClass = getDayColorClasses($schedule->day_of_week);
-                                @endphp
-                                <tr class="schedule-row hover:bg-gray-50 transition duration-200"
-                                    data-day="{{ $schedule->day_of_week }}">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                                        {{ $schedule->courseOffering->course->title_en?? 'N/A' }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                        {{ $schedule->courseOffering->lecturer->name ?? 'N/A' }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold {{ $dayColorClass }}">
-                                        {{ $schedule->day_of_week }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                        {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                        {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                        {{ $schedule->room->room_number ?? 'N/A' }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6"
-                                        class="px-6 py-12 text-center text-gray-500 font-medium">
-                                        មិនមានកាលវិភាគទេ
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-
-                {{-- ✅ Mobile Version (Cards - SHOWN on mobile, HIDDEN on desktop) --}}
-                <div id="mobile-timetable" class="block md:hidden space-y-4">
-                    @forelse ($schedules as $schedule)
-                        @php
-                            // Utility map to get Khmer day name for the card
-                            $khmerDay = [
-                                'Monday' => 'ច័ន្ទ', 'Tuesday' => 'អង្គារ', 'Wednesday' => 'ពុធ',
-                                'Thursday' => 'ព្រហស្បតិ៍', 'Friday' => 'សុក្រ', 'Saturday' => 'សៅរ៍',
-                                'Sunday' => 'អាទិត្យ',
-                            ][$schedule->day_of_week] ?? $schedule->day_of_week;
-                            
-                            $startTime = \Carbon\Carbon::parse($schedule->start_time)->format('H:i');
-                            $endTime = \Carbon\Carbon::parse($schedule->end_time)->format('H:i');
-
-                            // Get color classes for the card's day badge
-                            $dayColorClass = getDayColorClasses($schedule->day_of_week);
-                        @endphp
-
-                        {{-- Start of Card --}}
-                        <div class="schedule-row bg-white border border-gray-200 rounded-lg shadow-md p-4 space-y-2"
-                            data-day="{{ $schedule->day_of_week }}">
-
-                            <div class="flex justify-between items-start border-b pb-2">
-                                <p class="text-lg font-extrabold text-green-700">
-                                    {{ $schedule->courseOffering->course->title_en ?? 'N/A' }}
-                                </p>
-                                {{-- UPDATED CLASS HERE --}}
-                                <span class="text-sm font-semibold {{ $dayColorClass }} px-3 py-1 rounded-full whitespace-nowrap border">
-                                    {{ $khmerDay }}
-                                </span>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-2 text-sm">
-                                {{-- Row 1: Lecturer --}}
-                                <p class="font-medium text-gray-500">{{ __('សាស្រ្តាចារ្យ:') }}</p>
-                                <p class="text-gray-800 font-semibold">{{ $schedule->courseOffering->lecturer->name ?? 'N/A' }}</p>
-
-                                {{-- Row 2: Room --}}
-                                <p class="font-medium text-gray-500">{{ __('បន្ទប់:') }}</p>
-                                <p class="text-gray-800 font-semibold">{{ $schedule->room->room_number ?? 'N/A' }}</p>
-
-                                {{-- Row 3: Time --}}
-                                <p class="font-medium text-gray-500">{{ __('ម៉ោង:') }}</p>
-                                <p class="text-gray-800 font-semibold">{{ $startTime }} - {{ $endTime }}</p>
-                            </div>
-                        </div>
-                        {{-- End of Card --}}
-                    @empty
-                        <p class="text-center text-gray-500 py-8">{{ __('មិនមានកាលវិភាគទេ') }}</p>
-                    @endforelse
-                </div>
-
-                {{-- ✅ Print Version (No changes needed here) --}}
-                <div id="print-timetable" class="p-4">
-                    <div class="flex justify-between items-center mb-4">
-                        <div>
-                            <h1 class="text-xl font-bold">កាលវិភាគសិក្សារបស់ខ្ញុំ</h1>
-                            {{-- <p class="text-sm">ឈ្មោះនិស្សិត៖ {{ $user->name_kh ?? $user->name_en }}</p> --}}
-                            <p class="text-sm">ជំនាន់៖ {{ $user->generation }}</p>
-                            @if($studentProgram)
-                            <p class="text-sm">កម្មវិធីសិក្សា៖ {{ $studentProgram->name_km ?? $studentProgram->name_en }}</p>
-                            @endif
-                        </div>
-                        <img src="{{ asset('assets/image/nmu_Logo.png') }}" alt="Logo" class="w-16 h-16">
-                    </div>
-
-                    <table>
+                {{-- Desktop View --}}
+                <div id="screen-timetable" class="hidden md:block bg-white rounded-[2.5rem] shadow-xl shadow-gray-100/50 overflow-hidden border border-gray-100">
+                    <table class="min-w-full">
                         <thead>
-                            <tr>
-                                <th class="time-col">ម៉ោង</th>
-                                <th>ច័ន្ទ</th>
-                                <th>អង្គារ</th>
-                                <th>ពុធ</th>
-                                <th>ព្រហស្បតិ៍</th>
-                                <th>សុក្រ</th>
-                                <th>សៅរ៍</th>
-                                <th>អាទិត្យ</th>
+                            <tr class="bg-gray-50/50 border-b border-gray-100">
+                                <th class="px-8 py-5 text-left text-xs font-black text-gray-400 uppercase tracking-widest">មុខវិជ្ជា</th>
+                                <th class="px-8 py-5 text-left text-xs font-black text-gray-400 uppercase tracking-widest">សាស្រ្តាចារ្យ</th>
+                                <th class="px-8 py-5 text-left text-xs font-black text-gray-400 uppercase tracking-widest">ថ្ងៃសិក្សា</th>
+                                <th class="px-8 py-5 text-left text-xs font-black text-gray-400 uppercase tracking-widest">ម៉ោង</th>
+                                <th class="px-8 py-5 text-left text-xs font-black text-gray-400 uppercase tracking-widest">បន្ទប់</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            @php
-                                // Group by time slot
-                                $grouped = $schedules->groupBy(function($s) {
-                                    return \Carbon\Carbon::parse($s->start_time)->format('H:i') . ' - ' .
-                                                   \Carbon\Carbon::parse($s->end_time)->format('H:i');
-                                });
-
-                                $days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-                            @endphp
-
-                            @foreach($grouped as $slot => $schedulesPerSlot)
-                                <tr>
-                                    <td class="time-col">{{ $slot }}</td>
-                                    @foreach($days as $day)
-                                        <td>
-                                            @foreach($schedulesPerSlot->where('day_of_week', $day) as $sch)
-                                                <div><strong>{{ $sch->courseOffering->course->title_km ?? '' }}</strong></div>
-                                                <div>{{ $sch->courseOffering->lecturer->name ?? '' }}</div>
-
-                                                <div>បន្ទប់ {{ $sch->room->room_number ?? '' }}</div>
-                                            @endforeach
-                                        </td>
-                                    @endforeach
-                                </tr>
+                        <tbody class="divide-y divide-gray-50">
+                            @foreach ($schedules as $schedule)
+                            <tr class="schedule-row group hover:bg-green-50/30 transition-all duration-300" data-day="{{ $schedule->day_of_week }}">
+                                <td class="px-8 py-6">
+                                    <div class="font-black text-gray-900 group-hover:text-green-700 transition-colors">{{ $schedule->courseOffering->course->title_en ?? 'N/A' }}</div>
+                                    <div class="text-[10px] text-gray-400 font-bold uppercase mt-1">{{ $schedule->courseOffering->course->code ?? '' }}</div>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold text-xs border border-gray-200">
+                                            {{ substr($schedule->courseOffering->lecturer->name ?? 'P', 0, 1) }}
+                                        </div>
+                                        <span class="text-sm font-bold text-gray-700">{{ $schedule->courseOffering->lecturer->name ?? 'N/A' }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full {{ getDayColor($schedule->day_of_week) }}"></span>
+                                        <span class="text-sm font-black text-gray-800">{{ $schedule->day_of_week }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-6 text-sm tabular-nums font-bold text-gray-600">
+                                    <i class="far fa-clock mr-2 text-green-500 opacity-50"></i>
+                                    {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}
+                                </td>
+                                <td class="px-8 py-6">
+                                    <span class="bg-gray-900 text-white px-4 py-1.5 rounded-xl text-xs font-black shadow-sm">
+                                        {{ $schedule->room->room_number ?? 'N/A' }}
+                                    </span>
+                                </td>
+                            </tr>
                             @endforeach
                         </tbody>
                     </table>
-
-                    <div style="margin-top:30px; text-align:right; font-size:12px;">
-                        <p>Printed on: {{ now()->format('d/m/Y H:i') }}</p>
-                        <p>Signature: ______________________</p>
-                    </div>
                 </div>
 
+                {{-- Mobile View --}}
+                <div id="mobile-timetable" class="md:hidden space-y-6 px-2">
+                    @foreach ($schedules as $schedule)
+                        <div class="schedule-row bg-white rounded-3xl p-6 shadow-xl shadow-gray-100/50 border border-gray-100 relative overflow-hidden" data-day="{{ $schedule->day_of_week }}">
+                            <div class="absolute top-0 right-0 w-32 h-32 {{ getDayColor($schedule->day_of_week) }} opacity-[0.03] -mr-16 -mt-16 rounded-full"></div>
+                            
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <span class="text-[10px] font-black {{ str_replace('bg-', 'text-', getDayColor($schedule->day_of_week)) }} uppercase tracking-widest">{{ $schedule->day_of_week }}</span>
+                                    <h4 class="text-xl font-black text-gray-900 mt-1">{{ $schedule->courseOffering->course->title_en ?? 'N/A' }}</h4>
+                                </div>
+                                <span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-lg text-xs font-black">{{ $schedule->room->room_number ?? 'N/A' }}</span>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4 pt-4 border-t border-gray-50">
+                                <div>
+                                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{{ __('សាស្រ្តាចារ្យ') }}</p>
+                                    <p class="text-sm font-bold text-gray-700">{{ $schedule->courseOffering->lecturer->name ?? 'N/A' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{{ __('ម៉ោងសិក្សា') }}</p>
+                                    <p class="text-sm font-bold text-green-700">{{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+            
+        {{-- ORIGINAL PRINT VIEW (Unchanged as requested) --}}
+
+            <div id="print-timetable" class="p-4">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h1 class="text-xl font-bold">កាលវិភាគសិក្សារបស់ខ្ញុំ</h1>
+                        <p class="text-sm">ជំនាន់៖ {{ $user->generation }}</p>
+                        @if($studentProgram)
+                        <p class="text-sm">កម្មវិធីសិក្សា៖ {{ $studentProgram->name_km ?? $studentProgram->name_en }}</p>
+                        @endif
+                    </div>
+                    <img src="{{ asset('assets/image/nmu_Logo.png') }}" alt="Logo" class="w-16 h-16">
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="time-col">ម៉ោង</th>
+                            <th>ច័ន្ទ</th><th>អង្គារ</th><th>ពុធ</th><th>ព្រហស្បតិ៍</th><th>សុក្រ</th><th>សៅរ៍</th><th>អាទិត្យ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @php
+                            $grouped = $schedules->groupBy(function($s) {
+                                return \Carbon\Carbon::parse($s->start_time)->format('H:i') . ' - ' . \Carbon\Carbon::parse($s->end_time)->format('H:i');
+                            });
+                            $days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+                        @endphp
+                        @foreach($grouped as $slot => $schedulesPerSlot)
+                            <tr>
+                                <td class="time-col">{{ $slot }}</td>
+                                @foreach($days as $day)
+                                    <td>
+                                        @foreach($schedulesPerSlot->where('day_of_week', $day) as $sch)
+                                            <div><strong>{{ $sch->courseOffering->course->title_km ?? '' }}</strong></div>
+                                            <div>{{ $sch->courseOffering->lecturer->name ?? '' }}</div>
+                                            <div>បន្ទប់ {{ $sch->room->room_number ?? '' }}</div>
+                                        @endforeach
+                                    </td>
+                                @endforeach
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+                <div style="margin-top:30px; text-align:right; font-size:12px;">
+
+                    <p>Printed on: {{ now()->format('d/m/Y H:i') }}</p>
+
+                    <p>Signature: ______________________</p>
+                </div>
             </div>
         </div>
     </div>
@@ -274,28 +175,25 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const filterButtons = document.querySelectorAll('.day-filter-btn');
-            // UPDATED: Select both the table rows AND the new mobile cards
-            const scheduleRows = document.querySelectorAll('#screen-timetable .schedule-row, #mobile-timetable .schedule-row');
+            const scheduleRows = document.querySelectorAll('.schedule-row');
 
             filterButtons.forEach(button => {
                 button.addEventListener('click', () => {
                     const selectedDay = button.getAttribute('data-day-en');
-
-                    // Reset button styles
+                    
                     filterButtons.forEach(btn => {
-                        btn.classList.remove('bg-green-600', 'text-white');
-                        btn.classList.add('bg-white', 'text-gray-800');
+                        btn.classList.remove('bg-white', 'text-green-700', 'shadow-md');
+                        btn.classList.add('text-gray-500');
                     });
+                    
+                    button.classList.add('bg-white', 'text-green-700', 'shadow-md');
+                    button.classList.remove('text-gray-500');
 
-                    // Set active button style
-                    button.classList.add('bg-green-600', 'text-white');
-                    button.classList.remove('bg-white', 'text-gray-800');
-
-                    // Filter rows (applies to both table rows and cards)
                     scheduleRows.forEach(row => {
                         const rowDay = row.getAttribute('data-day');
                         if (selectedDay === 'all' || rowDay === selectedDay) {
                             row.style.display = '';
+                            row.classList.add('animate-fade-in');
                         } else {
                             row.style.display = 'none';
                         }
@@ -304,58 +202,23 @@
             });
         });
     </script>
+
+    <style>
+        .animate-fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        #print-timetable { display: none; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+        @media print {
+            .no-print, header, nav, .day-filter-btn { display: none !important; }
+            #print-timetable { display: block !important; }
+            body { font-family: 'Battambang', sans-serif; font-size: 11px; }
+            @page { size: A4 landscape; margin: 10mm; }
+            table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+            th, td { border: 1px solid #000; text-align: center; padding: 4px; word-wrap: break-word; font-size: 10px; }
+            th { background: #f0f0f0; }
+            .time-col { font-weight: bold; width: 70px; }
+        }
+    </style>
 </x-app-layout>
-
-<style>
-    #print-timetable {
-        display: none;
-    }
-
-@media print {
-    /* Hide unwanted parts */
-    header, nav, .day-filter-btn, #screen-timetable, #mobile-timetable, .alert, .header, .page-title .sidebar {
-        display: none !important;
-    }
-
-    /* Keep only print timetable */
-    #print-timetable {
-        display: block !important;
-    }
-
-    body {
-        font-family: 'Battambang', 'Khmer OS', Arial, sans-serif;
-        font-size: 11px;
-        color: #000;
-    }
-
-    @page {
-        size: A4 landscape; /* អាចប្តូរ portrait ប្រសិនបើចង់ */
-        margin: 10mm;
-    }
-
-    table {
-        border-collapse: collapse;
-        width: 100%;
-        table-layout: fixed;
-    }
-
-    th, td {
-        border: 1px solid #000;
-        text-align: center;
-        padding: 4px;
-        word-wrap: break-word;
-        font-size: 11px;
-    }
-
-    th {
-        background: #f0f0f0;
-        font-size: 12px;
-    }
-
-    .time-col {
-        font-weight: bold;
-        width: 70px;
-    }
-}
-
-</style>

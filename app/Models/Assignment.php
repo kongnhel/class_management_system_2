@@ -11,7 +11,7 @@ class Assignment extends Model
 
     protected $fillable = [
         'course_offering_id',
-        // 'grading_category_id',
+        'grading_category_id',
         'title_km',
         'title_en',
         'description',
@@ -48,8 +48,11 @@ class Assignment extends Model
     /**
      * Get the submissions for this assignment.
      */
-    public function submissions()
+
+        public function examResults()
     {
-        return $this->hasMany(Submission::class);
+        return $this->hasMany(ExamResult::class, 'assessment_id')
+                    ->where('assessment_type', 'assignment');
     }
+
 }

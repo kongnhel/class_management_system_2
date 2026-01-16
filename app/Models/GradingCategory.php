@@ -30,6 +30,8 @@ class GradingCategory extends Model
             ['name_en' => 'Attendance', 'name_km' => 'វត្តមាន', 'weight_percentage' => 15],
             // Assignment (Research Work): 20%
             ['name_en' => 'Assignment', 'name_km' => 'កិច្ចការស្រាវជ្រាវ', 'weight_percentage' => 20],
+            // Quiz: 10%
+            ['name_en' => 'Quiz', 'name_km' => 'កិច្ចការ', 'weight_percentage' => 10],
         ];
     /**
      * Get the course that the grading category belongs to.

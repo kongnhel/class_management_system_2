@@ -9,13 +9,7 @@ class ExamResult extends Model
 {
         use HasFactory;
 
-    protected $fillable = [
-        'exam_id',
-        'student_user_id',
-        'score_obtained',
-        'recorded_at',
-        'notes',
-    ];
+protected $fillable = ['assessment_id', 'assessment_type', 'student_user_id', 'score_obtained', 'notes', 'recorded_at'];
 
     protected $casts = [
         'recorded_at' => 'datetime',
@@ -29,7 +23,7 @@ class ExamResult extends Model
 // In Exam.php
 public function grade()
 {
-    return $this->hasOne(ExamResult::class, 'exam_id')
+    return $this->hasOne(ExamResult::class, 'assessment_id')
                 ->where('student_user_id', Auth::id());
 }
     /**
@@ -37,7 +31,8 @@ public function grade()
      */
     public function exam()
     {
-        return $this->belongsTo(Exam::class);
+        // return $this->belongsTo(Exam::class);
+        return $this->belongsTo(Exam::class, 'assessment_id');
     }
 
     /**
@@ -46,5 +41,15 @@ public function grade()
     public function student()
     {
         return $this->belongsTo(User::class, 'student_user_id');
+    }
+
+    // public function assessment()
+    // {
+    //     return $this->morphTo(null, 'assessment_type', 'assessment_id');
+    // }
+
+    public function assignment()
+    {
+        return $this->belongsTo(Assignment::class, 'assessment_id');
     }
 }

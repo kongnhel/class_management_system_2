@@ -3,72 +3,190 @@
     All necessary icons are now inline SVGs for better performance and consistency.
 --}}
 
-<nav
+{{-- <nav class="fixed top-0 left-0 h-screen w-64 lg:w-72 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 border-r border-gray-200 dark:border-gray-800 shadow-xl transform ... transition-transform duration-300 ease-in-out z-50 font-['Battambang']">
+    "
+    :class="{ 'translate-x-0': open, '-translate-x-full': !open }"
+> --}}
+<nav 
     class="
         fixed top-0 left-0 h-screen 
-        w-64 lg:w-72 
-        lg:m-1 /* Margin only for large screens, m-0 is default */
-        bg-gradient-to-b from-gray-900 to-gray-800
-        text-white
-        shadow-2xl 
+        lg:w-64 
+         w-64 
+        lg:m-1 
+        bg-white dark:bg-gray-900 
+        text-gray-800 dark:text-gray-100
+        border-r border-gray-200 dark:border-gray-800
+        shadow-xl 
         transform -translate-x-full lg:translate-x-0
-        transition-transform duration-300 ease-in-out
+        transition-all duration-300 ease-in-out
         z-50
         font-['Battambang']
     "
     :class="{ 'translate-x-0': open, '-translate-x-full': !open }"
 >
-
 @auth
-    @php
-        // --- CONSOLIDATED USER LOGIC ---
-        // 1. Get user and load profile relation
-        $user = Auth::user()->loadMissing('userProfile');
-        
-        // 2. Determine profile picture URL
-        $profilePath = $user->userProfile?->profile_picture_url;
-        $profileUrl = $profilePath ? asset('storage/' . $profilePath) : null;
+@php
+    $user = Auth::user();
+    
+    // ១. ទាញយក URL រូបភាព (ឆែកទាំងពីរកន្លែង)
+    $profilePath = $user->userProfile?->profile_picture_url ?? $user->studentProfile?->profile_picture_url;
+    $profileUrl = $profilePath ? asset('storage/' . $profilePath) : null;
 
-        // 3. Define translated role text using the match expression (PHP 8.0+)
-        $roleText = match ($user->role) {
-            'admin' => __('អ្នកគ្រប់គ្រង'),
-            'professor' => __('សាស្ត្រាចារ្យ'),
-            'student' => __('និស្សិត'),
-            default => ''
-        };
-    @endphp
+    // ២. កំណត់អត្ថបទ Role
+    $roleText = match ($user->role) {
+        'admin' => __('អ្នកគ្រប់គ្រង'),
+        'professor' => __('សាស្ត្រាចារ្យ'),
+        'student' => __('និស្សិត'),
+        default => ''
+    };
 
+    // ៣. បន្ថែម Logic ឆែកមើលថាជាប្រធានថ្នាក់ឬអត់ (ឆែកក្នុង Table enrollment)
+    $isClassLeader = false;
+        if($user->role === 'student') {
+                $isClassLeader = \DB::table('student_course_enrollments')
+                    ->where('student_user_id', $user->id)
+                    ->where('is_class_leader', 1)
+                    ->exists();
+            }
+        @endphp
     <div class="flex flex-col h-full p-6 ">
         
-        {{-- Profile Section (Top) --}}
-        <div class="shrink-0 flex flex-col items-center justify-center py-8 border-b border-gray-700/50 mb-8">
-            <a href="{{ route('dashboard') }}" class="flex flex-col items-center space-y-2">
-                <div class="mt-4 relative group">
-                    <div class="h-20 w-20 rounded-full overflow-hidden flex items-center justify-center text-3xl font-bold bg-gradient-to-br from-green-500 to-green-700 ring-4 ring-green-500 shadow-lg transition-transform hover:scale-105">
-                        @if($profileUrl)
-                            <img src="{{ $profileUrl }}" 
-                                alt="{{ __('Profile Picture') }}" 
-                                class="h-full w-full object-cover">
-                        @else
-                            {{-- Show first letter of the name --}}
-                            {{ Str::substr($user->name, 0, 1) }}
-                        @endif
-                    </div>
 
-                    {{-- User Role Badge --}}
-                    @if($roleText)
-                        <div class="absolute bottom-0 right-0 transform translate-x-1/4 translate-y-1/4">
-                            <span class="text-xs font-semibold uppercase text-green-300 px-3 py-1 bg-gray-800/80 rounded-full shadow-md">
-                                {{ $roleText }}
-                            </span>
-                        </div>
-                    @endif
-                </div>
-            </a>
+{{-- Reactive Notification (Auto-update, No Button) --}}
+
+
+        {{-- Profile Section (Top) --}}
+      <div class="shrink-0 flex flex-col items-center justify-center py-8 border-b border-gray-700/50 mb-8">
+    <a href="{{ route('dashboard') }}" class="flex flex-col items-center space-y-2">
+        <div class="mt-4 relative group">
+            <div class="h-20 w-20 rounded-full overflow-hidden flex items-center justify-center text-3xl font-bold bg-gradient-to-br from-green-500 to-green-700 ring-4 ring-green-500 shadow-lg transition-transform hover:scale-105">
+                @if($profileUrl)
+                    <img src="{{ $profileUrl }}" alt="{{ __('Profile Picture') }}" class="h-full w-full object-cover">
+                @else
+                    {{ Str::substr($user->name, 0, 1) }}
+                @endif
+            </div>
+
+            {{-- User Role & Class Leader Badge --}}
+            <div class="absolute bottom-0 right-0 transform translate-x-1/4 translate-y-1/4 flex flex-col items-end space-y-1">
+                {{-- បង្ហាញពាក្យថា ប្រធានថ្នាក់ បើលក្ខខណ្ឌត្រូវ --}}
+                @if($isClassLeader)
+                    <span class="text-[10px] font-bold uppercase text-white px-2 py-0.5 bg-yellow-600 rounded-full shadow-md ring-1 ring-white">
+                        {{ __('ប្រធានថ្នាក់') }}
+                    </span>
+                @endif
+
+                {{-- បង្ហាញ Role ធម្មតា (និស្សិត/សាស្ត្រាចារ្យ) --}}
+                @if($roleText)
+                    <span class="text-xs font-semibold uppercase text-green-300 px-3 py-1 bg-gray-800/80 rounded-full shadow-md">
+                        {{ $roleText }}
+                    </span>
+                @endif
+            </div>
         </div>
-        
+    </a>
+</div>
+
+
+<div 
+    x-data="{
+        show: false,
+        msg: '',
+        timer: 10,
+        max: 10,
+        interval: null,
+        open(message) {
+            this.msg = message;
+            this.show = true;
+            this.start();
+        },
+        close() {
+            this.show = false;
+            if (this.interval) clearInterval(this.interval);
+        },
+        start() {
+            this.timer = this.max;
+            if (this.interval) clearInterval(this.interval);
+            this.interval = setInterval(() => {
+                this.timer--;
+                if (this.timer <= 0) {
+                    this.refresh();
+                }
+            }, 1000);
+        },
+        refresh() {
+            if (typeof Livewire !== 'undefined') {
+                Livewire.dispatch('refreshComponent');
+            }
+            this.close();
+            window.sharedPageLoadTime = Math.floor(Date.now() / 1000);
+        }
+    }"
+    x-on:firebase-message.window="open($event.detail.message)"
+    x-cloak
+    class="fixed top-4 left-4 right-4 md:left-auto md:top-6 md:right-6 md:w-[320px] z-[9999]"
+>
+    <div 
+        x-show="show"
+        x-transition:enter="transition transform ease-out duration-300"
+        x-transition:enter-start="translate-y-[-20px] md:translate-x-10 opacity-0"
+        x-transition:enter-end="translate-y-0 md:translate-x-0 opacity-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="bg-white/95 dark:bg-gray-900/95 border border-green-400/30 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-black/5"
+    >
+        <div class="flex items-center gap-3 p-4">
+            <div class="flex-shrink-0 bg-green-500/10 p-2 rounded-full">
+                <svg class="w-5 h-5 text-green-600 animate-pulse" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
+                </svg>
+            </div>
+
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-gray-800 dark:text-gray-100 leading-tight truncate" x-text="msg"></p>
+                <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
+                    {{ __('នឹង Refresh ក្នុង') }} <span class="text-green-600 font-bold" x-text="timer"></span>s
+                </p>
+            </div>
+
+            <button @click="close()" class="flex-shrink-0 ml-2 text-gray-400 hover:text-red-500 p-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <div class="h-1 bg-gray-100 dark:bg-gray-800">
+            <div 
+                class="h-full bg-green-500 transition-all duration-1000 ease-linear"
+                :style="'width: ' + ((timer / max) * 100) + '%'"
+            ></div>
+        </div>
+    </div>
+</div>
+
+{{-- Theme Toggle Switch --}}
+    {{-- <div class="mb-6 px-2">
+        <button @click="toggleTheme()" 
+            class="flex items-center justify-between w-full p-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300">
+            <div class="flex items-center">
+                <template x-if="!darkMode">
+                    <svg class="w-5 h-5 text-yellow-500" ...></svg>
+                </template>
+                <template x-if="darkMode">
+                    <svg class="w-5 h-5 text-blue-400" ...></svg>
+                </template>
+                <span class="ml-3 text-sm font-medium" x-text="darkMode ? 'ពន្លឺ' : 'ងងឹត'"></span>
+            </div>
+            
+            <div class="w-10 h-5 bg-gray-300 dark:bg-gray-600 rounded-full relative">
+                <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-300"
+                    :class="darkMode ? 'translate-x-5' : 'translate-x-0'"></div>
+            </div>
+        </button>
+    </div> --}}
         {{-- Navigation Links Section --}}
-        <div class="flex-1 space-y-4 overflow-y-auto custom-scrollbar">
+        <div class="flex-1 space-y-4 overflow-y-auto custom-scrollbar ">
+            
             
             {{-- Dashboard Link --}}
             <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')"
@@ -232,6 +350,16 @@
             {{-- --- STUDENT LINKS --- --}}
             @if($user->role === 'student')
                 <p class="text-xs font-semibold uppercase text-gray-400 px-5 pt-6 pb-3 tracking-wide">{{ __('សម្រាប់និស្សិត') }}</p>
+                              @if($isClassLeader)
+                    <a href="{{ route('student.my-enrolled-courses') }}" 
+                    class="flex items-center w-full px-5 py-3 text-base font-medium rounded-xl border border-yellow-500/30 bg-yellow-500/5 hover:bg-yellow-500/20 hover:text-yellow-300 transition duration-200 ease-in-out mb-2 cursor-pointer {{ request()->routeIs('student.leader.*') ? 'bg-yellow-600 text-white shadow-lg border-none' : 'text-yellow-500' }}">
+                        
+                        <svg class="h-6 w-6 me-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                        <span class="font-bold">{{ __('ស្រង់វត្តមានសិស្ស') }}</span>
+                    </a>
+                @endif
 
                 <x-nav-link :href="route('student.profile.show')" :active="request()->routeIs('student.profile.show', 'student.profile.edit')"
                     class="flex items-center w-full px-5 py-3 text-base font-medium rounded-xl hover:bg-gray-700/80 hover:text-green-300 transition duration-200 ease-in-out {{ request()->routeIs('student.profile.show', 'student.profile.edit') ? 'bg-green-700 text-white shadow-lg' : 'text-gray-200' }}">
@@ -239,7 +367,8 @@
                     <svg class="h-6 w-6 me-3 text-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.93 1.327 6.379 3.804M15 9a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                     <span>{{ __('ប្រវត្តិរូប') }}</span>
                 </x-nav-link>
-
+      {{-- ប្តូរពី <x-nav-link> មកជា <a> ធម្មតាវិញ --}}
+  
                 <x-nav-link :href="route('student.my-enrolled-courses')" :active="request()->routeIs('student.my-enrolled-courses')"
                     class="flex items-center w-full px-5 py-3 text-base font-medium rounded-xl hover:bg-gray-700/80 hover:text-green-300 transition duration-200 ease-in-out {{ request()->routeIs('student.my-enrolled-courses') ? 'bg-green-700 text-white shadow-lg' : 'text-gray-200' }}">
                     {{-- Clock/Enrolled Courses SVG --}}
@@ -313,6 +442,7 @@
                                 {{ __('ចាកចេញ') }}
                             </x-dropdown-link>
                         </form>
+                        
                     </div>
                 </x-slot>
             </x-dropdown>
@@ -342,4 +472,77 @@
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
         background: rgb(16, 185, 129); /* Darker green on hover */
     }
+
+    /* Prevent flicker on page load */
+    [x-cloak] { display: none !important; }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { 
+        background: #10b981; 
+        border-radius: 10px; 
+    }
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+<script>
+    if (typeof firebaseConfig === 'undefined') {
+        var firebaseConfig = {
+            apiKey: "AIzaSyC5QgFzC-Kuudj7mWxLPf58xmoe_feXF3o",
+            authDomain: "classmanagementsystem-cd57f.firebaseapp.com",
+            databaseURL: "https://classmanagementsystem-cd57f-default-rtdb.firebaseio.com/",
+            projectId: "classmanagementsystem-cd57f",
+        };
+        firebase.initializeApp(firebaseConfig);
+    }
+
+    var database = firebase.database();
+    
+    // កំណត់ម៉ោងដែល Page ចាប់ផ្ដើម Load
+    if (!window.sharedPageLoadTime) {
+        window.sharedPageLoadTime = Math.floor(Date.now() / 1000);
+    }
+
+    // --- Faculty Sync ---
+    database.ref('faculties_sync').on('value', (snapshot) => {
+        const data = snapshot.val();
+        // ឆែកមើលថា តើទិន្នន័យថ្មីនេះ កើតឡើងក្រោយពេលយើង Load Page ឬអត់?
+        if (data && data.updated_at > window.sharedPageLoadTime) {
+            window.dispatchEvent(new CustomEvent('firebase-message', {
+                detail: { message: data.message || 'មានការកែប្រែទិន្នន័យមហាវិទ្យាល័យ' }
+            }));
+        }
+    });
+
+    // --- Rooms Sync ---
+    database.ref('rooms_sync').on('value', (snapshot) => {
+        const data = snapshot.val();
+        // បន្ថែមលក្ខខណ្ឌ updated_at ដូច Faculty ដែរ ដើម្បីកុំឱ្យវា Alert ផ្ដេសផ្ដាស
+        if (data && data.updated_at > window.sharedPageLoadTime) {
+            window.dispatchEvent(new CustomEvent('firebase-message', {
+                detail: { message: data.message || 'មានការកែប្រែទិន្នន័យបន្ទប់ថ្មី' }
+            }));
+        }
+    });
+
+    // Departmenrt Sync
+    database.ref('departments_sync').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data && data.updated_at > window.sharedPageLoadTime) {
+            window.dispatchEvent(new CustomEvent('firebase-message', {
+                detail: { message: data.message || 'មានការកែប្រែទិន្នន័យដេប៉ាតឺម៉ង់ថ្មី' }
+            }));
+        }
+    }); 
+
+// database.ref('rooms_sync').on('value', (snapshot) => {
+//     const data = snapshot.val();
+//     if (data) {
+//         // បាញ់ Event ទៅឱ្យ Livewire
+//         Livewire.dispatch('refreshComponent'); 
+        
+//         // បង្ហាញ Alert ប្រាប់អ្នកប្រើប្រាស់
+//         showNotification(data.message || 'ទិន្នន័យបន្ទប់ត្រូវបានធ្វើបច្ចុប្បន្នភាព');
+//     }
+</script>

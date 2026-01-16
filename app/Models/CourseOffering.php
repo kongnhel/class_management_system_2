@@ -42,7 +42,8 @@ class CourseOffering extends Model
      */
     public function course(): BelongsTo // 💡 បញ្ជាក់ return type
     {
-        return $this->belongsTo(Course::class);
+        // return $this->belongsTo(Course::class);
+        return $this->belongsTo(Course::class, 'course_id');
     }
 
     /**
@@ -130,5 +131,28 @@ class CourseOffering extends Model
 {
     return $this->hasOne(StudentProfile::class);
 }
+
+public function students()
+{
+    // return $this->belongsToMany(User::class, 'student_course_enrollments', 'course_offering_id', 'student_user_id')
+    //             ->withPivot('is_class_leader'); // បន្ថែមចំណុចនេះ
+    return $this->belongsToMany(User::class, 'student_course_enrollments', 'course_offering_id', 'student_user_id')
+    ->withPivot('is_class_leader');
+}
+
+
+
+public function professor()
+    {
+        // ប្រសិនបើក្នុង Table course_offerings របស់អ្នកប្រើ column 'lecturer_id'
+        return $this->belongsTo(User::class, 'lecturer_id'); 
+    }
+    
+    // ប្រសិនបើអ្នកមាន 'lecturer' រួចហើយ អ្នកអាចបង្កើត 'professor' ជា Alias ក៏បាន
+    // public function lecturer()
+    // {
+    //     return $this->belongsTo(User::class, 'lecturer_id');
+    // }
+
 
 }

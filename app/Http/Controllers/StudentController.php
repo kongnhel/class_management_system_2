@@ -32,112 +32,146 @@ use Illuminate\Support\Facades\DB; // Make sure DB facade is imported for transa
 
 class StudentController extends Controller
 {
+public function dashboard()
+{
+    $user = Auth::user();
+    $studentId = $user->id;
+    $todayName = now()->format('l');
 
- public function dashboard()
-    {
-        $user = Auth::user();
+    // 1. ទាញយកមុខវិជ្ជាដែលនិស្សិតបានចុះឈ្មោះរួច (Enrolled Courses)
+    $enrolledCourses = CourseOffering::whereHas('students', function($query) use ($studentId) {
+        $query->where('student_user_id', $studentId);
+    })->with(['course', 'lecturer', 'studentCourseEnrollments' => function($query) use ($studentId) {
+        $query->where('student_user_id', $studentId);
+    }])
+    ->withCount('studentCourseEnrollments') 
+    ->get();
 
-        // ទាញយកទិន្នន័យជាក់លាក់របស់សិស្សសម្រាប់ផ្ទាំងគ្រប់គ្រង
-        // Fetch student-specific data for the dashboard
-        $enrollments = StudentCourseEnrollment::where('student_user_id', $user->id)
-                                         ->with('courseOffering.course', 'courseOffering.lecturer')
-                                         ->get();
-        $upcomingAssignments = Assignment::whereHas('courseOffering.studentCourseEnrollments', function ($query) use ($user) {
-                                                    $query->where('student_user_id', $user->id);
-                                                })
-                                                ->where('due_date', '>=', now())
-                                                ->orderBy('due_date')
-                                                ->take(5)
-                                                ->get();
-        $upcomingExams = Exam::whereHas('courseOffering.studentCourseEnrollments', function ($query) use ($user) {
-                                            $query->where('student_user_id', $user->id);
-                                        })
-                                        ->where('exam_date', '>=', now())
-                                        ->orderBy('exam_date')
-                                        ->take(5)
-                                        ->get();
-        $upcomingSchedules = Schedule::whereHas('courseOffering.studentCourseEnrollments', function ($query) use ($user) {
-                                                    $query->where('student_user_id', $user->id);
-                                                })
-                                                ->where('start_time', '>=', now())
-                                                ->orderBy('start_time')
-                                                ->take(5)
-                                                ->get();
-$studentProgram = null;
-        $studentProgramEnrollment = StudentProgramEnrollment::where('student_user_id', $user->id)
-                                                           ->where('status', 'active')
-                                                           ->with('program')
-                                                           ->first();
-        if ($studentProgramEnrollment) {
-            $studentProgram = $studentProgramEnrollment->program;
-        }
+    // 2. ទាញយកទិន្នន័យ Enrollment លម្អិត (សម្រាប់ Progress ឬ Status)
+    $enrollments = StudentCourseEnrollment::where('student_user_id', $user->id)
+                    ->with('courseOffering.course', 'courseOffering.lecturer')
+                    ->get();
 
-        $availableCoursesInProgram = collect([]);
-        if ($studentProgram) {
-            $enrolledCourseOfferingIds = StudentCourseEnrollment::where('student_user_id', $user->id)
-                ->where('status', 'enrolled')
-                ->pluck('course_offering_id');
+    // 3. ទាញយកកិច្ចការ ការប្រឡង និង QUIZ ដែលជិតមកដល់
+    $upcomingAssignments = Assignment::whereHas('courseOffering.studentCourseEnrollments', function ($query) use ($user) {
+            $query->where('student_user_id', $user->id);
+        })
+        ->whereDate('due_date', '>=', now()->toDateString()) 
+        ->orderBy('due_date', 'asc')
+        ->take(5) // បន្ថែម Take 5 ដូចមុន
+        ->get();
 
-            // 💡 ទាញយកជំនាន់របស់និស្សិត
-            $studentGeneration = $user->generation;
-            $availableCoursesInProgram = CourseOffering::with('course', 'lecturer')
-                ->whereHas('course', function ($query) use ($studentProgram) {
-                    $query->where('program_id', $studentProgram->id);
-                })
-                ->whereNotIn('id', $enrolledCourseOfferingIds)
-                ->where('end_date', '>=', now())
-                ->where('generation', $studentGeneration) // 💡 នេះគឺជាបន្ទាត់ដែលបានបន្ថែមដើម្បីត្រងតាមជំនាន់
-                ->get();
-        }
+    $upcomingExams = Exam::whereHas('courseOffering.studentCourseEnrollments', function ($query) use ($user) {
+            $query->where('student_user_id', $user->id);
+        })
+        ->whereDate('exam_date', '>=', now()->toDateString()) 
+        ->orderBy('exam_date', 'asc')
+        ->take(5)
+        ->get();
+
+    $upcomingQuizzes = \App\Models\Quiz::whereHas('courseOffering.studentCourseEnrollments', function ($query) use ($user) {
+            $query->where('student_user_id', $user->id);
+        })
+        ->whereDate('quiz_date', '>=', now()->toDateString()) 
+        ->orderBy('quiz_date', 'asc')
+        ->take(5)
+        ->get();
+
+    // Schedule ថ្ងៃនេះ (ទាញយក Room និង Lecturer មកជាមួយ)
+    $upcomingSchedules = Schedule::whereHas('courseOffering.studentCourseEnrollments', function ($query) use ($studentId) {
+            $query->where('student_user_id', $studentId);
+        })
+        ->with(['room', 'courseOffering.course', 'courseOffering.lecturer'])
+        ->where('day_of_week', $todayName)
+        ->orderBy('start_time', 'asc')
+        ->get();
+
+    // 4. ព័ត៌មានអំពីកម្មវិធីសិក្សា និង មុខវិជ្ជាដែលអាចចុះឈ្មោះបាន
+    $studentProgram = null;
+    $studentProgramEnrollment = \App\Models\StudentProgramEnrollment::where('student_user_id', $user->id)
+        ->where('status', 'active')
+        ->with('program')
+        ->first();
+
+    if ($studentProgramEnrollment) {
+        $studentProgram = $studentProgramEnrollment->program;
+    }
+
+    $availableCoursesInProgram = collect([]);
+    if ($studentProgram) {
+        $enrolledCourseOfferingIds = StudentCourseEnrollment::where('student_user_id', $user->id)
+            ->pluck('course_offering_id');
+
+        $studentGeneration = $user->generation;
         
-        $completedCoursesCount = StudentCourseEnrollment::where('student_user_id', $user->id)
-            ->where('status', 'completed')
-            ->count();
-        
-        $totalCoursesInProgram = $studentProgram ? $studentProgram->courses->count() : 0;
-        
-        // ផ្លាស់ប្តូរដើម្បីទាញយកសេចក្តីប្រកាសទាំងអស់ និងសម្គាល់ថាតើវាត្រូវបានអានហើយឬនៅ
-        $allAnnouncements = Announcement::where('target_role', 'all')
-            ->orWhere('target_role', 'student')
-            ->with(['reads' => function($query) use ($user) {
-                $query->where('user_id', $user->id);
-            }])
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function ($announcement) {
-                $announcement->type = 'announcement';
-                $announcement->title = $announcement->title_km ?? $announcement->title_en;
-                $announcement->content = $announcement->content_km ?? $announcement->content_en;
-                $announcement->is_read = $announcement->reads->isNotEmpty();
-                return $announcement;
-            });
+        $availableCoursesInProgram = CourseOffering::with(['course', 'lecturer'])
+            ->withCount('studentCourseEnrollments')
+            ->whereHas('course', function ($query) use ($studentProgram) {
+                $query->where('program_id', $studentProgram->id);
+            })
+            ->whereNotIn('id', $enrolledCourseOfferingIds)
+            ->where('end_date', '>=', now())
+            ->where('generation', $studentGeneration)
+            ->get();
+    }
 
-        // ផ្លាស់ប្តូរដើម្បីទាញយកការជូនដំណឹងទាំងអស់ និងសម្គាល់ថាតើវាត្រូវបានអានហើយឬនៅ
-        $allNotifications = $user->notifications->map(function ($notification) {
-            $notification->type = 'notification';
-            $notification->title = $notification->data['title'] ?? 'ការជូនដំណឹងថ្មី';
-            $notification->content = $notification->data['message'] ?? 'អ្នកមានការជូនដំណឹងថ្មី។';
-            $notification->is_read = $notification->read_at !== null;
-            return $notification;
+    // 5. Statistics
+    $completedCoursesCount = StudentCourseEnrollment::where('student_user_id', $user->id)
+        ->where('status', 'completed')
+        ->count();
+
+    $totalCoursesInProgram = $studentProgram ? $studentProgram->courses->count() : 0;
+
+    // 6. Announcements & Notifications (Feed) - រួមបញ្ចូល Logic បកប្រែភាសា និង is_read
+    $allAnnouncements = Announcement::where('target_role', 'all')
+        ->orWhere('target_role', 'student')
+        ->with(['reads' => function($query) use ($user) {
+            $query->where('user_id', $user->id);
+        }])
+        ->orderBy('created_at', 'desc')
+        ->get()
+        ->map(function ($announcement) {
+            $announcement->type = 'announcement';
+            // រក្សាទុក Logic បកប្រែចំណងជើង និងខ្លឹមសារ
+            $announcement->title = $announcement->title_km ?? $announcement->title_en;
+            $announcement->content = $announcement->content_km ?? $announcement->content_en;
+            $announcement->is_read = $announcement->reads->isNotEmpty();
+            return $announcement;
         });
 
-        // បញ្ចូលគ្នានូវការជូនដំណឹង និងសេចក្តីប្រកាសទាំងអស់
-        $combinedFeed = $allAnnouncements->merge($allNotifications)->sortByDesc('created_at');
+    $allNotifications = $user->notifications->map(function ($notification) {
+        $notification->type = 'notification';
+        $notification->title = $notification->data['title'] ?? 'ការជូនដំណឹងថ្មី';
+        $notification->content = $notification->data['message'] ?? 'អ្នកមានការជូនដំណឹងថ្មី។';
+        $notification->is_read = $notification->read_at !== null;
+        return $notification;
+    });
 
-        return view('student.dashboard', compact(
-            'user',
-            'enrollments',
-            'upcomingAssignments',
-            'upcomingExams',
-            'upcomingSchedules',
-            'studentProgram',
-            'availableCoursesInProgram',
-            'completedCoursesCount',
-            'totalCoursesInProgram',
-            'combinedFeed' // Pass the new combined feed
-        ));
-    }
-    // ... (rest of the functions)
+    $combinedFeed = $allAnnouncements->merge($allNotifications)->sortByDesc('created_at');
+
+    // 7. បញ្ជូនទិន្នន័យទៅ View
+    return view('student.dashboard', compact(
+        'user',
+        'enrolledCourses',
+        'enrollments',
+        'upcomingAssignments',
+        'upcomingExams',
+        'upcomingQuizzes',
+        'upcomingSchedules',
+        'studentProgram',
+        'availableCoursesInProgram',
+        'completedCoursesCount',
+        'totalCoursesInProgram',
+        'combinedFeed',
+        'todayName'
+    ));
+}
+
+// course_title_km
+    /**
+     * បង្ហាញផ្ទាំងគ្រប់គ្រងសម្រាប់សិស្ស។
+     * Display the dashboard for the student.
+     */
 
     /**
      * សម្គាល់ការជូនដំណឹងថាបានអានហើយ។
@@ -277,122 +311,276 @@ public function notifications()
      * Display the student's grades.
      * Combines grades from AssignmentSubmissions, ExamResults, and calculated Quiz scores.
      */
-    public function myGrades(Request $request)
-    {
-        $user = Auth::user();
-        $allGrades = new Collection();
+// public function myGrades(Request $request)
+// {
+//     $user = Auth::user();
+    
+//     // --- ១. ទាញយកពិន្ទុពីគ្រប់ប្រភេទ (Assignment, Exam, Quiz) ចេញពីតារាង ExamResult ---
+//     // នេះជាកន្លែងដែលទិន្នន័យ Import ពី Excel របស់អ្នកស្ថិតនៅ
+//     $examResults = \App\Models\ExamResult::where('student_user_id', $user->id)
+//         ->get()
+//         ->map(function ($result) {
+//             $assessment = null;
+//             $typeLabel = '';
 
-        // 1. ទាញយកពិន្ទុកិច្ចការ
-        // 1. Fetch Assignment Grades
-        $assignmentGrades = Submission::where('student_user_id', $user->id)
-                                             ->whereNotNull('grade_received')
-                                             ->with('assignment.courseOffering.course')
-                                             ->get()
-                                             ->map(function ($submission) {
-                                                 $assignmentTitle = $submission->assignment->title_km ?? $submission->assignment->title_en ?? 'N/A';
-                                                 $courseTitle = $submission->assignment->courseOffering->course->title_km ?? 'N/A';
-                                                 $maxScore = $submission->assignment->max_score ?? 0;
+//             // ឆែករក Assessment ឱ្យចំប្រភេទដើម្បីទាញយក Course Title និង Max Score
+//             if ($result->assessment_type === 'assignment') {
+//                 $assessment = \App\Models\Assignment::with('courseOffering.course')->find($result->assessment_id);
+//                 $typeLabel = 'កិច្ចការ: ';
+//             } elseif ($result->assessment_type === 'quiz') {
+//                 $assessment = \App\Models\Quiz::with('courseOffering.course')->find($result->assessment_id);
+//                 $typeLabel = 'កម្រងសំណួរ: ';
+//             } else {
+//                 $assessment = \App\Models\Exam::with('courseOffering.course')->find($result->assessment_id);
+//                 $typeLabel = 'ការប្រឡង: ';
+//             }
 
-                                                 return (object)[
-                                                     'type' => 'assignment',
-                                                     'course_title_km' => $courseTitle,
-                                                     'course_title_en' => $submission->assignment->courseOffering->course->title_en ?? 'N/A',
-                                                     'assessment_type' => 'កិច្ចការស្រាវជ្រាវ: ' . $assignmentTitle,
-                                                     'score' => $submission->grade_received,
-                                                     'max_score' => $maxScore,
-                                                     'date' => $submission->updated_at,
-                                                 ];
-                                             });
-        $allGrades = $allGrades->concat($assignmentGrades);
+//             return (object)[
+//                 'assessment_id'   => $result->assessment_id,
+//                 'type_category'   => $result->assessment_type, // 'assignment', 'exam', 'quiz'
+//                 'course_title_en' => $assessment->courseOffering->course->title_en ?? 'Unknown Course',
+//                 'course_title_km' => $assessment->courseOffering->course->title_km ?? 'មិនស្គាល់មុខវិជ្ជា',
+//                 'assessment_type' => $typeLabel . ($assessment->title_en ?? 'N/A'),
+//                 'score'           => (float) $result->score_obtained,
+//                 'max_score'       => (float) ($assessment->max_score ?? 0),
+//                 'date'            => $result->updated_at,
+//             ];
+//         });
 
+//     // --- ២. ទាញយកពិន្ទុពីតារាង Submission (ករណីគ្រូដាក់ពិន្ទុតាមប្រព័ន្ធផ្ទាល់ មិនមែន Import) ---
+//     $submissionGrades = \App\Models\Submission::where('student_user_id', $user->id)
+//         ->whereNotNull('grade_received')
+//         ->with(['assignment.courseOffering.course'])
+//         ->get()
+//         ->map(function ($submission) {
+//             return (object)[
+//                 'assessment_id'   => $submission->assignment_id,
+//                 'type_category'   => 'assignment',
+//                 'course_title_en' => $submission->assignment->courseOffering->course->title_en ?? 'Unknown Course',
+//                 'course_title_km' => $submission->assignment->courseOffering->course->title_km ?? 'មិនស្គាល់មុខវិជ្ជា',
+//                 'assessment_type' => 'កិច្ចការ: ' . ($submission->assignment->title_en ?? 'N/A'),
+//                 'score'           => (float) $submission->grade_received,
+//                 'max_score'       => (float) ($submission->assignment->max_score ?? 0),
+//                 'date'            => $submission->updated_at,
+//             ];
+//         });
 
-        // 2. ទាញយកពិន្ទុប្រឡង
-        // 2. Fetch Exam Grades
-        $examGrades = ExamResult::where('student_user_id', $user->id)
-                                ->whereNotNull('score_obtained')
-                                ->with('exam.courseOffering.course')
-                                ->get()
-                                ->map(function ($result) {
-                                    $examTitle = $result->exam->title_km ?? $result->exam->title_en ?? 'N/A';
-                                    $courseTitle = $result->exam->courseOffering->course->title_km ?? 'N/A';
-                                    $maxScore = $result->exam->max_score ?? 0;
+//     // បញ្ចូលទិន្នន័យចូលគ្នា (ការពារកុំឱ្យមានទិន្នន័យជាន់គ្នា ប្រសិនបើមានទាំងក្នុង Submission និង ExamResult)
+//     // ក្នុងករណីនេះ យើងយកទិន្នន័យពី ExamResult ជាអាទិភាព (ករណី Import Excel)
+//     $allGrades = $examResults->concat($submissionGrades)->unique(function ($item) {
+//         return $item->type_category . $item->assessment_id;
+//     });
 
-                                    return (object)[
-                                        'type' => 'exam',
-                                        'course_title_km' => $courseTitle,
-                                        'assessment_type' => 'ប្រឡង: ' . $examTitle,
-                                        'score' => $result->score_obtained,
-                                        'max_score' => $maxScore,
-                                        'date' => $result->updated_at,
-                                    ];
-                                });
-        $allGrades = $allGrades->concat($examGrades);
+//     // --- ៣. គណនា Grade និង Rank ---
+//     $gradedItems = $allGrades->map(function ($item) {
+//         $item->grade = $this->calculateGrade($item->score, $item->max_score);
+        
+//         // គណនា Rank តាមប្រភេទ Assessment នីមួយៗ
+//         if ($item->type_category == 'assignment' && !\App\Models\ExamResult::where('assessment_id', $item->assessment_id)->where('assessment_type', 'assignment')->exists()) {
+//              $higherScores = \App\Models\ExamResult::where('assignment_id', $item->assessment_id)
+//                 ->where('score_obtained', '>', $item->score)->count();
+//         } else {
+//             $higherScores = \App\Models\ExamResult::where('assessment_id', $item->assessment_id)
+//                 ->where('assessment_type', $item->type_category)
+//                 ->where('score_obtained', '>', $item->score)->count();
+//         }
+//         $item->rank = $higherScores + 1;
+//         return $item;
+//     })->sortByDesc('course_title_en');
 
-        // 3. ទាញយកពិន្ទុ Quiz (ទាមទារការគណនាសម្រាប់ Quiz នីមួយៗ)
-        // 3. Fetch Quiz Grades (Requires calculation per quiz)
-        $studentQuizzesWithResponses = Quiz::whereHas('courseOffering.studentCourseEnrollments', function ($query) use ($user) {
-                                                    $query->where('student_user_id', $user->id);
-                                                })
-                                                ->whereHas('quizQuestions.studentQuizResponses', function ($query) use ($user) {
-                                                    $query->where('student_user_id', $user->id);
-                                                })
-                                                ->with(['courseOffering.course', 'quizQuestions.quizOptions', 'quizQuestions.studentQuizResponses' => function($query) use ($user) {
-                                                    $query->where('student_user_id', $user->id);
-                                                }])
-                                                ->get();
+//     // --- ៤. គណនា Overall Rank & Average Score ---
+//     $averageScore = $allGrades->avg('score') ?? 0;
+//     $averageMax   = $allGrades->avg('max_score') ?: 100;
+//     $overallGrade = $this->calculateGrade($averageScore, $averageMax);
 
-        $quizGrades = $studentQuizzesWithResponses->map(function ($quiz) use ($user) {
-            $correctAnswers = 0;
-            $totalQuestions = 0;
-            $totalPossibleScore = $quiz->total_points ?? 0;
+//     // Logic Ranking សាមញ្ញសម្រាប់ Overall (ផ្អែកលើមធ្យមភាគ)
+//     $overallRank = 1; // អ្នកអាចបន្ថែម Logic Ranking កម្រិត Course ទីនេះ
 
-            if ($quiz->quizQuestions->isNotEmpty()) {
-                $totalQuestions = $quiz->quizQuestions->count();
-                if ($totalPossibleScore === 0) {
-                   $totalPossibleScore = $totalQuestions;
-                }
+//     // --- ៥. Pagination & UI Colors ---
+//     $perPage = 10;
+//     $currentPage = \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPage();
+//     $grades = new \Illuminate\Pagination\LengthAwarePaginator(
+//         $gradedItems->slice(($currentPage - 1) * $perPage, $perPage)->values(),
+//         $gradedItems->count(), $perPage, $currentPage, ['path' => $request->url()]
+//     );
 
-                foreach ($quiz->quizQuestions as $question) {
-                    $studentResponse = $question->studentQuizResponses->first(function ($response) use ($user) {
-                        return $response->student_user_id === $user->id;
-                    });
-                    if ($studentResponse && $studentResponse->is_correct) {
-                        $correctAnswers++;
-                    }
-                }
+//     $colorPalette = [
+//         ['bg' => 'bg-blue-50', 'text' => 'text-blue-600', 'border' => 'border-blue-100', 'hover' => 'hover:bg-blue-50/50', 'accent' => 'bg-blue-500'],
+//         ['bg' => 'bg-indigo-50', 'text' => 'text-indigo-600', 'border' => 'border-indigo-100', 'hover' => 'hover:bg-indigo-50/50', 'accent' => 'bg-indigo-500'],
+//         ['bg' => 'bg-purple-50', 'text' => 'text-purple-600', 'border' => 'border-purple-100', 'hover' => 'hover:bg-purple-50/50', 'accent' => 'bg-purple-500'],
+//         ['bg' => 'bg-rose-50', 'text' => 'text-rose-600', 'border' => 'border-rose-100', 'hover' => 'hover:bg-rose-50/50', 'accent' => 'bg-rose-500'],
+//     ];
+
+//     $grades->getCollection()->transform(function ($grade, $key) use ($colorPalette) {
+//         $colorIndex = $key % count($colorPalette);
+//         $grade->ui = (object) $colorPalette[$colorIndex];
+//         return $grade;
+//     });
+    
+//     return view('student.my-grades', compact('user', 'grades', 'overallRank', 'averageScore', 'overallGrade'));
+// }
+
+public function myGrades(Request $request)
+{
+    $user = Auth::user();
+    
+    // --- ១. ទាញយកពិន្ទុពី ExamResult (Import ពី Excel) ---
+    $examResults = \App\Models\ExamResult::where('student_user_id', $user->id)
+        ->get()
+        ->map(function ($result) {
+            $assessment = null;
+            $typeLabel = '';
+
+            if ($result->assessment_type === 'assignment') {
+                $assessment = \App\Models\Assignment::with('courseOffering.course')->find($result->assessment_id);
+                $typeLabel = 'កិច្ចការ: ';
+            } elseif ($result->assessment_type === 'quiz') {
+                $assessment = \App\Models\Quiz::with('courseOffering.course')->find($result->assessment_id);
+                $typeLabel = 'កម្រងសំណួរ: ';
+            } else {
+                $assessment = \App\Models\Exam::with('courseOffering.course')->find($result->assessment_id);
+                $typeLabel = 'ការប្រឡង: ';
             }
 
-            $score = ($totalQuestions > 0 && $totalPossibleScore > 0) ? ($correctAnswers / $totalQuestions) * $totalPossibleScore : 0;
-
-            $quizTitle = $quiz->title_km ?? $quiz->title_en ?? 'N/A';
-            $courseTitle = $quiz->courseOffering->course->title_km ?? 'N/A';
+            if (!$assessment) return null;
 
             return (object)[
-                'type' => 'quiz',
-                'course_title_km' => $courseTitle,
-                'assessment_type' => 'Quiz: ' . $quizTitle,
-                'score' => round($score, 2),
-                'max_score' => $totalPossibleScore,
-                'date' => $quiz->updated_at,
+                'assessment_id'   => $result->assessment_id,
+                'type_category'   => $result->assessment_type,
+                'course_title_en' => $assessment->courseOffering->course->title_en ?? 'Unknown Course',
+                'course_title_km' => $assessment->courseOffering->course->title_km ?? 'មិនស្គាល់មុខវិជ្ជា',
+                'assessment_type' => $typeLabel . ($assessment->title_en ?? 'N/A'),
+                'score'           => (float) $result->score_obtained,
+                'max_score'       => (float) ($assessment->max_score ?? 0),
+                'date'            => $result->updated_at,
             ];
         })->filter();
 
-        $allGrades = $allGrades->concat($quizGrades);
+    // --- ២. ទាញយកពិន្ទុពី Submission ---
+    $submissionGrades = \App\Models\Submission::where('student_user_id', $user->id)
+        ->whereNotNull('grade_received')
+        ->with(['assignment.courseOffering.course'])
+        ->get()
+        ->map(function ($submission) {
+            return (object)[
+                'assessment_id'   => $submission->assignment_id,
+                'type_category'   => 'assignment',
+                'course_title_en' => $submission->assignment->courseOffering->course->title_en ?? 'Unknown Course',
+                'course_title_km' => $submission->assignment->courseOffering->course->title_km ?? 'មិនស្គាល់មុខវិជ្ជា',
+                'assessment_type' => 'កិច្ចការ: ' . ($submission->assignment->title_en ?? 'N/A'),
+                'score'           => (float) $submission->grade_received,
+                'max_score'       => (float) ($submission->assignment->max_score ?? 0),
+                'date'            => $submission->updated_at,
+            ];
+        });
 
-        $allGrades = $allGrades->sortByDesc('date');
+    $allGrades = $examResults->concat($submissionGrades)->unique(function ($item) {
+        return $item->type_category . $item->assessment_id;
+    });
 
-        $perPage = 10;
-        $currentPage = LengthAwarePaginator::resolveCurrentPage();
-        $currentItems = $allGrades->slice(($currentPage - 1) * $perPage, $perPage)->values()->all();
-        $grades = new LengthAwarePaginator($currentItems, $allGrades->count(), $perPage, $currentPage, [
-            'path' => $request->url(),
-            'pageName' => 'gradesPage',
-        ]);
+    // --- ៣. គណនា Grade និង Rank សម្រាប់ Assessment នីមួយៗ ---
+    $gradedItems = $allGrades->map(function ($item) {
+        $item->grade = $this->calculateGrade($item->score, $item->max_score);
+        
+        $higherScores = \App\Models\ExamResult::where('assessment_id', $item->assessment_id)
+            ->where('assessment_type', $item->type_category)
+            ->where('score_obtained', '>', $item->score)
+            ->count();
+        
+        $item->rank = $higherScores + 1;
+        return $item;
+    })->sortByDesc('course_title_en');
 
-        return view('student.my-grades', compact('user', 'grades'));
+    // --- ៤. គណនា Overall Rank & Average Score ---
+    $averageScore = $allGrades->avg('score') ?? 0;
+    $averageMax   = $allGrades->avg('max_score') ?: 100;
+    $overallGrade = $this->calculateGrade($averageScore, $averageMax);
+
+    // ដោះស្រាយបញ្ហា Rank #1 គ្រប់គ្នា និងជួសជុល Error: assessment() not found
+    $overallRank = 'N/A';
+    $firstRes = \App\Models\ExamResult::where('student_user_id', $user->id)->first();
+    
+    if ($firstRes) {
+        // កំណត់ស្វែងរក Assessment ដើម្បយក offering_id
+        $asmt = null;
+        if ($firstRes->assessment_type === 'assignment') $asmt = \App\Models\Assignment::find($firstRes->assessment_id);
+        elseif ($firstRes->assessment_type === 'quiz') $asmt = \App\Models\Quiz::find($firstRes->assessment_id);
+        else $asmt = \App\Models\Exam::find($firstRes->assessment_id);
+
+        if ($asmt) {
+            $offering_id = $asmt->course_offering_id;
+
+            // ១. ទាញយក IDs Assessments ទាំងអស់ក្នុងថ្នាក់នេះ
+            $asmtIds = collect()
+                ->concat(\App\Models\Assignment::where('course_offering_id', $offering_id)->pluck('id'))
+                ->concat(\App\Models\Quiz::where('course_offering_id', $offering_id)->pluck('id'))
+                ->concat(\App\Models\Exam::where('course_offering_id', $offering_id)->pluck('id'));
+
+            // ២. ទាញយកសិស្សក្នុងថ្នាក់
+            $enrollments = \App\Models\StudentCourseEnrollment::where('course_offering_id', $offering_id)->get();
+
+            // ៣. គណនា Rank
+            $rankings = $enrollments->map(function ($enrollment) use ($offering_id, $asmtIds) {
+                $sid = $enrollment->student_user_id;
+                $attendance = \App\Models\User::find($sid)->getAttendanceScoreByCourse($offering_id) ?? 0;
+                
+                // ប្រើ whereIn ជំនួស whereHas ដើម្បីការពារ Error BadMethodCallException
+                $scores = \App\Models\ExamResult::where('student_user_id', $sid)
+                    ->whereIn('assessment_id', $asmtIds)
+                    ->sum('score_obtained');
+
+                return [
+                    'student_id' => $sid,
+                    'total' => (float)$attendance + (float)$scores
+                ];
+            });
+
+            $sorted = $rankings->sortByDesc('total')->values();
+            $overallRank = $sorted->search(fn($i) => $i['student_id'] == $user->id) + 1;
+        }
     }
 
+    // --- ៥. Pagination & UI Colors ---
+    $perPage = 10;
+    $currentPage = \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPage();
+    $grades = new \Illuminate\Pagination\LengthAwarePaginator(
+        $gradedItems->slice(($currentPage - 1) * $perPage, $perPage)->values(),
+        $gradedItems->count(), $perPage, $currentPage, ['path' => $request->url()]
+    );
 
+    $colorPalette = [
+        ['bg' => 'bg-blue-50', 'text' => 'text-blue-600', 'border' => 'border-blue-100', 'hover' => 'hover:bg-blue-50/50', 'accent' => 'bg-blue-500'],
+        ['bg' => 'bg-indigo-50', 'text' => 'text-indigo-600', 'border' => 'border-indigo-100', 'hover' => 'hover:bg-indigo-50/50', 'accent' => 'bg-indigo-500'],
+        ['bg' => 'bg-purple-50', 'text' => 'text-purple-600', 'border' => 'border-purple-100', 'hover' => 'hover:bg-purple-50/50', 'accent' => 'bg-purple-500'],
+        ['bg' => 'bg-rose-50', 'text' => 'text-rose-600', 'border' => 'border-rose-100', 'hover' => 'hover:bg-rose-50/50', 'accent' => 'bg-rose-500'],
+    ];
+
+    $grades->getCollection()->transform(function ($grade, $key) use ($colorPalette) {
+        $colorIndex = $key % count($colorPalette);
+        $grade->ui = (object) $colorPalette[$colorIndex];
+        return $grade;
+    });
+    
+    return view('student.my-grades', compact('user', 'grades', 'overallRank', 'averageScore', 'overallGrade'));
+}
+
+
+private function calculateGrade($score, $maxScore)
+{
+    if ($maxScore <= 0) return 'F';
+    $percentage = ($score / $maxScore) * 100;
+
+    if ($percentage >= 90) return 'A';
+    if ($percentage >= 80) return 'B';
+    if ($percentage >= 70) return 'C';
+    if ($percentage >= 60) return 'D';
+    if ($percentage >= 50) return 'E';
+    return 'F';
+}
+    /**
+     * បង្ហាញកាលវិភាគរបស់សិស្ស។
+     * Display the student's schedule.
+     */
 public function mySchedule()
 {
     $user = Auth::user();
@@ -449,7 +637,7 @@ public function mySchedule()
         return view('student.enrolled_courses', compact('student', 'enrollments'));
     }
 
-
+// myenroll
     /**
      * បង្ហាញកិច្ចការរបស់សិស្ស។
      * សន្មតថាមានតារាង 'assignments' និង 'assignment_submissions'។
@@ -547,16 +735,24 @@ public function mySchedule()
      * បង្ហាញកំណត់ត្រាចូលរួមរបស់សិស្ស។
      * Display the student's attendance records.
      */
-    public function myAttendance()
-    {
-        $user = Auth::user();
-        $attendances = AttendanceRecord::where('student_user_id', $user->id)
-                                             ->with('courseOffering.course')
-                                             ->orderBy('date', 'desc')
-                                             ->paginate(10);
+public function myAttendance()
+{
+    $user = Auth::user();
 
-        return view('student.my-attendance', compact('user', 'attendances'));
-    }
+    $attendances = AttendanceRecord::where('student_user_id', $user->id)
+        ->with(['courseOffering.course'])
+        // រាប់ចំនួនដងដែលអវត្តមានក្នុងមុខវិជ្ជានីមួយៗ
+        ->withCount(['courseOffering as total_absent' => function ($query) use ($user) {
+            $query->whereHas('attendanceRecords', function ($q) use ($user) {
+                $q->where('student_user_id', $user->id)
+                  ->whereIn('status', ['absent', 'អវត្តមាន']);
+            });
+        }])
+        ->orderBy('created_at', 'desc')
+        ->paginate(10);
+
+    return view('student.my-attendance', compact('user', 'attendances'));
+}
 
     /**
      * បង្ហាញមុខវិជ្ជាដែលមានសម្រាប់សិស្សចុះឈ្មោះ។
@@ -581,42 +777,81 @@ public function mySchedule()
         return view('student.available-programs', compact('user', 'availablePrograms'));
     }
 
-    public function enrollSelf(Request $request)
-    {
-        $request->validate([
-            'course_offering_id' => 'required|exists:course_offerings,id',
-        ]);
+    // public function enrollSelf(Request $request)
+    // {
+    //     $request->validate([
+    //         'course_offering_id' => 'required|exists:course_offerings,id',
+    //     ]);
 
-        $user = Auth::user();
-        $courseOfferingId = $request->input('course_offering_id');
+    //     $user = Auth::user();
+    //     $courseOfferingId = $request->input('course_offering_id');
 
-        // Check if the student is already enrolled in this course offering
-        $existingEnrollment = StudentCourseEnrollment::where('student_user_id', $user->id)
-            ->where('course_offering_id', $courseOfferingId)
-            ->first();
+    //     // Check if the student is already enrolled in this course offering
+    //     $existingEnrollment = StudentCourseEnrollment::where('student_user_id', $user->id)
+    //         ->where('course_offering_id', $courseOfferingId)
+    //         ->first();
 
-        if ($existingEnrollment) {
-            Session::flash('info', 'អ្នកបានចុះឈ្មោះក្នុងវគ្គសិក្សានេះរួចហើយ។');
-            return redirect()->back();
-        }
+    //     if ($existingEnrollment) {
+    //         Session::flash('info', 'អ្នកបានចុះឈ្មោះក្នុងវគ្គសិក្សានេះរួចហើយ។');
+    //         return redirect()->back();
+    //     }
 
-        try {
-            // Create the new enrollment record
-            StudentCourseEnrollment::create([
-                'student_user_id' => $user->id,
-                'course_offering_id' => $courseOfferingId,
-                'enrollment_date' => now(),
-                'status' => 'enrolled',
-            ]);
-            Session::flash('success', 'ការចុះឈ្មោះដោយជោគជ័យ!');
-        } catch (\Exception $e) {
-            Session::flash('error', 'មានបញ្ហាក្នុងការចុះឈ្មោះ៖ ' . $e->getMessage());
-        }
+    //     try {
+    //         // Create the new enrollment record
+    //         StudentCourseEnrollment::create([
+    //             'student_user_id' => $user->id,
+    //             'course_offering_id' => $courseOfferingId,
+    //             'enrollment_date' => now(),
+    //             'status' => 'enrolled',
+    //         ]);
+    //         Session::flash('success', 'ការចុះឈ្មោះដោយជោគជ័យ!');
+    //     } catch (\Exception $e) {
+    //         Session::flash('error', 'មានបញ្ហាក្នុងការចុះឈ្មោះ៖ ' . $e->getMessage());
+    //     }
 
-        // return redirect()->route('student.my-enrolled-courses');
-        return redirect()->route('student.dashboard');
+    //     // return redirect()->route('student.my-enrolled-courses');
+    //     return redirect()->route('student.dashboard');
+    // }
+
+    // enrolledCourses
+public function enrollSelf(Request $request)
+{
+    $request->validate([
+        'course_offering_id' => 'required|exists:course_offerings,id',
+    ]);
+
+    $user = Auth::user();
+    $courseOfferingId = $request->input('course_offering_id');
+
+    // ១. ពិនិត្យមើលថាធ្លាប់ចុះឈ្មោះរួចហើយឬនៅ
+    $existingEnrollment = StudentCourseEnrollment::where('student_user_id', $user->id)
+        ->where('course_offering_id', $courseOfferingId)
+        ->first();
+
+    if ($existingEnrollment) {
+        Session::flash('info', 'អ្នកបានចុះឈ្មោះក្នុងវគ្គសិក្សានេះរួចហើយ។');
+        return redirect()->back();
     }
 
+    try {
+        // ២. បង្កើត Record ថ្មី (បញ្ជូនទាំង student_user_id និង student_id)
+        StudentCourseEnrollment::create([
+            'student_user_id'    => $user->id,
+            'student_id'         => $user->id, // 💡 បន្ថែមនេះដើម្បីដោះស្រាយបញ្ហា SQL Error
+            'course_offering_id' => $courseOfferingId,
+            'enrollment_date'    => now(),
+            'status'             => 'enrolled',
+        ]);
+
+        Session::flash('success', 'ការចុះឈ្មោះដោយជោគជ័យ!');
+    } catch (\Exception $e) {
+        // បើមាន Error វានឹងបង្ហាញប្រាប់ថា Error អ្វី
+        Session::flash('error', 'មានបញ្ហាក្នុងការចុះឈ្មោះ៖ ' . $e->getMessage());
+    }
+
+    // ៣. Redirect ទៅកាន់ Dashboard (ប្រើ student.dashboard តាម Route name របស់អ្នក)
+    return redirect()->route('student.dashboard');
+}
     /**
      * គ្រប់គ្រងការចុះឈ្មោះកម្មវិធីសិក្សារបស់សិស្ស។
      * Handles the student's program enrollment request.
@@ -678,153 +913,36 @@ public function mySchedule()
     }
 
 
-    /**
-     * បង្ហាញទំព័រសម្រាប់ធ្វើ Quiz ជាក់លាក់។
-     * Display the page for taking a specific quiz.
-     *
-     * @param int $quiz_id
-     * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
-     */
-    public function takeQuiz($quiz_id)
-    {
-        $user = Auth::user();
-
-        $quiz = Quiz::where('id', $quiz_id)
-                    ->whereHas('courseOffering.studentCourseEnrollments', function ($query) use ($user) {
-                        $query->where('student_user_id', $user->id);
-                    })
-                    ->with(['quizQuestions.quizOptions'])
-                    ->firstOrFail();
-
-        // ពិនិត្យមើលថាតើ Quiz ត្រូវបានបើកហើយឬនៅ និងមិនទាន់ចប់
-        // Check if the quiz is open and not ended
-        if (now()->lt($quiz->start_date)) {
-            Session::flash('info', 'Quiz នេះមិនទាន់បើកនៅឡើយទេ។');
-            return redirect()->back();
-        }
-        if (now()->gt($quiz->end_date)) {
-            Session::flash('info', 'Quiz នេះបានបិទហើយ។');
-            return redirect()->back();
-        }
-
-        // ពិនិត្យមើលថាតើសិស្សបានឆ្លើយ Quiz នេះរួចហើយឬនៅ
-        // Check if the student has already submitted this quiz
-        $hasSubmitted = StudentQuizResponse::whereHas('quizQuestion', function ($query) use ($quiz_id) {
-                                                $query->where('quiz_id', $quiz_id);
-                                            })
-                                            ->where('student_user_id', $user->id)
-                                            ->exists();
-
-        if ($hasSubmitted) {
-            Session::flash('info', 'អ្នកបានឆ្លើយ Quiz នេះរួចហើយ។');
-            return redirect()->route('student.my-quizzes'); // បញ្ជូនទៅទំព័រ Quiz របស់ខ្ញុំ
-        }
-
-        return view('student.take-quiz', compact('user', 'quiz'));
-    }
-
-    /**
-     * គ្រប់គ្រងការដាក់ស្នើចម្លើយ Quiz របស់សិស្ស។
-     * Handles the submission of student quiz answers.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @param int $quiz_id
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function submitQuiz(Request $request, $quiz_id)
-    {
-        $user = Auth::user();
-
-        $quiz = Quiz::where('id', $quiz_id)
-                    ->whereHas('courseOffering.studentCourseEnrollments', function ($query) use ($user) {
-                        $query->where('student_user_id', $user->id);
-                    })
-                    ->with('quizQuestions.quizOptions')
-                    ->firstOrFail();
-
-        // ពិនិត្យមើលថាតើ Quiz ត្រូវបានបើកហើយឬនៅ និងមិនទាន់ចប់
-        // Check if the quiz is open and not ended
-        if (now()->lt($quiz->start_date) || now()->gt($quiz->end_date)) {
-            Session::flash('error', 'Quiz នេះមិនអាចដាក់ស្នើបានទេ ដោយសារវាមិនមែនជារយៈពេលដែលបានកំណត់ទេ។');
-            return redirect()->route('student.my-quizzes');
-        }
-
-        // ពិនិត្យមើលថាតើសិស្សបានដាក់ស្នើ Quiz នេះរួចហើយឬនៅ
-        // Check if the student has already submitted this quiz
-        $hasSubmitted = StudentQuizResponse::whereHas('quizQuestion', function ($query) use ($quiz_id) {
-                                                $query->where('quiz_id', $quiz_id);
-                                            })
-                                            ->where('student_user_id', $user->id)
-                                            ->exists();
-
-        if ($hasSubmitted) {
-            Session::flash('info', 'អ្នកបានដាក់ស្នើ Quiz នេះរួចហើយ។');
-            return redirect()->route('student.my-quizzes');
-        }
-
-        $correctAnswersCount = 0;
-        foreach ($quiz->quizQuestions as $question) {
-            $submittedAnswerId = $request->input('question_' . $question->id);
-
-            // ស្វែងរកជម្រើសត្រឹមត្រូវ
-            // Find the correct option
-            $correctOption = $question->quizOptions->first(fn($option) => $option->is_correct);
-
-            $isCorrect = ($correctOption && $correctOption->id == $submittedAnswerId); // កែតម្រូវ spelling: $correctOpt=ion->id ទៅ $correctOption->id
-
-            StudentQuizResponse::create([
-                'student_user_id' => $user->id,
-                'quiz_question_id' => $question->id,
-                'quiz_option_id' => $submittedAnswerId, // អាច null ប្រសិនបើសិស្សមិនបានឆ្លើយ
-                'is_correct' => $isCorrect,
-            ]);
-
-            if ($isCorrect) {
-                $correctAnswersCount++;
-            }
-        }
-
-        // Optionally, update a `quiz_attempts` table or `student_quiz_scores` to store the overall score for the quiz.
-        // For simplicity, we are just storing individual responses here.
-        // Example:
-        // StudentQuizScore::updateOrCreate(
-        //     ['student_user_id' => $user->id, 'quiz_id' => $quiz->id],
-        //     ['score' => $correctAnswersCount, 'total_questions' => $quiz->quizQuestions->count()]
-        // );
-
-        Session::flash('success', 'Quiz របស់អ្នកត្រូវបានដាក់ស្នើដោយជោគជ័យ!');
-        return redirect()->route('student.my-quizzes');
-    }
+   
 
 
+    public function myEnrolledCourses()
+{
+    $user = Auth::user();
 
-    /**
-     * Display a list of courses the student has enrolled in.
-     * This method fetches the enrolled courses using pagination.
-     */
-     public function myEnrolledCourses()
-    {
-        $user = Auth::user();
+    // ១. ស្វែងរក Program ដែលសិស្សបានចុះឈ្មោះ (រក្សានៅដដែល)
+    $studentProgramEnrollment = StudentProgramEnrollment::where('student_user_id', $user->id)
+        ->where('status', 'active')
+        ->with('program')
+        ->first();
         
 
-        // ស្វែងរក Program ដែលសិស្សបានចុះឈ្មោះហើយ
-        $studentProgram = null;
-        $studentProgramEnrollment = StudentProgramEnrollment::where('student_user_id', $user->id)
-            ->where('status', 'active')
-            ->with('program')
-            ->first();
+    $studentProgram = $studentProgramEnrollment ? $studentProgramEnrollment->program : null;
 
-        if ($studentProgramEnrollment) {
-            $studentProgram = $studentProgramEnrollment->program;
-        }
+    // ២. ទាញយកមុខវិជ្ជាដែលបានចុះឈ្មោះ (ត្រូវប្រាកដថាទាញយក is_class_leader ពីតារាង enrollment)
+    $enrollments = StudentCourseEnrollment::where('student_user_id', $user->id)
+        ->with([
+            'courseOffering.course', 
+            'courseOffering.lecturer',
+            'courseOffering.lecturer.userProfile',
+            'courseOffering.lecturer.studentProfile' // ករណីសាស្ត្រាចារ្យមាន Profile ក្នុងតារាង Student
+        ])
+        ->paginate(10);
 
-        // ទាញយកមុខវិជ្ជាដែលសិស្សបានចុះឈ្មោះជាមួយនឹង pagination
-        $enrollments = StudentCourseEnrollment::where('student_user_id', $user->id)
-            ->with('courseOffering.course', 'courseOffering.lecturer','courseOffering.lecturer.userProfile')
-            ->paginate(10);
+    // បញ្ជូន variable $enrollments ទៅកាន់ view
+    return view('student.my-enrolled-courses', compact('user', 'enrollments', 'studentProgram'));
+}
 
-        return view('student.my-enrolled-courses', compact('user', 'enrollments', 'studentProgram'));
-    }
     public function rooms()
 {
     $rooms = Room::all();
@@ -832,7 +950,140 @@ public function mySchedule()
 }
 
 
+public function leaderAttendance($courseOfferingId)
+{
+    // ត្រូវប្រើ student_user_id ជានិច្ច
+    $isLeader = DB::table('student_course_enrollments')
+        ->where('course_offering_id', $courseOfferingId)
+        ->where('student_user_id', auth()->id()) 
+        ->where('is_class_leader', 1)
+        ->exists();
 
+    if (!$isLeader) {
+        // បើចូលមកដល់នេះ ហើយលោត 403 មានន័យថា is_class_leader ក្នុង DB នៅតែជា 0
+        abort(403, 'អ្នកមិនមែនជាប្រធានថ្នាក់សម្រាប់មុខវិជ្ជានេះទេ។');
+    }
 
-    
+    // កូដសម្រាប់បង្ហាញទំព័រស្រង់វត្តមាន...
+
+    $courseOffering = CourseOffering::with('students.studentProfile')->findOrFail($courseOfferingId);
+    $students = $courseOffering->students;
+    $today = now()->format('Y-m-d');
+
+    return view('student.leader.attendance', compact('courseOffering', 'students', 'today'));
 }
+
+public function storeLeaderAttendance(Request $request, $courseOfferingId)
+{
+    // ១. ឆែកមើលម្ដងទៀតថាគាត់ជាប្រធានថ្នាក់ពិតមែនឬអត់ (ដើម្បីសុវត្ថិភាព)
+    $isLeader = DB::table('student_course_enrollments')
+        ->where('course_offering_id', $courseOfferingId)
+        ->where('student_user_id', auth()->id())
+        ->where('is_class_leader', 1)
+        ->exists();
+
+    if (!$isLeader) {
+        abort(403);
+    }
+
+    // ២. ទទួលទិន្នន័យវត្តមានពី Form (ឧទាហរណ៍៖ $request->attendance)
+    $attendances = $request->input('attendance'); 
+    $date = now()->format('Y-m-d');
+
+    foreach ($attendances as $studentUserId => $status) {
+        DB::table('attendances')->updateOrInsert(
+            [
+                'course_offering_id' => $courseOfferingId,
+                'student_user_id' => $studentUserId,
+                'date' => $date
+            ],
+            [
+                'status' => $status,
+                'updated_at' => now()
+            ]
+        );
+    }
+
+    return redirect()->back()->with('success', 'រក្សាទុកវត្តមានបានជោគជ័យ!');
+}
+// myEnrolledCourses
+public function leaderAttendanceReport($courseOfferingId)
+{
+    // ១. ទាញយកព័ត៌មាន Course
+    $courseOffering = CourseOffering::with('course')->findOrFail($courseOfferingId);
+
+    // ២. ឆែកសិទ្ធិ (រក្សាទុកកូដដដែលរបស់អ្នក)
+    $isLeader = DB::table('student_course_enrollments')
+        ->where('student_user_id', auth()->id())
+        ->where('course_offering_id', $courseOfferingId)
+        ->where('is_class_leader', 1)
+        ->exists();
+
+    if (!$isLeader) {
+        abort(403, 'អ្នកមិនមានសិទ្ធិចូលមើលរបាយការណ៍នេះទេ។');
+    }
+
+    // ៣. ទាញយកបញ្ជីសិស្ស និង counts
+    $students = User::whereHas('enrolledCourses', function($query) use ($courseOfferingId) {
+            $query->where('course_offering_id', $courseOfferingId);
+        })
+        // បន្ថែម Eager Loading សម្រាប់ CourseOffering ដើម្បីបង្ហាញក្នុងតារាង
+        ->with(['enrolledCourses' => function($q) use ($courseOfferingId) {
+            $q->where('course_offering_id', $courseOfferingId)->with('course');
+        }])
+        ->withCount([
+            'attendances as present_count' => function ($query) use ($courseOfferingId) {
+                $query->where('course_offering_id', $courseOfferingId)->where('status', 'present');
+            },
+            'attendances as absent_count' => function ($query) use ($courseOfferingId) {
+                $query->where('course_offering_id', $courseOfferingId)->where('status', 'absent');
+            },
+            'attendances as permission_count' => function ($query) use ($courseOfferingId) {
+                $query->where('course_offering_id', $courseOfferingId)->where('status', 'permission');
+            },
+            'attendances as late_count' => function ($query) use ($courseOfferingId) {
+                $query->where('course_offering_id', $courseOfferingId)->where('status', 'late');
+            }
+        ])
+        ->get();
+
+    return view('student.leader.report', compact('courseOffering', 'students'));
+}
+
+public function getAttendanceScore($studentId, $courseOfferingId)
+{
+    // ១. រាប់ចំនួនអវត្តមានសរុប (Absents) របស់និស្សិតក្នុងមុខវិជ្ជានោះ
+    $absentCount = \App\Models\Attendance::where('student_user_id', $studentId)
+        ->where('course_offering_id', $courseOfferingId)
+        ->where('status', 'absent') // យកតែអ្នកអវត្តមាន
+        ->count();
+
+    // ២. គណនាពិន្ទុ (ឈប់ ២ដង ដក ១ពិន្ទុ)
+    $maxScore = 15;
+    $deduction = floor($absentCount / 2); // ប្រើ floor ដើម្បីយកចំនួនគត់
+    $finalScore = $maxScore - $deduction;
+
+    // ការពារកុំឱ្យពិន្ទុធ្លាក់ក្រោម ០
+    return $finalScore < 0 ? 0 : $finalScore;
+}
+
+
+public function updateTelegram(Request $request)
+{
+    $request->validate([
+        'telegram_chat_id' => 'required|numeric',
+    ]);
+
+    $user = auth()->user();
+    $user->telegram_chat_id = $request->telegram_chat_id;
+    $user->save();
+
+    return back()->with('success', 'អបអរសាទរ! គណនី Telegram របស់អ្នកត្រូវបានភ្ជាប់ហើយ។');
+}
+
+
+
+
+}
+
+// enroll

@@ -11,44 +11,23 @@ class Quiz extends Model
 
     protected $fillable = [
         'course_offering_id',
+        'grading_category_id',
         'title_km',
         'title_en',
-        'description',
-        // 'description_en',
-        'start_date',
-        'end_date',
         'max_score',
-        // 'duration_minutes',
-        // 'total_points', // Assuming this column exists for total possible score
-        // 'is_published',
+        'quiz_date',
     ];
 
-    protected $casts = [
-        'start_date' => 'datetime',
-        'end_date' => 'datetime',
-        // 'is_published' => 'boolean',
-    ];
+    // Relationship ទៅកាន់ ExamResult
+    public function examResults()
+    {
+        return $this->hasMany(ExamResult::class, 'assessment_id')
+                    ->where('assessment_type', 'quiz');
+    }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Relationships
-    |--------------------------------------------------------------------------
-    */
-
-    /**
-     * Get the course offering that the quiz belongs to.
-     */
+    // Relationship ទៅកាន់ CourseOffering
     public function courseOffering()
     {
         return $this->belongsTo(CourseOffering::class);
-    }
-
-    /**
-     * Get the quiz questions for the quiz.
-     * This relationship is crucial for the StudentController to fetch quiz details.
-     */
-    public function quizQuestions()
-    {
-        return $this->hasMany(QuizQuestion::class);
     }
 }

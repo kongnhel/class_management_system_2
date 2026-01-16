@@ -1,18 +1,23 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" 
+      x-data="{ 
+          open: false, 
+          darkMode: localStorage.getItem('theme') === 'dark',
+          toggleTheme() {
+              this.darkMode = !this.darkMode;
+              localStorage.setItem('theme', this.darkMode ? 'dark' : 'light');
+          }
+      }" 
+      :class="{ 'dark': darkMode }">
     <head>
+        
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        {{-- <title>{{ config('', 'class management system') }}</title> --}}
-        <head>
-            <link rel="icon" type="image/png" href="{{ asset('assets\image\nmu_Logo.png') }}">
-            <title>{{ config('', 'Class Management System') }}</title>
-        </head>
-    
-        <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-        <script src="//unpkg.com/alpinejs" defer></script>
+        <link rel="icon" type="image/png" href="{{ asset('assets/image/nmu_Logo.png') }}">
+        <title>{{ config('', 'Class Management System') }}</title>
+        @livewireStyles
 
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
 
@@ -23,96 +28,41 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@100;300;400;700;900&display=swap" rel="stylesheet">
 
-        {{-- @vite(['resources/css/app.css', 'resources/js/app.js']) --}}
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         <style>
-            body ,div{
+            [x-cloak] { display: none !important; }
+            body, div {
                 font-family: 'Battambang', sans-serif;
-                /* overflow-x: hidden; */
+                transition: background-color 0.3s ease, color 0.3s ease;
             }
 
-            /* The custom-scrollbar styles from the sidebar have been moved here
-                for global availability or if you prefer them in a central CSS file.
-                If already defined in your app.css, you can remove this section. */
-            .custom-scrollbar::-webkit-scrollbar {
-                width: 8px;
+            /* Dark Mode Styles */
+            .dark body { background-color: #111827; color: #f3f4f6; }
+            .dark .bg-white { background-color: #1f2937 !important; color: #ffffff; }
+            .dark .bg-light-100 { background-color: #111827 !important; }
+            .dark .text-light-800 { color: #f3f4f6 !important; }
+            .dark .border-light-200 { border-color: #374151 !important; }
+
+            .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+            .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+            .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 10px; }
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.5); }
+
+            @media print {
+                nav, header, footer, .lg\:hidden, .no-print, .theme-toggle-btn { display: none !important; }
+                main { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+                @page { margin: 15mm; size: A4 portrait; }
             }
-
-            .custom-scrollbar::-webkit-scrollbar-track {
-                background: rgba(255, 255, 255, 0.1);
-                border-radius: 10px;
-            }
-
-            .custom-scrollbar::-webkit-scrollbar-thumb {
-                background: rgba(255, 255, 255, 0.3);
-                border-radius: 10px;
-            }
-
-            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                background: rgba(255, 255, 255, 0.5);
-            }
-            <style>
-    body ,div{
-        font-family: 'Battambang', sans-serif;
-    }
-
-    /* Hide parts you don't want to print */
-    @media print {
-        nav,                /* laravel sidebar */
-        header,             /* page header */
-        footer,             /* footer */
-        .lg\:hidden,        /* mobile top bar */
-        .no-print {         /* custom hide */
-            display: none !important;
-        }
-
-        /* Force content full width on print */
-        main {
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 100% !important;
-        }
-
-        /* Schedule table style */
-        .schedule-table {
-            width: 100% !important;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-
-        .schedule-table th,
-        .schedule-table td {
-            border: 1px solid black !important;
-            padding: 6px;
-            text-align: center;
-        }
-
-        /* A4 setup */
-        @page {
-            margin: 15mm;
-            size: A4 portrait;
-        }
-    }
-</style>
-
         </style>
     </head>
-    <body class="font-sans antialiased" x-data="{ open: false }">
+    <body class="font-sans antialiased text-gray-900">
 
     @auth
-        {{-- 
-            *** START: CONSOLIDATED USER LOGIC FOR MOBILE TOP BAR & SIDEBAR *** This logic is moved here from navigation.blade.php to be available globally.
-        --}}
         @php
-            // 1. Get user and load profile relation
             $user = Auth::user()->loadMissing('userProfile');
-            
-            // 2. Determine profile picture URL
             $profilePath = $user->userProfile?->profile_picture_url;
             $profileUrl = $profilePath ? asset('storage/' . $profilePath) : null;
-
-            // 3. Define translated role text using the match expression (PHP 8.0+)
             $roleText = match ($user->role) {
                 'admin' => __('អ្នកគ្រប់គ្រង'),
                 'professor' => __('សាស្ត្រាចារ្យ'),
@@ -120,92 +70,76 @@
                 default => ''
             };
         @endphp
-        {{-- *** END: CONSOLIDATED USER LOGIC *** --}}
     @endauth
 
-        <div class="min-h-screen bg-gray-100">
+    {{-- ប្តូរ bg មកជាពណ៌ Light ទាំងស្រុង និងដក Dark Mode ចេញ --}}
+    <div class="min-h-screen bg-[#f8fafc]">
 
-            {{-- Include the modern sidebar --}}
-            @include('layouts.navigation')
+        {{-- Sidebar --}}
+        @include('layouts.navigation')
 
-            {{-- Hamburger menu for mobile (outside the sidebar, typically in a top bar) --}}
-        <div class="lg:hidden fixed top-0 left-0 w-full bg-white border-b border-gray-200 shadow-sm z-40 p-3 flex justify-between items-center font-['Battambang']">
+        {{-- Mobile Top Bar - កែឱ្យមកជាពណ៌សស្អាត --}}
+        <div class="lg:hidden fixed top-0 left-0 w-full bg-white border-b border-gray-100 shadow-sm z-40 p-3 flex justify-between items-center font-['Battambang']">
             
-            {{-- 1. Hamburger Button (Pushed to the left) --}}
-            <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-800 transition duration-150 ease-in-out">
+            {{-- ប៊ូតុង Hamburger --}}
+            <button @click.stop="open = true" x-cloak class="inline-flex items-center justify-center p-2 rounded-xl text-gray-500 hover:bg-gray-50 focus:outline-none transition">
                 <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                    <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                    <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
             </button>
             
-            @auth
-            {{-- 2. User Profile and Role (New addition - positioned on the right) --}}
             <div class="flex items-center space-x-3 ml-auto">
-                <div class="flex flex-col items-end leading-tight me-2 hidden sm:block">
-                    <span class="text-sm font-semibold text-gray-800 truncate max-w-24">{{ $user->name }}</span>
-                    @if($roleText)
-                        <span class="text-xs text-gray-500">{{ $roleText }}</span>
-                    @endif
-                </div>
-
-                <div class="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center text-lg font-bold bg-gradient-to-br from-green-500 to-green-700 ring-2 ring-green-500/50">
-                    @if($profileUrl)
-                        <img src="{{ $profileUrl }}" 
-                            alt="{{ __('Profile Picture') }}" 
-                            class="h-full w-full object-cover">
-                    @else
-                        {{ Str::substr($user->name, 0, 1) }}
-                    @endif
-                </div>
+    @auth
+        {{-- បន្ថែមស្លាក <a> ដើម្បីឱ្យចុចបានទាំងឈ្មោះ និងរូបភាព --}}
+        <a href="{{ route('profile.edit') }}" class="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+            
+            {{-- ឈ្មោះអ្នកប្រើប្រាស់ (បង្ហាញតែលើ Desktop) --}}
+            <div class="flex flex-col items-end leading-tight me-2 sm:block">
+                <span class="text-sm font-bold text-gray-800">{{ $user->name }}</span>
+                @if($roleText) 
+                    <span class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">{{ $roleText }}</span> 
+                @endif
             </div>
-            @else
-                {{-- Fallback: Original Logo/Text --}}
-                <a href="{{ route('dashboard') }}" class="flex items-center space-x-2 ms-2 ml-auto">
-                    <img src="{{ asset('assets/image/nmu_Logo.png') }}" 
-                        alt="NMU Logo" 
-                        class="block h-8 w-auto">
-                    
-                    {{-- Full Name: Hidden on mobile (default) but visible from 'sm' (small) screens up --}}
-                    <span class="text-base font-bold text-gray-800 hidden sm:inline-block">
-                        {{ __('សកលវិទ្យាល័យជាតិមានជ័យ') }}
-                    </span>
 
-                    {{-- Short Name: Visible on mobile (default) but hidden from 'sm' (small) screens up --}}
-                    <span class="text-base font-bold text-gray-800 sm:hidden">
-                        {{ __('NMU') }}
-                    </span>
-                </a>
-            @endauth
+            {{-- រូបភាព Profile --}}
+            <div class="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center text-sm font-bold bg-white-600 text-white shadow-md shadow-blue-200 border border-white">
+                @if($profileUrl) 
+                    <img src="{{ $profileUrl }}" class="h-full w-full object-cover" alt="{{ $user->name }}">
+                @else 
+                    {{ Str::substr($user->name, 0, 1) }} 
+                @endif
+            </div>
+        </a>
+    @endauth
+</div>
         </div>
 
-            {{-- Overlay for mobile when sidebar is open --}}
-            <div x-show="open"
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="opacity-0"
-                 x-transition:enter-end="opacity-100"
-                 x-transition:leave="transition ease-in duration-300"
-                 x-transition:leave-start="opacity-100"
-                 x-transition:leave-end="opacity-0"
-                 class="fixed inset-0 bg-black/50 z-40 lg:hidden"
-                 @click="open = false"
-            ></div>
+        {{-- Overlay --}}
+        <div x-show="open" 
+             x-cloak
+             x-transition.opacity 
+             class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-40 lg:hidden" 
+             @click="open = false"></div>
 
-            {{-- Main Content Wrapper --}}
-            <div class="flex flex-col min-h-screen lg:ml-64 pt-16 lg:pt-0" :class="{'ml-0': !open}">
-                @isset($header)
-                    <header class="bg-white shadow">
-                        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                            {{ $header }}
-                        </div>
-                    </header>
-                @endisset
+        {{-- Main Content Wrapper --}}
+        {{-- កែ lg:ml-64 (Sidebar Width) និងដក max-w-7xl ចេញពី Header --}}
+        <div class="flex flex-col min-h-screen lg:ml-64 pt-16 lg:pt-0">
+            @isset($header)
+                <header class="bg-white border-b border-gray-100">
+                    {{-- ប្តូរ max-w-7xl ទៅ max-w-full ដើម្បីឱ្យ Header រត់ពេញអេក្រង់ដែរ --}}
+                    <div class="max-w-full mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                        {{ $header }}
+                    </div>
+                </header>
+            @endisset
 
-                <main>
-                    {{ $slot }}
-                </main>
-            </div>
+            {{-- Main Slot - ប្រើ w-full និងដក Dark Mode --}}
+            <main class="flex-grow bg-[#f8fafc]">
+                {{ $slot }}
+            </main>
         </div>
-    </body>
+    </div>
 
+    @livewireScripts
+</body>
 </html>

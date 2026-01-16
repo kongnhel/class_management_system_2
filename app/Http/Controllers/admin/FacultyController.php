@@ -1,73 +1,98 @@
 <?php
 
 namespace App\Http\Controllers\admin;
+
 use App\Http\Controllers\Controller;
 use App\Models\Faculty;
 use App\Models\User;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+// ១. ហៅ Firebase Factory មកប្រើ
+use Kreait\Firebase\Factory;
 
 class FacultyController extends Controller
 {
+    /**
+     * បង្កើតរោងចក្រ Firebase (Private Helper)
+     */
+    private function getFirebaseDatabase()
+    {
+        $credentialPath = storage_path('app/firebase/classmanagementsystem.json');
+
+        if (!is_file($credentialPath)) {
+            throw new \Exception("Path ខាងលើមិនមែនជាឯកសារ JSON ទេ។ សូមពិនិត្យមើលក្នុង Folder storage/app/firebase។");
+        }
+
+        $factory = (new Factory)
+            ->withServiceAccount($credentialPath)
+            ->withDatabaseUri('https://classmanagementsystem-cd57f-default-rtdb.firebaseio.com/');
+
+        return $factory->createDatabase();
+    }
+
+    private function syncWithFirebase($message = 'ទិន្នន័យត្រូវបានកែប្រែ')
+    {
+        try {
+            $this->getFirebaseDatabase()
+                ->getReference('faculties_sync')
+                ->set([
+                    'updated_at' => now()->timestamp,
+                    'message' => $message 
+                ]);
+        } catch (\Exception $e) {
+            Log::error('Firebase Error: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * មុខងារផ្ញើសញ្ញាទៅ Firebase ដើម្បីឱ្យ Index ធ្វើការ Refresh (Real-time Sync)
+     */
+    // private function syncWithFirebase()
+    // {
+    //     try {
+    //         $this->getFirebaseDatabase()
+    //             ->getReference('faculties_sync')
+    //             ->set(['updated_at' => now()->timestamp]);
+    //     } catch (\Exception $e) {
+    //         Log::error('Firebase Sync Error: ' . $e->getMessage());
+    //     }
+    // }
+
     public function index()
-    // public function manageFaculties().
     {
         $faculties = Faculty::with('dean')->paginate(10);
         return view('admin.faculties.index', compact('faculties'));
     }
 
-    /**
-     * Show the form for creating a new faculty.
-     */
     public function create()
     {
-        $professors = User::where('role', 'professor')->get(); // Get all professors for assigning dean
+        $professors = User::where('role', 'professor')->get();
         return view('admin.faculties.create', compact('professors'));
     }
 
-    /**
-     * Store a newly created faculty in storage.
-     */
-// ផ្នែកនៃ AdminController.php
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name_km' => ['required', 'string', 'max:255', Rule::unique('faculties', 'name_km')],
+            'name_en' => ['required', 'string', 'max:255', Rule::unique('faculties', 'name_en')],
+            'dean_user_id' => 'nullable|exists:users,id',
+        ]);
 
-public function store(Request $request)
-// public function storeFaculty(Request $request)
-{
-    $request->validate([
-        'name_km' => [
-            'required',
-            'string',
-            'max:255',
-            Rule::unique('faculties', 'name_km'),
-        ],
-        'name_en' => [
-            'required',
-            'string',
-            'max:255',
-            Rule::unique('faculties', 'name_en'),
-        ],
-        'dean_user_id' => 'nullable|exists:users,id',
-    ]);
+        Faculty::create($request->all());
 
-    Faculty::create($request->all());
+        // ២. បញ្ជូនសញ្ញាទៅ Firebase
+        $this->syncWithFirebase("មហាវិទ្យាល័យថ្មីត្រូវបានបន្ថែម");
+        return redirect()->route('admin.manage-faculties')->with('success', 'មហាវិទ្យាល័យត្រូវបានបង្កើតដោយជោគជ័យ។');
+    }
 
-    return redirect()->route('admin.manage-faculties')->with('success', 'មហាវិទ្យាល័យត្រូវបានបង្កើតដោយជោគជ័យ។');
-}
-
-    /**
-     * Show the form for editing the specified faculty.
-     */
     public function edit(Faculty $faculty)
-    // public function editFaculty(Faculty $faculty)
     {
         $professors = User::where('role', 'professor')->get();
         return view('admin.faculties.edit', compact('faculty', 'professors'));
     }
 
-    /**
-     * Update the specified faculty in storage.
-     */
     public function update(Request $request, Faculty $faculty)
     {
         $request->validate([
@@ -78,49 +103,41 @@ public function store(Request $request)
 
         $faculty->update($request->all());
 
+        // ៣. បញ្ជូនសញ្ញាទៅ Firebase
+        $this->syncWithFirebase("មហាវិទ្យាល័យ '{$faculty->name_km}' ត្រូវបានកែប្រែ");
+
         return redirect()->route('admin.manage-faculties')->with('success', 'មហាវិទ្យាល័យត្រូវបានធ្វើបច្ចុប្បន្នដោយជោគជ័យ!');
     }
-// $studen
-    /**
-     * Remove the specified faculty from storage.
-     */
-    // public function deleteFaculty(Faculty $faculty)
-    // {
-    //     $faculty->delete(); // Cascade delete will handle related departments, programs, etc.
-    //     return redirect()->route('admin.manage-faculties')->with('success', 'Faculty deleted successfully.');
-    // }
-public function destroy(Faculty $faculty)
-{
-    try {
-        DB::beginTransaction();
 
-        // 1. Loop through each department of this faculty
-        foreach ($faculty->departments as $department) {
-            // 1.1 Delete courses for each program
-            foreach ($department->programs as $program) {
-                $program->courses()->delete();
+    public function destroy(Faculty $faculty)
+    {
+        try {
+            DB::beginTransaction();
+
+            foreach ($faculty->departments as $department) {
+                foreach ($department->programs as $program) {
+                    $program->courses()->delete();
+                }
+                $department->programs()->delete();
             }
-            // 1.2 Delete programs themselves
-            $department->programs()->delete();
+
+            $faculty->departments()->delete();
+            $faculty->delete();
+
+            DB::commit();
+
+            // ៤. បញ្ជូនសញ្ញាទៅ Firebase
+            $this->syncWithFirebase("មហាវិទ្យាល័យមួយត្រូវបានលុបចេញពីប្រព័ន្ធ");
+
+            return redirect()->route('admin.manage-faculties')
+                ->with('success', 'មហាវិទ្យាល័យនិងទិន្នន័យដែលពាក់ព័ន្ធទាំងអស់ត្រូវបានលុបដោយជោគជ័យ។');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error deleting faculty: ' . $e->getMessage());
+            return redirect()->route('admin.manage-faculties')
+                ->with('error', 'មិនអាចលុបមហាវិទ្យាល័យបានទេ៖ មានបញ្ហាមួយបានកើតឡើង។');
         }
-
-        // 2. Delete all departments
-        $faculty->departments()->delete();
-
-        // 3. Delete the faculty
-        $faculty->delete();
-
-        DB::commit();
-
-        return redirect()->route('admin.manage-faculties')
-            ->with('success', 'មហាវិទ្យាល័យនិងទិន្នន័យដែលពាក់ព័ន្ធទាំងអស់ត្រូវបានលុបដោយជោគជ័យ។');
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-        \Log::error('Error deleting faculty: ' . $e->getMessage());
-        return redirect()->route('admin.manage-faculties')
-            ->with('error', 'មិនអាចលុបមហាវិទ្យាល័យបានទេ៖ មានបញ្ហាមួយបានកើតឡើង។');
     }
-}
-
+    
 }

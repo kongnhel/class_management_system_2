@@ -14,10 +14,12 @@ class StudentCourseEnrollment extends Model
 
     // Field ដែលអាចបញ្ចូល ឬកែប្រែដោយ Mass Assignment
     protected $fillable = [
+        'student_id',
         'student_user_id',
         'course_offering_id',
         'enrollment_date',
         'final_grade',
+        'attendance_score_manual',
         'status',
     ];
 
@@ -55,7 +57,12 @@ class StudentCourseEnrollment extends Model
     {
         return $this->belongsTo(User::class, 'student_user_id');
     }
-
+// នៅក្នុង Model StudentCourseEnrollment
+public function studentUser()
+{
+    // សន្មតថា column ក្នុង table enrollments ដែលភ្ជាប់ទៅ user គឺ student_user_id
+    return $this->belongsTo(\App\Models\User::class, 'student_user_id');
+}
     /**
      * It's also good practice to have a relationship named 'student'.
      * This is an alias for the 'user' relationship.

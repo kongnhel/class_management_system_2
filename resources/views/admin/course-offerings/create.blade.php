@@ -1,227 +1,261 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">{{ __('បង្កើតការផ្តល់ជូនមុខវិជ្ជាថ្មី') }}</h2>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight">
+            {{ __('បង្កើតការផ្តល់ជូនមុខវិជ្ជាថ្មី') }}
+        </h2>
     </x-slot>
 
-    <div class="py-12 bg-gray-50">
+    <div class="py-12 bg-gray-50/50">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white shadow-xl sm:rounded-3xl p-6 sm:p-8 lg:p-12">
-                @if (session('success'))
-                    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg mb-6" role="alert">
-                        <div class="flex items-center">
-                            <svg class="h-6 w-6 text-green-500 mr-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            <div class="bg-white shadow-2xl shadow-gray-200/50 sm:rounded-3xl overflow-hidden">
+                <div class="p-6 sm:px-12 pt-10">
+                    @if (session('success'))
+                        <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded-xl mb-6 flex items-center shadow-sm">
+                            <svg class="h-6 w-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <span class="font-semibold">{{ session('success') }}</span>
                         </div>
-                    </div>
-                @endif
-                @if (session('error'))
-                    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-6" role="alert">
-                        <div class="flex items-center">
-                            <svg class="h-6 w-6 text-red-500 mr-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                            </svg>
-                            <div>
+                    @endif
+
+                    @if ($errors->any() || session('error'))
+                        <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-xl mb-6 shadow-sm">
+                            <div class="flex items-center mb-2">
+                                <svg class="h-6 w-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
                                 <strong class="font-bold">{{ __('មានបញ្ហា!') }}</strong>
-                                <ul class="mt-2 text-sm list-disc list-inside space-y-1">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
                             </div>
+                            <ul class="text-sm list-disc list-inside space-y-1 ml-9">
+                                @if(session('error')) <li>{{ session('error') }}</li> @endif
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
                         </div>
-                    </div>
-                @endif
-                @if ($errors->any())
-                    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-6" role="alert">
-                        <strong class="font-bold">{{ __('មានបញ្ហា!') }}</strong>
-                        <ul class="mt-2 text-sm list-disc list-inside space-y-1">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
+                    @endif
+                </div>
 
-                <form method="POST" action="{{ route('admin.store-course-offering') }}">
+                <form method="POST" action="{{ route('admin.store-course-offering') }}" class="p-6 sm:px-12 pb-12">
                     @csrf
-                    <div class="space-y-10">
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-10">
-                            <div>
-                                <label for="program_id" class="block text-sm font-medium text-gray-700">{{ __('កម្មវិធីសិក្សា') }}<span class="text-red-500">*</span></label>
-                                <select id="program_id" name="program_id" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm" required>
-                                    <option value="">{{ __('ជ្រើសរើសកម្មវិធីសិក្សា') }}</option>
-                                    @foreach ($programs as $program)
-                                        <option value="{{ $program->id }}" {{ old('program_id') == $program->id ? 'selected' : '' }}>{{ $program->name_km ?? $program->name }}</option>
-                                    @endforeach
-                                </select>
+                    <div class="space-y-12">
+                        <section>
+                            <div class="flex items-center space-x-3 mb-6">
+                                <span class="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-600 font-bold text-sm">1</span>
+                                <h3 class="text-xl font-bold text-gray-800">{{ __('ព័ត៌មានមូលដ្ឋាន') }}</h3>
                             </div>
-                            
-                            <div>
-                                <label for="generation" class="block text-sm font-medium text-gray-700">{{ __('ជំនាន់') }}<span class="text-red-500">*</span></label>
-                                <select id="generation" name="generation" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm" required>
-                                    <option value="">{{ __('ជ្រើសរើសជំនាន់') }}</option>
-                                    @foreach ($generations as $generation)
-                                        <option value="{{ $generation }}">{{ $generation }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                <div class="space-y-2">
+                                    <label for="program_id" class="block text-sm font-semibold text-gray-700 uppercase tracking-wider">{{ __('កម្មវិធីសិក្សា') }}<span class="text-red-500">*</span></label>
+                                    <select id="program_id" name="program_id" class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50 transition duration-200" required>
+                                        <option value="">{{ __('ជ្រើសរើសកម្មវិធីសិក្សា') }}</option>
+                                        @foreach ($programs as $program)
+                                            <option value="{{ $program->id }}" {{ old('program_id') == $program->id ? 'selected' : '' }}>{{ $program->name_km ?? $program->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                
+                                <div class="space-y-2">
+                                    <label for="generation" class="block text-sm font-semibold text-gray-700 uppercase tracking-wider">{{ __('ជំនាន់') }}<span class="text-red-500">*</span></label>
+                                    <select id="generation" name="generation" class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50 transition duration-200" required>
+                                        <option value="">{{ __('ជ្រើសរើសជំនាន់') }}</option>
+                                        @foreach ($generations as $generation)
+                                            <option value="{{ $generation }}">{{ $generation }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
 
-                            <div>
-                                <label for="course_id" class="block text-sm font-medium text-gray-700">{{ __('មុខវិជ្ជា') }}<span class="text-red-500">*</span></label>
-                                <select id="course_id" name="course_id" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm" required disabled>
-                                    <option value="">{{ __('សូមជ្រើសរើសកម្មវិធីសិក្សានិងជំនាន់សិន') }}</option>
-                                </select>
+                                <div class="space-y-2">
+                                    <label for="course_id" class="block text-sm font-semibold text-gray-700 uppercase tracking-wider">{{ __('មុខវិជ្ជា') }}<span class="text-red-500">*</span></label>
+                                    <select id="course_id" name="course_id" class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50 transition duration-200 bg-gray-50" required disabled>
+                                        <option value="">{{ __('សូមជ្រើសរើសកម្មវិធីសិក្សានិងជំនាន់សិន') }}</option>
+                                    </select>
+                                </div>
                             </div>
-                        </div>
+                        </section>
 
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
-                            <div class="bg-gray-50 p-6 rounded-2xl shadow-inner">
-                                <h3 class="text-xl font-bold text-gray-800 mb-6 border-b border-gray-200 pb-2">{{ __('ព័ត៌មានការផ្តល់ជូនមុខវិជ្ជា') }}</h3>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                            <section class="bg-gray-50/80 p-8 rounded-3xl border border-gray-100 shadow-inner">
+                                <div class="flex items-center space-x-3 mb-8">
+                                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-600 font-bold text-sm">2</span>
+                                    <h3 class="text-xl font-bold text-gray-800">{{ __('ព័ត៌មានការផ្តល់ជូនមុខវិជ្ជា') }}</h3>
+                                </div>
                                 <div class="space-y-6">
-                                    <div>
+                                    <div class="space-y-2">
                                         <label for="lecturer_user_id" class="block text-sm font-medium text-gray-700">{{ __('សាស្រ្តាចារ្យ') }}</label>
-                                        <select id="lecturer_user_id" name="lecturer_user_id" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500" required>
+                                        <select id="lecturer_user_id" name="lecturer_user_id" class="block w-full rounded-xl border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 transition duration-200" required>
                                             <option value="">{{ __('ជ្រើសរើសសាស្រ្តាចារ្យ') }}</option>
                                             @foreach ($professors as $professor)
                                                 <option value="{{ $professor->id }}" {{ old('lecturer_user_id') == $professor->id ? 'selected' : '' }}>{{ $professor->name }}</option>
                                             @endforeach
                                         </select>
-                                        @error('lecturer_user_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                                     </div>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
+
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div class="space-y-2">
                                             <label for="academic_year" class="block text-sm font-medium text-gray-700">{{ __('ឆ្នាំសិក្សា') }}</label>
-                                            <input type="text" name="academic_year" id="academic_year" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500" value="{{ old('academic_year') }}" placeholder="ឧទាហរណ៍: 2024-2025" required>
-                                            @error('academic_year') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                                            <input type="text" name="academic_year" id="academic_year" class="block w-full rounded-xl border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500" value="{{ old('academic_year') }}" placeholder="2024-2025" required>
                                         </div>
-                                        <div>
+                                        <div class="space-y-2">
                                             <label for="semester" class="block text-sm font-medium text-gray-700">{{ __('ឆមាស') }}</label>
-                                            <input type="text" name="semester" id="semester" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500" value="{{ old('semester') }}" placeholder="ឧទាហរណ៍: 1" required>
-                                            @error('semester') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                                            <select name="semester" id="semester" class="block w-full rounded-xl border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500" required>
+                                                <option value="" disabled {{ old('semester') ? '' : 'selected' }}>{{ __('ជ្រើសរើស') }}</option>
+                                                <option value="ឆមាសទី១" {{ old('semester') == 'ឆមាសទី១' ? 'selected' : '' }}>{{ __('ឆមាសទី១') }}</option>
+                                                <option value="ឆមាសទី២" {{ old('semester') == 'ឆមាសទី២' ? 'selected' : '' }}>{{ __('ឆមាសទី២') }}</option>
+                                            </select>
                                         </div>
                                     </div>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label for="capacity" class="block text-sm font-medium text-gray-700">{{ __('ចំនួនអតិបរមា') }}</label>
-                                            <input type="number" name="capacity" id="capacity" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500" value="{{ old('capacity') }}" required>
-                                            @error('capacity') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                                        </div>
-                                        <div class="flex items-end pb-1">
-                                            <label for="is_open_for_self_enrollment" class="inline-flex items-center">
-                                                <input type="checkbox" name="is_open_for_self_enrollment" id="is_open_for_self_enrollment" class="rounded border-gray-300 text-green-600 shadow-sm focus:ring-green-500" {{ old('is_open_for_self_enrollment') ? 'checked' : '' }}>
-                                                <span class="ml-2 text-sm text-gray-700">{{ __('អនុញ្ញាតឱ្យចុះឈ្មោះដោយខ្លួនឯង') }}</span>
-                                            </label>
-                                        </div>
+
+                                    <div class="space-y-2">
+                                        <label for="capacity" class="block text-sm font-medium text-gray-700">{{ __('ចំនួននិស្សិតអតិបរមា') }}</label>
+                                        <input type="number" name="capacity" id="capacity" class="block w-full rounded-xl border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500" value="{{ old('capacity') }}" placeholder="ឧទាហរណ៍: ៣០" required>
                                     </div>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label for="start_date" class="block text-sm font-medium text-gray-700">{{ __('កាលបរិច្ឆេទចាប់ផ្តើម') }}</label>
-                                            <input type="date" name="start_date" id="start_date" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500" value="{{ old('start_date') }}" required>
-                                            @error('start_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+
+                                    <div class="grid grid-cols-2 gap-4 pt-2">
+                                        <div class="space-y-2">
+                                            <label for="start_date" class="block text-sm font-medium text-gray-700 text-green-600">{{ __('កាលបរិច្ឆេទចាប់ផ្តើម') }}</label>
+                                            <input type="date" name="start_date" id="start_date" class="block w-full rounded-xl border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500" value="{{ old('start_date') }}" required>
                                         </div>
-                                        <div>
-                                            <label for="end_date" class="block text-sm font-medium text-gray-700">{{ __('កាលបរិច្ឆេទបញ្ចប់') }}</label>
-                                            <input type="date" name="end_date" id="end_date" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500" value="{{ old('end_date') }}" required>
-                                            @error('end_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                                        <div class="space-y-2">
+                                            <label for="end_date" class="block text-sm font-medium text-gray-700 text-red-600">{{ __('កាលបរិច្ឆេទបញ្ចប់') }}</label>
+                                            <input type="date" name="end_date" id="end_date" class="block w-full rounded-xl border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500" value="{{ old('end_date') }}" required>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            
-                            <div class="bg-white p-6 rounded-2xl shadow-inner border border-gray-200">
-                                <h3 class="text-xl font-bold text-gray-800 mb-6 border-b border-gray-200 pb-2">{{ __('កាលវិភាគ') }}</h3>
-                                <div id="schedules-container" class="space-y-6">
-                                    {{-- Schedule items will be inserted here by JavaScript --}}
+                            </section>
+
+                            <section class="border-2 border-dashed border-gray-200 p-8 rounded-3xl flex flex-col">
+                                <div class="flex items-center justify-between mb-8">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-600 font-bold text-sm">3</span>
+                                        <h3 class="text-xl font-bold text-gray-800">{{ __('កាលវិភាគសិក្សា') }}</h3>
+                                    </div>
                                 </div>
-                                <button type="button" id="add-schedule" class="mt-6 px-6 py-2 bg-green-600 text-white font-semibold rounded-full hover:bg-green-700 transition duration-300 shadow-md">
-                                    {{ __('បន្ថែមទៀត') }} ➕
-                                </button>
-                                @error('schedules') <p class="text-red-500 text-xs mt-2">{{ __('សូមបន្ថែមយ៉ាងហោចណាស់កាលវិភាគមួយ។') }}</p> @enderror
-                            </div>
+                                
+                                <div id="schedules-container" class="space-y-4 flex-grow">
+                                    </div>
+
+                                <div class="mt-8 pt-6 border-t border-gray-100">
+                                    <button type="button" id="add-schedule" class="group flex items-center space-x-2 text-green-600 font-bold hover:text-green-700 transition duration-200">
+                                        <span class="flex items-center justify-center w-8 h-8 rounded-full bg-green-50 group-hover:bg-green-100 transition duration-200">
+                                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                                        </span>
+                                        <span>{{ __('បន្ថែមម៉ោងសិក្សាថ្មី (Next Session)') }}</span>
+                                    </button>
+                                    @error('schedules') <p class="text-red-500 text-xs mt-2 italic">* {{ __('សូមបន្ថែមយ៉ាងហោចណាស់កាលវិភាគមួយ។') }}</p> @enderror
+                                </div>
+                            </section>
                         </div>
-                     <div class="mt-12 flex justify-between items-center">
-                        <a href="{{ route('admin.manage-course-offerings') }}" class="px-6 py-3 text-gray-600 font-semibold rounded-full hover:bg-gray-200 transition duration-300 transform hover:scale-105">{{ __('បោះបង់') }}</a>
-                        
-                        <button type="submit" class="px-8 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white font-bold rounded-full shadow-lg hover:from-green-600 hover:to-green-700 transition duration-300 transform hover:scale-105 flex items-center space-x-2">
-                                     {{ __('បង្កើតការផ្តល់ជូនមុខវិជ្ជា') }} ✅
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
-                         
-                    </div>
-                      
+
+                        <div class="pt-10 flex flex-col sm:flex-row items-center justify-between border-t border-gray-100 gap-4">
+                            <a href="{{ route('admin.manage-course-offerings') }}" class="w-full sm:w-auto text-center px-10 py-3.5 text-gray-500 font-bold rounded-2xl hover:bg-gray-100 transition duration-200">
+                                {{ __('បោះបង់') }}
+                            </a>
+                            
+                            <button type="submit" class="w-full sm:w-auto flex items-center justify-center space-x-3 px-12 py-4 bg-green-600 text-white font-bold rounded-2xl shadow-lg shadow-green-200 hover:bg-green-700 hover:-translate-y-0.5 transition duration-200">
+                                <span>{{ __('បង្កើតការផ្តល់ជូនមុខវិជ្ជា') }}</span>
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // --- Schedule Management Logic ---
             const container = document.getElementById('schedules-container');
             const addButton = document.getElementById('add-schedule');
-            const rooms = {!! json_encode($rooms) !!}; // 💡 ឥឡូវនេះទិន្នន័យបន្ទប់ត្រូវបានបញ្ជូនត្រឹមត្រូវ
+            const rooms = {!! json_encode($rooms) !!};
             let scheduleIndex = 0;
 
             function addScheduleRow(initialData = {}) {
                 const scheduleDiv = document.createElement('div');
-                scheduleDiv.className = 'schedule-item grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-2 items-end pb-4 border-b border-gray-100 last:border-b-0';
+                scheduleDiv.className = 'schedule-row group relative bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:border-green-200 transition duration-200 animate-fadeIn mb-4';
                 
+                // បន្ថែម Logic ដើម្បីទាញយកលេខរៀង Session (1, 2, 3...)
+                const currentSessions = document.querySelectorAll('.schedule-row').length + 1;
                 const roomOptions = rooms.map(room => `<option value="${room.id}" ${initialData.room_id == room.id ? 'selected' : ''}>${room.room_number}</option>`).join('');
 
                 scheduleDiv.innerHTML = `
-                    <div class="col-span-2 sm:col-span-4 lg:col-span-1">
-                        <label class="block text-sm font-medium text-gray-700">{{ __('ថ្ងៃ') }}</label>
-                        <select name="schedules[${scheduleIndex}][day_of_week]" class="w-full mt-1 px-4 py-2 border rounded-xl shadow-sm focus:ring-green-500 focus:border-green-500" required>
-                            <option value="">{{ __('ជ្រើសរើសថ្ងៃ') }}</option>
-                            <option value="Monday" ${initialData.day_of_week === 'Monday' ? 'selected' : ''}>{{ __('ថ្ងៃច័ន្ទ') }}</option>
-                            <option value="Tuesday" ${initialData.day_of_week === 'Tuesday' ? 'selected' : ''}>{{ __('ថ្ងៃអង្គារ') }}</option>
-                            <option value="Wednesday" ${initialData.day_of_week === 'Wednesday' ? 'selected' : ''}>{{ __('ថ្ងៃពុធ') }}</option>
-                            <option value="Thursday" ${initialData.day_of_week === 'Thursday' ? 'selected' : ''}>{{ __('ថ្ងៃព្រហស្បតិ៍') }}</option>
-                            <option value="Friday" ${initialData.day_of_week === 'Friday' ? 'selected' : ''}>{{ __('ថ្ងៃសុក្រ') }}</option>
-                            <option value="Saturday" ${initialData.day_of_week === 'Saturday' ? 'selected' : ''}>{{ __('ថ្ងៃសៅរ៍') }}</option>
-                            <option value="Sunday" ${initialData.day_of_week === 'Sunday' ? 'selected' : ''}>{{ __('ថ្ងៃអាទិត្យ') }}</option>
-                        </select>
+                    <div class="flex items-center mb-3 text-sm font-bold text-green-600">
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"></path></svg>
+                        Session ${currentSessions}
                     </div>
-                    <div class="col-span-2 sm:col-span-2 lg:col-span-1">
-                        <label class="block text-sm font-medium text-gray-700">{{ __('បន្ទប់') }}</label>
-                        <select name="schedules[${scheduleIndex}][room_id]" class="w-full mt-1 px-4 py-2 border rounded-xl shadow-sm focus:ring-green-500 focus:border-green-500" required>
-                            <option value="">{{ __('ជ្រើសរើសបន្ទប់') }}</option>
-                            ${roomOptions}
-                        </select>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="col-span-2 md:col-span-1">
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">{{ __('ថ្ងៃសិក្សា') }}</label>
+                            <select name="schedules[${scheduleIndex}][day_of_week]" class="w-full rounded-xl border-gray-200 text-sm focus:ring-green-500 focus:border-green-500" required>
+                                <option value="">{{ __('រើសថ្ងៃ') }}</option>
+                                <option value="Monday" ${initialData.day_of_week === 'Monday' ? 'selected' : ''}>{{ __('ថ្ងៃច័ន្ទ') }}</option>
+                                <option value="Tuesday" ${initialData.day_of_week === 'Tuesday' ? 'selected' : ''}>{{ __('ថ្ងៃអង្គារ') }}</option>
+                                <option value="Wednesday" ${initialData.day_of_week === 'Wednesday' ? 'selected' : ''}>{{ __('ថ្ងៃពុធ') }}</option>
+                                <option value="Thursday" ${initialData.day_of_week === 'Thursday' ? 'selected' : ''}>{{ __('ថ្ងៃព្រហស្បតិ៍') }}</option>
+                                <option value="Friday" ${initialData.day_of_week === 'Friday' ? 'selected' : ''}>{{ __('ថ្ងៃសុក្រ') }}</option>
+                                <option value="Saturday" ${initialData.day_of_week === 'Saturday' ? 'selected' : ''}>{{ __('ថ្ងៃសៅរ៍') }}</option>
+                                <option value="Sunday" ${initialData.day_of_week === 'Sunday' ? 'selected' : ''}>{{ __('ថ្ងៃអាទិត្យ') }}</option>
+                            </select>
+                        </div>
+                        <div class="col-span-2 md:col-span-1">
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">{{ __('បន្ទប់') }}</label>
+                            <select name="schedules[${scheduleIndex}][room_id]" class="w-full rounded-xl border-gray-200 text-sm focus:ring-green-500 focus:border-green-500" required>
+                                <option value="">{{ __('រើសបន្ទប់') }}</option>
+                                ${roomOptions}
+                            </select>
+                        </div>
+                        <div class="col-span-1">
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">{{ __('ចាប់ផ្តើម') }}</label>
+                            <input type="time" name="schedules[${scheduleIndex}][start_time]" class="w-full rounded-xl border-gray-200 text-sm focus:ring-green-500 focus:border-green-500" value="${initialData.start_time || ''}" required>
+                        </div>
+                        <div class="col-span-1">
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">{{ __('បញ្ចប់') }}</label>
+                            <input type="time" name="schedules[${scheduleIndex}][end_time]" class="w-full rounded-xl border-gray-200 text-sm focus:ring-green-500 focus:border-green-500" value="${initialData.end_time || ''}" required>
+                        </div>
                     </div>
-                    <div class="col-span-1 sm:col-span-1 lg:col-span-1">
-                        <label class="block text-sm font-medium text-gray-700">{{ __('ម៉ោងចាប់ផ្តើម') }}</label>
-                        <input type="time" name="schedules[${scheduleIndex}][start_time]" class="w-full mt-1 px-4 py-2 border rounded-xl shadow-sm focus:ring-green-500 focus:border-green-500" value="${initialData.start_time || ''}" required>
-                    </div>
-                    <div class="col-span-1 sm:col-span-1 lg:col-span-1">
-                        <label class="block text-sm font-medium text-gray-700">{{ __('ម៉ោងបញ្ចប់') }}</label>
-                        <input type="time" name="schedules[${scheduleIndex}][end_time]" class="w-full mt-1 px-4 py-2 border rounded-xl shadow-sm focus:ring-green-500 focus:border-green-500" value="${initialData.end_time || ''}" required>
-                    </div>
-                    <div class="col-span-2 sm:col-span-4 lg:col-span-1 flex justify-end">
-                        <button type="button" class="remove-schedule text-gray-400 hover:text-red-500 transition-colors duration-200 p-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                        </button>
-                    </div>
+                    <button type="button" class="remove-schedule absolute -top-2 -right-2 bg-white text-gray-300 hover:text-red-500 rounded-full border border-gray-100 shadow-sm p-1 transition-colors duration-200 opacity-0 group-hover:opacity-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
                 `;
                 container.appendChild(scheduleDiv);
-                scheduleDiv.querySelector('.remove-schedule').addEventListener('click', function() { scheduleDiv.remove(); });
+                
+                // បន្ថែម Event សម្រាប់លុប និង Update លេខ Session ឡើងវិញ
+                scheduleDiv.querySelector('.remove-schedule').addEventListener('click', function() { 
+                    scheduleDiv.classList.add('scale-95', 'opacity-0');
+                    setTimeout(() => {
+                        scheduleDiv.remove();
+                        updateSessionNumbers(); // ហៅ Function ដើម្បីរៀបលេខ Session ឡើងវិញ
+                    }, 200);
+                });
                 scheduleIndex++;
             }
+
+            // Function សម្រាប់ប្តូរលេខ Session ឡើងវិញនៅពេលលុប Row ណាមួយចោល
+            function updateSessionNumbers() {
+                document.querySelectorAll('.schedule-row').forEach((row, index) => {
+                    const sessionLabel = row.querySelector('.flex.items-center.text-green-600');
+                    if (sessionLabel) {
+                        sessionLabel.innerHTML = `
+                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"></path></svg>
+                            Session ${index + 1}
+                        `;
+                    }
+                });
+            }
+
             addButton.addEventListener('click', () => addScheduleRow());
+            
             const oldSchedules = {!! json_encode(old('schedules', [])) !!};
-            if (oldSchedules.length > 0) {
-                oldSchedules.forEach(schedule => addScheduleRow(schedule));
+            if (Object.keys(oldSchedules).length > 0) {
+                Object.values(oldSchedules).forEach(schedule => addScheduleRow(schedule));
             } else {
                 addScheduleRow();
             }
 
-            // --- NEW: Dependent Dropdown Logic (Fixed for Generation) ---
+            // --- Dependent Dropdown Logic ---
             const programSelect = document.getElementById('program_id');
             const generationSelect = document.getElementById('generation');
             const courseSelect = document.getElementById('course_id');
@@ -230,14 +264,15 @@
                 const programId = programSelect.value;
                 const generation = generationSelect.value;
                 
-                courseSelect.innerHTML = '<option value="">{{ __("កំពុងផ្ទុក...") }}</option>';
-                courseSelect.disabled = true;
-
                 if (!programId || !generation) {
                     courseSelect.innerHTML = '<option value="">{{ __("សូមជ្រើសរើសកម្មវិធីសិក្សានិងជំនាន់សិន") }}</option>';
+                    courseSelect.disabled = true;
+                    courseSelect.classList.add('bg-gray-50');
                     return;
                 }
 
+                courseSelect.innerHTML = '<option value="">{{ __("កំពុងផ្ទុក...") }}</option>';
+                
                 fetch(`/admin/get-courses-by-program-and-generation?program_id=${programId}&generation=${generation}`)
                     .then(response => response.json())
                     .then(courses => {
@@ -246,25 +281,30 @@
                             courses.forEach(course => {
                                 const option = document.createElement('option');
                                 option.value = course.id;
-                                option.textContent = `${course.title_km}`;
+                                option.textContent = course.title_km || course.title;
                                 courseSelect.appendChild(option);
                             });
+                            courseSelect.disabled = false;
+                            courseSelect.classList.remove('bg-gray-50');
                         } else {
-                            courseSelect.innerHTML = '<option value="">{{ __("មិនមានមុខវិជ្ជាសម្រាប់កម្មវិធីសិក្សានិងជំនាន់នេះទេ") }}</option>';
+                            courseSelect.innerHTML = '<option value="">{{ __("មិនមានមុខវិជ្ជាទេ") }}</option>';
                         }
-                        courseSelect.disabled = false;
                     })
-                    .catch(error => {
-                        console.error('Error fetching courses:', error);
-                        courseSelect.innerHTML = '<option value="">{{ __("មានបញ្ហាក្នុងការផ្ទុកមុខវិជ្ជា") }}</option>';
+                    .catch(() => {
+                        courseSelect.innerHTML = '<option value="">{{ __("មានបញ្ហាក្នុងការផ្ទុក") }}</option>';
                     });
             }
 
-            // Listen for changes on both program and generation selects
             programSelect.addEventListener('change', fetchAndPopulateCourses);
             generationSelect.addEventListener('change', fetchAndPopulateCourses);
-            
-            fetchAndPopulateCourses();
         });
     </script>
+
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn { animation: fadeIn 0.3s ease-out forwards; }
+    </style>
 </x-app-layout>

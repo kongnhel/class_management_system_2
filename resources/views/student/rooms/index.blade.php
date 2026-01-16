@@ -1,75 +1,106 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="px-4 md:px-6 lg:px-8">
-            <h2 class="text-4xl font-extrabold text-gray-900 leading-tight flex items-center">
-                {{ __('ព័ត៌មានបន្ទប់') }} <i class="fas fa-university text-3xl text-green-600 ml-4"></i>
-            </h2>
-            <p class="mt-2 text-lg text-gray-500">{{ __('ស្វែងរកព័ត៌មានអំពីបន្ទប់សិក្សា') }}</p>
-        </div>
-    </x-slot>
+    <div class="py-10 bg-[#f8fafc] min-h-screen font-['Battambang']">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            {{-- Header section with Glass Effect --}}
+            <div class="mb-12">
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div>
+                        <h2 class="text-4xl font-black text-slate-900 leading-tight flex items-center gap-4">
+                            {{ __('ព័ត៌មានបន្ទប់សិក្សា') }} 
+                            <span class="p-2.5 bg-emerald-100 text-emerald-600 rounded-2xl">
+                                <i class="fas fa-door-open text-xl"></i>
+                            </span>
+                        </h2>
+                        <p class="mt-2 text-slate-500 font-medium">{{ __('ស្វែងរកបន្ទប់សិក្សា និងការតភ្ជាប់ WiFi របស់សាលា') }}</p>
+                    </div>
 
-    <div class="py-12 bg-gray-50 min-h-screen">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white rounded-3xl shadow-2xl p-8 lg:p-12 border border-gray-200">
-
-                <div class="flex flex-col md:flex-row items-center justify-between mb-8 space-y-4 md:space-y-0">
-                    <h3 class="text-3xl font-bold text-gray-800">{{ __('បញ្ជីបន្ទប់ទាំងអស់') }}</h3>
-                    <div class="relative w-full md:w-1/3">
-                        <input type="text" id="searchInput" placeholder="{{ __('ស្វែងរកបន្ទប់...') }}" class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent shadow-sm transition duration-200 text-base placeholder-gray-400">
-                        <svg class="w-6 h-6 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
+                    <div class="relative w-full md:w-96 group">
+                        <input type="text" id="searchInput" 
+                               placeholder="{{ __('ស្វែងរកលេខបន្ទប់...') }}" 
+                               class="w-full pl-12 pr-6 py-4 bg-white border border-slate-100 rounded-[1.5rem] focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 shadow-xl shadow-slate-200/50 transition-all placeholder-slate-300 font-bold text-slate-700">
+                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-emerald-500 transition-colors">
+                            <i class="fas fa-search text-lg"></i>
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                @if ($rooms->isEmpty())
-                    <div class="flex flex-col items-center justify-center py-20 text-gray-600 bg-gray-100 rounded-2xl shadow-inner">
-                        <svg class="w-24 h-24 text-green-500 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2m-9 0V3m2 2V3m-5 8h14m-7 8a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                        </svg>
-                        <p class="text-2xl font-semibold text-gray-800">{{ __('មិនមានបន្ទប់ណាមួយត្រូវបានរកឃើញទេ') }}</p>
-                        <p class="mt-2 text-base text-gray-500">{{ __('សូមព្យាយាមស្វែងរកនៅពេលក្រោយ ឬពិនិត្យមើលការបញ្ចូលរបស់អ្នក។') }}</p>
+            @if ($rooms->isEmpty())
+                <div class="flex flex-col items-center justify-center py-24 bg-white rounded-[3rem] border border-dashed border-slate-200 shadow-sm">
+                    <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
+                        <i class="fas fa-box-open text-3xl text-slate-200"></i>
                     </div>
-                @else
-                    <div id="roomList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                        @foreach ($rooms as $room)
-                            <div class="room-card bg-white rounded-2xl shadow-lg border border-gray-200 p-6 flex flex-col transform transition duration-300 hover:scale-105 hover:shadow-2xl">
-                                <h4 class="text-2xl font-extrabold text-gray-900 mb-4 flex items-center">
-                                    <i class="fas fa-door-open text-green-600 mr-3 text-2xl"></i>
-                                    <span class="room-number-text">{{ __('បន្ទប់') }} {{ $room->room_number }}</span>
-                                </h4>
-                                <div class="space-y-4 text-gray-700 text-sm">
-                                    <p class="flex items-start">
-                                        <i class="fas fa-users w-5 h-5 mt-1 mr-3 text-green-500 flex-shrink-0"></i>
-                                        <span class="font-bold">{{ __('សមត្ថភាព') }}:</span><span class="flex-1 ml-2 text-gray-600">{{ $room->capacity }} {{ __('នាក់') }}</span>
-                                    </p>
-                                    <p class="flex items-start">
-                                        <i class="fas fa-wifi w-5 h-5 mt-1 mr-3 text-green-500 flex-shrink-0"></i>
-                                        <span class="font-bold">{{ __('ឈ្មោះ Wifi') }}:</span><span class="flex-1 ml-2 text-gray-600">{{ $room->wifi_name ?? '-' }}</span>
-                                    </p>
-                                    <p class="flex items-start">
-                                        <i class="fas fa-lock w-5 h-5 mt-1 mr-3 text-green-500 flex-shrink-0"></i>
-                                        <span class="font-bold">{{ __('ពាក្យសម្ងាត់ Wifi') }}:</span><span class="flex-1 ml-2 text-gray-600">{{ $room->wifi_password ?? '-' }}</span>
-                                    </p>
-                                    <p class="flex items-start">
-                                        <i class="fas fa-map-marker-alt w-5 h-5 mt-1 mr-3 text-green-500 flex-shrink-0"></i>
-                                        <span class="font-bold">{{ __('ទីតាំង') }}:</span><span class="flex-1 ml-2 text-gray-600">{{ $room->location_of_room ?? '-' }}</span>
-                                    </p>
-                                    <p class="flex items-start">
-                                        <i class="fas fa-clipboard w-5 h-5 mt-1 mr-3 text-green-500 flex-shrink-0"></i>
-                                        <span class="font-bold">{{ __('ប្រភេទ') }}:</span><span class="flex-1 ml-2 text-gray-600">{{ $room->type_of_room ?? '-' }}</span>
-                                    </p>
+                    <p class="text-xl font-black text-slate-800">{{ __('មិនទាន់មានទិន្នន័យបន្ទប់') }}</p>
+                </div>
+            @else
+                <div id="roomList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    @foreach ($rooms as $room)
+                        <div class="room-card group bg-white rounded-[2.5rem] border border-slate-100 p-2 transition-all duration-300 hover:shadow-2xl hover:shadow-slate-200/60 hover:-translate-y-1 relative flex flex-col">
+                            
+                            <div class="p-6 flex flex-col h-full">
+                                {{-- Card Top --}}
+                                <div class="flex justify-between items-start mb-6">
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-lg">
+                                                {{ $room->type_of_room ?? 'Lecture' }}
+                                            </span>
+                                        </div>
+                                        <h4 class="text-4xl font-black text-slate-800 room-number-text">
+                                            {{ $room->room_number }}
+                                        </h4>
+                                    </div>
+                                    <div class="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-inner">
+                                        <i class="fas fa-location-arrow"></i>
+                                    </div>
+                                </div>
+
+                                {{-- WiFi Section (Modernized) --}}
+                                <div class="mb-6 relative flex flex-col items-center p-6 bg-slate-50 rounded-[2rem] border border-slate-100 group-hover:bg-white transition-colors">
+                                    @if($room->wifi_qr_code)
+                                        <div class="relative bg-white p-3 rounded-2xl shadow-lg border border-slate-50">
+                                            <img src="{{ asset('storage/' . $room->wifi_qr_code) }}" alt="WiFi QR" class="w-32 h-32 md:w-40 md:h-40 object-cover rounded-lg">
+                                        </div>
+                                        <div class="mt-4 flex items-center gap-2 px-4 py-1.5 bg-white text-emerald-600 border border-emerald-100 rounded-full shadow-sm">
+                                            <i class="fas fa-wifi text-xs"></i>
+                                            <span class="text-[10px] font-black uppercase tracking-tighter">Scan WiFi</span>
+                                        </div>
+                                    @else
+                                        <div class="w-32 h-32 md:w-40 md:h-40 flex flex-col items-center justify-center text-slate-200 border-2 border-dashed border-slate-200 rounded-2xl">
+                                            <i class="fas fa-qrcode text-3xl mb-2"></i>
+                                            <span class="text-[9px] font-bold">No QR</span>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                {{-- Details --}}
+                                <div class="mt-auto space-y-3">
+                                    <div class="flex items-center justify-between p-3 bg-slate-50/50 rounded-xl">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fas fa-users text-slate-400 text-xs"></i>
+                                            <span class="text-xs font-bold text-slate-500 uppercase">{{ __('សមត្ថភាព') }}</span>
+                                        </div>
+                                        <span class="text-sm font-black text-slate-800">{{ $room->capacity }} {{ __('នាក់') }}</span>
+                                    </div>
+
+                                    <div class="p-3">
+                                        <span class="text-[10px] font-black text-slate-300 uppercase block mb-1">{{ __('ទីតាំង') }}</span>
+                                        <div class="flex items-start gap-2 text-xs text-slate-600 font-bold leading-relaxed">
+                                            <i class="fas fa-map-pin text-rose-400 mt-0.5"></i>
+                                            <span>{{ $room->location_of_room ?? __('មិនមានព័ត៌មានទីតាំង') }}</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        @endforeach
-                    </div>
-                @endif
-            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
         </div>
     </div>
 </x-app-layout>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/js/all.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const searchInput = document.getElementById('searchInput');
@@ -79,7 +110,7 @@
 
         const roomCards = Array.from(roomList.querySelectorAll('.room-card'));
 
-        searchInput.addEventListener('keyup', function() {
+        searchInput.addEventListener('input', function() {
             const query = this.value.toLowerCase().trim();
             let found = false;
 
@@ -95,24 +126,22 @@
                 }
             });
 
-            // You could add a "not found" message here if needed
-            const noResultsMessage = document.getElementById('noResultsMessage');
-            if (noResultsMessage) {
-                noResultsMessage.remove();
-            }
+            // Handle "No Results"
+            const existingMsg = document.getElementById('noResultsMessage');
+            if (existingMsg) existingMsg.remove();
 
             if (!found && roomCards.length > 0) {
                 const messageDiv = document.createElement('div');
                 messageDiv.id = 'noResultsMessage';
-                messageDiv.className = 'flex flex-col items-center justify-center py-20 text-gray-600 bg-gray-100 rounded-2xl shadow-inner';
+                messageDiv.className = 'col-span-full flex flex-col items-center justify-center py-20 text-slate-400 bg-white rounded-[3rem] border border-dashed border-slate-200';
                 messageDiv.innerHTML = `
-                    <svg class="w-24 h-24 text-green-500 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    <p class="text-2xl font-semibold text-gray-800">{{ __('មិនមានបន្ទប់ណាមួយត្រូវបានរកឃើញទេ') }}</p>
-                    <p class="mt-2 text-base text-gray-500">{{ __('សូមព្យាយាមស្វែងរកពាក្យផ្សេងទៀត') }}</p>
+                    <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 text-slate-200">
+                        <i class="fas fa-search text-2xl"></i>
+                    </div>
+                    <p class="text-lg font-black text-slate-800">{{ __('រកមិនឃើញលេខបន្ទប់ដែលអ្នកចង់រកទេ') }}</p>
+                    <p class="text-xs text-slate-400 mt-1">{{ __('សូមពិនិត្យមើលលេខបន្ទប់ឡើងវិញ') }}</p>
                 `;
-                roomList.parentNode.appendChild(messageDiv);
+                roomList.appendChild(messageDiv);
             }
         });
     });

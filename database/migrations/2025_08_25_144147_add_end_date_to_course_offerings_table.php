@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::table('course_offerings', function (Blueprint $table) {
             // Adds the 'end_date' column as a nullable datetime.
             // You can change 'nullable()' to 'default(now())' or 'useCurrent()' if a default is desired.
-            $table->dateTime('end_date')->nullable()->after('start_date');
+            // $table->dateTime('end_date')->nullable()->after('start_date');
+            $table->datetime('end_date')->nullable();
         });
     }
 

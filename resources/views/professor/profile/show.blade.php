@@ -1,30 +1,22 @@
-<x-app-layout> 
-    <div class="py-12 bg-gray-100 min-h-screen">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-2xl rounded-3xl p-6 md:p-10 border border-gray-200 transition-all duration-300 hover:shadow-3xl">
+<x-app-layout>
+    <div class="py-6 md:py-12 bg-gradient-to-br from-gray-50 to-green-50 min-h-screen">
+        <div class="max-w-7xl mx-auto px-2 md:px-6 lg:px-8">
+            <div class="bg-white overflow-hidden shadow-xl sm:rounded-3xl p-4 md:p-8 lg:p-12 border border-gray-100">
 
                 {{-- Header Section --}}
-                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-10 pb-6 border-b border-gray-200">
-                    <div>
-                        <h2 class="font-extrabold text-3xl md:text-4xl text-gray-900 leading-tight">
-                            {{ __('ប្រវត្តិរូបសាស្រ្តាចារ្យ') }}
+                <div class="flex flex-col md:flex-row items-center justify-between mb-6 md:mb-10 pb-6 border-b border-gray-100 gap-4">
+                    <div class="text-center md:text-left">
+                        <h2 class="font-extrabold text-2xl md:text-4xl text-gray-900 leading-tight">
+                            <i class="fas fa-id-card text-green-600 mr-2 md:hidden"></i>{{ __('ប្រវត្តិរូប') }}
                         </h2>
-                        <p class="mt-2 text-base md:text-lg text-gray-500">
-                            {{ __('មើល និងកែប្រែព័ត៌មាន Profile របស់អ្នក') }}
+                        <p class="mt-1 text-sm md:text-lg text-gray-500 italic">
+                            {{ __('គ្រប់គ្រងព័ត៌មានផ្ទាល់ខ្លួនរបស់អ្នក') }}
                         </p>
                     </div>
-                    <div>
+                    <div class="w-full md:w-auto">
                         <a href="{{ route('professor.profile.edit') }}" 
-                           class="inline-flex items-center px-5 py-3 md:px-6 md:py-3 border border-transparent text-sm md:text-base font-medium rounded-full shadow-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all transform hover:scale-105">
-                            <svg xmlns="http://www.w3.org/2000/svg" 
-                                 class="h-5 w-5 -ml-1 mr-2" 
-                                 viewBox="0 0 20 20" 
-                                 fill="currentColor">
-                                <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-                                <path fill-rule="evenodd" 
-                                      d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" 
-                                      clip-rule="evenodd" />
-                            </svg>
+                           class="flex items-center justify-center px-6 py-3 md:px-8 md:py-4 bg-green-600 text-sm md:text-base font-bold rounded-xl md:rounded-2xl text-white hover:bg-green-700 transition-all shadow-md hover:shadow-lg">
+                            <i class="fas fa-user-edit mr-2"></i>
                             {{ __('កែប្រែប្រវត្តិរូប') }}
                         </a>
                     </div>
@@ -32,114 +24,80 @@
 
                 {{-- Success Message --}}
                 @if (session('success'))
-                    <div class="bg-green-50 border border-green-200 text-green-700 px-6 py-4 rounded-2xl mb-8 flex items-center gap-3 shadow-md" role="alert">
-                        <svg xmlns="http://www.w3.org/2000/svg" 
-                             class="h-6 w-6 text-green-500" 
-                             viewBox="0 0 20 20" 
-                             fill="currentColor">
-                            <path fill-rule="evenodd" 
-                                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" 
-                                  clip-rule="evenodd" />
-                        </svg>
-                        <p class="text-sm md:text-base font-semibold">{{ session('success') }}</p>
+                    <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-3 md:p-5 rounded-xl mb-6 shadow-sm flex items-center" role="alert">
+                        <i class="fas fa-check-circle mr-3 text-green-500"></i>
+                        <span class="font-bold text-sm md:text-lg">{{ session('success') }}</span>
                     </div>
                 @endif
 
-                {{-- Profile Section --}}
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-10 items-start">
-
-                    {{-- Profile Picture --}}
-                    <div class="md:col-span-1 bg-white p-6 rounded-2xl shadow-lg border border-gray-100 flex flex-col items-center">
-                        <div class="w-32 h-32 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-green-400 shadow-md transition-transform duration-300 hover:scale-105">
-                            @if ($userProfile->profile_picture_url)
-                                <img src="{{ asset('storage/' . $userProfile->profile_picture_url) }}" 
-                                     alt="{{ $user->name }}" 
-                                     class="object-cover w-full h-full">
-                            @else
-                                <div class="w-full h-full bg-green-100 flex items-center justify-center text-green-600 text-4xl md:text-6xl font-extrabold tracking-tight">
-                                    {{ Str::upper(Str::substr($user->name, 0, 1)) }}
-                                </div>
-                            @endif
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-12">
+                    
+                    {{-- Left Column: Avatar --}}
+                    <div class="lg:col-span-4 flex flex-col items-center">
+                        <div class="relative">
+                            <div class="w-32 h-32 md:w-56 md:h-56 rounded-[2rem] md:rounded-[2.5rem] overflow-hidden border-4 md:border-8 border-white shadow-xl">
+                                @if ($userProfile->profile_picture_url)
+                                    <img src="{{ asset('storage/' . $userProfile->profile_picture_url) }}" class="object-cover w-full h-full">
+                                @else
+                                    <div class="w-full h-full bg-green-100 flex items-center justify-center text-green-600 text-4xl md:text-6xl font-black">
+                                        {{ Str::upper(Str::substr($user->name, 0, 1)) }}
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="absolute -bottom-3 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-4 py-1 rounded-full shadow-lg font-bold text-[10px] md:text-sm uppercase whitespace-nowrap">
+                                <i class="fas fa-chalkboard-teacher mr-1"></i> {{ __('សាស្រ្តាចារ្យ') }}
+                            </div>
                         </div>
-                        <h3 class="mt-6 text-2xl md:text-3xl font-extrabold text-gray-900 text-center">{{ $user->name }}</h3>
-                        <p class="mt-1 text-base md:text-lg text-gray-500 font-medium">
-                            {{ $user->role === 'professor' ? __('សាស្រ្តាចារ្យ') : Str::ucfirst($user->role) }}
-                        </p>
+                        
+                        <div class="mt-6 md:mt-10 text-center">
+                            <h3 class="text-xl md:text-3xl font-black text-gray-900">{{ $user->name }}</h3>
+                            <p class="text-xs md:text-lg text-gray-500 font-medium">{{ $user->email }}</p>
+                        </div>
                     </div>
 
-                    {{-- Profile Info --}}
-                    <div class="md:col-span-2 bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-gray-100">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {{-- Right Column: Information Details --}}
+                    <div class="lg:col-span-8">
+                        <div class="bg-gray-50 rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-10 border border-gray-100 shadow-inner">
+                            <h4 class="text-base md:text-xl font-bold text-gray-800 mb-5 md:mb-8 flex items-center">
+                                <span class="w-1.5 h-6 bg-green-500 rounded-full mr-3"></span>
+                                {{ __('ព័ត៌មានលម្អិត') }}
+                            </h4>
 
-                            {{-- Full Name (Khmer) --}}
-                            <div class="flex items-center gap-4">
-                                <div class="bg-green-50 text-green-500 p-3 rounded-xl flex-shrink-0">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-semibold text-gray-500">{{ __('ឈ្មោះពេញ (ខ្មែរ)') }}</p>
-                                    <p class="text-lg font-medium text-gray-800">{{ $userProfile->full_name_km ?? 'N/A' }}</p>
-                                </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-8">
+                                
+                                @php
+                                    $details = [
+                                        ['label' => 'ឈ្មោះខ្មែរ', 'value' => $userProfile->full_name_km, 'icon' => 'fas fa-user-circle'],
+                                        ['label' => 'ឈ្មោះអង់គ្លេស', 'value' => $userProfile->full_name_en, 'icon' => 'fas fa-font'],
+                                        ['label' => 'ភេទ', 'value' => $userProfile->gender, 'icon' => 'fas fa-venus-mars'],
+                                        ['label' => 'ថ្ងៃកំណើត', 'value' => $userProfile->date_of_birth ? \Carbon\Carbon::parse($userProfile->date_of_birth)->format('d-M-Y') : null, 'icon' => 'fas fa-calendar-alt'],
+                                        ['label' => 'Telegram', 'value' => $userProfile->telegram_user, 'icon' => 'fab fa-telegram-plane'],
+                                        ['label' => 'ទូរស័ព្ទ', 'value' => $userProfile->phone_number, 'icon' => 'fas fa-phone-alt'],
+                                        ['label' => 'អាសយដ្ឋាន', 'value' => $userProfile->address, 'icon' => 'fas fa-map-marker-alt', 'fullWidth' => true],
+                                    ];
+                                @endphp
+
+                                @foreach ($details as $detail)
+                                    <div class="{{ isset($detail['fullWidth']) ? 'md:col-span-2' : '' }}">
+                                        <div class="flex items-center p-3 md:p-4 rounded-xl bg-white border border-gray-50 shadow-sm h-full">
+                                            <div class="w-10 h-10 md:w-12 md:h-12 bg-green-50 rounded-lg flex items-center justify-center text-green-600 mr-3 md:mr-5 shrink-0 transition-colors">
+                                                <i class="{{ $detail['icon'] }} text-sm md:text-lg"></i>
+                                            </div>
+                                            <div class="min-w-0">
+                                                <p class="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-tighter md:tracking-widest">{{ __($detail['label']) }}</p>
+                                                <p class="text-sm md:text-lg font-bold text-gray-800 truncate md:whitespace-normal">
+                                                    {{ $detail['value'] ?? '---' }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+
                             </div>
-
-                            {{-- Full Name (English) --}}
-                            <div class="flex items-center gap-4">
-                                <div class="bg-green-50 text-green-500 p-3 rounded-xl flex-shrink-0">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-semibold text-gray-500">{{ __('ឈ្មោះពេញ (អង់គ្លេស)') }}</p>
-                                    <p class="text-lg font-medium text-gray-800">{{ $userProfile->full_name_en ?? 'N/A' }}</p>
-                                </div>
-                            </div>
-
-                            {{-- Gender --}}
-                            <div class="flex items-center gap-4">
-                                <div class="bg-green-50 text-green-500 p-3 rounded-xl flex-shrink-0">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M16 12L12 8L8 12"></path><line x1="12" y1="16" x2="12" y2="8"></line></svg>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-semibold text-gray-500">{{ __('ភេទ') }}</p>
-                                    <p class="text-lg font-medium text-gray-800">{{ $userProfile->gender ?? 'N/A' }}</p>
-                                </div>
-                            </div>
-
-                            {{-- Date of Birth --}}
-                            <div class="flex items-center gap-4">
-                                <div class="bg-green-50 text-green-500 p-3 rounded-xl flex-shrink-0">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-semibold text-gray-500">{{ __('ថ្ងៃខែឆ្នាំកំណើត') }}</p>
-                                    <p class="text-lg font-medium text-gray-800">{{ $userProfile->date_of_birth ? $userProfile->date_of_birth->format('d/m/Y') : 'N/A' }}</p>
-                                </div>
-                            </div>
-
-                            {{-- Phone Number --}}
-                            <div class="flex items-center gap-4">
-                                <div class="bg-green-50 text-green-500 p-3 rounded-xl flex-shrink-0">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 3.08 2h3a2 2 0 0 1 2 1.74 15.61 15.61 0 0 0 .93 4.63 1 1 0 0 1-.33 1.05l-2.43 2.43a15.75 15.75 0 0 0 6 6l2.43-2.43a1 1 0 0 1 1.05-.33 15.61 15.61 0 0 0 4.63.93A2 2 0 0 1 22 16.92z"></path></svg>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-semibold text-gray-500">{{ __('លេខទូរស័ព្ទ') }}</p>
-                                    <p class="text-lg font-medium text-gray-800">{{ $userProfile->phone_number ?? 'N/A' }}</p>
-                                </div>
-                            </div>
-
-                            {{-- Address --}}
-                            <div class="flex items-center gap-4">
-                                <div class="bg-green-50 text-green-500 p-3 rounded-xl flex-shrink-0">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-semibold text-gray-500">{{ __('អាសយដ្ឋាន') }}</p>
-                                    <p class="text-lg font-medium text-gray-800">{{ $userProfile->address ?? 'N/A' }}</p>
-                                </div>
-                            </div>
-
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
