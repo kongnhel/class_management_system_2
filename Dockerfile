@@ -42,4 +42,7 @@ RUN chown -R www-data:www-data /var/www/html && \
 # កំណត់ Port 9000 សម្រាប់ PHP-FPM
 EXPOSE 9000
 
-CMD ["php-fpm"]
+# CMD ["php-fpm"]
+
+EXPOSE 80
+CMD php artisan serve --host=0.0.0.0 --port=80
