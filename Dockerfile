@@ -1,48 +1,27 @@
-FROM php:8.2-fpm
+# ប្រើ PHP ជាមួយ Apache ដើម្បីឱ្យវាងាយស្រួលដំឡើង
+FROM php:8.2-apache
 
-# Step 1: ដំឡើង Dependencies របស់ប្រព័ន្ធ និង Libraries ទាំងអស់ រួមទាំង zlib1g-dev
+# ១. ដំឡើង System Dependencies ដែលចាំបាច់
 RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpq-dev \
-    libonig-dev \
-    libxml2-dev \
-    libzip-dev \
-    libpng-dev \
-    libjpeg-dev \
-    zlib1g-dev \
-    zip \
-    unzip \
-    --no-install-recommends
+    libpng-dev libjpeg-dev libfreetype6-dev zip git unzip \
+    && docker-php-ext-install pdo pdo_mysql gd
 
-# Step 2: ដំឡើង PHP Extensions រួមទាំង pdo_pgsql និងសម្អាត Cache
-RUN docker-php-ext-install -j$(nproc) \
-    pdo_pgsql \
-    mbstring \
-    exif \
-    pcntl \
-    bcmath \
-    gd \
-    sockets \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+# ២. កំណត់ Document Root ទៅកាន់ folder public របស់ Laravel
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+RUN a2enmod rewrite
 
-# ដំឡើង Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# កំណត់ទីតាំងធ្វើការ
+# ៣. ចម្លងកូដចូលក្នុង Container
 WORKDIR /var/www/html
+COPY . .
 
-# ចម្លងឯកសារកម្មវិធីទាំងអស់ចូលក្នុង Container
-COPY . /var/www/html
+# ៤. ដំឡើង Composer ឱ្យបានត្រឹមត្រូវ (នេះជាចំណុចដែលបាត់)
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+RUN composer install --no-dev --optimize-autoloader
 
-# កែសម្រួល Permissions សម្រាប់ storage
-RUN chown -R www-data:www-data /var/www/html && \
-    chmod -R 775 /var/www/html/storage
+# ៥. កំណត់សិទ្ធិឱ្យ Folder storage និង cache
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# កំណត់ Port 9000 សម្រាប់ PHP-FPM
-EXPOSE 9000
-
-# CMD ["php-fpm"]
-
+# ៦. បើក Port 80
 EXPOSE 80
-CMD php artisan serve --host=0.0.0.0 --port=80
