@@ -38,7 +38,7 @@ use Illuminate\Support\Str; // បានបន្ថែម
 use Illuminate\Support\Facades\Notification as NotificationFacade; // បានเอา comment ចេញ
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Storage;
-
+use Illuminate\Support\Facades\Log;
 use App\Exports\GradebookExport;
 use Maatwebsite\Excel\Facades\Excel;
 
