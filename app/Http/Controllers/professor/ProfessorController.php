@@ -1569,10 +1569,17 @@ public function storeGrades(Request $request, $assessment_id)
 
 
 
+// ១. ប្រាកដថាអ្នកមាន Use Facades ទាំងនេះនៅផ្នែកខាងលើនៃឯកសារ
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+
 public function updateProfile(Request $request)
 {
     $user = Auth::user();
 
+    // ២. ការធ្វើ Validation ឱ្យត្រូវនឹង Column ក្នុង DB
     $validator = Validator::make($request->all(), [
         'full_name_km' => 'required|string|max:255',
         'full_name_en' => 'nullable|string|max:255',
@@ -1590,37 +1597,32 @@ public function updateProfile(Request $request)
 
     $userProfile = $user->userProfile()->firstOrNew(['user_id' => $user->id]);
 
-    // ✅ Upload Profile Picture (Safe)
+    // ✅ ៣. ការ Upload ទៅ Cloudinary (វិធីសាស្ត្រដែលមានសុវត្ថិភាពបំផុត)
     if ($request->hasFile('profile_picture_url')) {
-
-        // 🛑 Guard: Cloudinary មិន config
-        if (!config('cloudinary.cloud_name')) {
-            return back()->withErrors([
-                'profile_picture_url' => 'Cloudinary មិនទាន់បានកំណត់ (ENV missing)'
-            ]);
-        }
-
         try {
-            $result = Cloudinary::upload(
-                $request->file('profile_picture_url')->getRealPath(),
-                [
-                    'folder' => 'profile_pictures',
-                    'resource_type' => 'image',
+            // ប្រើ cloudinary() helper ដើម្បីទាញយក CLOUDINARY_URL ពី ENV ដោយផ្ទាល់
+            $result = cloudinary()->upload($request->file('profile_picture_url')->getRealPath(), [
+                'folder' => 'profile_pictures',
+                'transformation' => [
+                    'width' => 400,
+                    'height' => 400,
+                    'crop' => 'limit'
                 ]
-            );
+            ]);
 
             $userProfile->profile_picture_url = $result->getSecurePath();
 
         } catch (\Exception $e) {
-            Log::error('Cloudinary Upload Error: '.$e->getMessage());
+            // ការប្រើ \Log:: បែបនេះនឹងការពារ Error "Class Log not found" ក្នុងរូបភាពទី ១៧
+            \Log::error('Cloudinary Upload Error: ' . $e->getMessage());
 
             return back()->withErrors([
-                'profile_picture' => 'Upload រូបភាពមិនបាន សូមព្យាយាមម្តងទៀត'
+                'profile_picture_url' => 'មានបញ្ហាក្នុងការ Upload រូបភាព៖ ' . $e->getMessage()
             ]);
         }
     }
 
-    // រក្សាទុកព័ត៌មានផ្សេងៗ
+    // ៤. រក្សាទុកព័ត៌មានទាំងអស់ចូលក្នុង UserProfile Model
     $userProfile->fill($validator->validated());
     $userProfile->save();
 
@@ -1628,6 +1630,7 @@ public function updateProfile(Request $request)
         ->route('professor.profile.show')
         ->with('success', 'ប្រវត្តិរូបរបស់អ្នកត្រូវបានកែប្រែដោយជោគជ័យ!');
 }
+
 
 
 public function toggleClassLeader($offeringId, $studentUserId)
