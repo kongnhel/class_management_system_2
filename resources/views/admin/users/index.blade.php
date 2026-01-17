@@ -135,13 +135,16 @@
                     @foreach ($admins as $admin)
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-6 py-3">
-                                @if ($admin->profile && $admin->profile->profile_picture_url)
-                                    <img src="{{ asset('storage/' . $admin->profile->profile_picture_url) }}" class="h-10 w-10 rounded-full object-cover border border-gray-100">
-                                @else
-                                    <div class="h-10 w-10 rounded-full bg-red-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
-                                        {{ strtoupper(substr($admin->name, 0, 1)) }}
-                                    </div>
-                                @endif
+@if ($admin->profile && $admin->profile->profile_picture_url)
+    {{-- ប្តូរមកប្រើ URL ផ្ទាល់ពី ImgBB --}}
+    <img src="{{ $admin->profile->profile_picture_url }}" 
+         class="h-12 w-12 rounded-full object-cover border border-gray-100"
+         alt="{{ $admin->name }}">
+@else
+    <div class="h-12 w-12 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center text-white font-black text-xl shadow-md flex-shrink-0">
+        {{ strtoupper(substr($admin->name, 0, 1)) }}
+    </div>
+@endif
                             </td>
                             <td class="px-6 py-3 font-semibold text-gray-900">{{ $admin->name }}</td>
                             <td class="px-6 py-3 text-gray-600">{{ $admin->email }}</td>
