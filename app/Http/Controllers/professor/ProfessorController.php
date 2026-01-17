@@ -34,8 +34,8 @@ use App\Models\StudentCourseEnrollment;
 use App\Notifications\GeneralNotification;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str; // បានបន្ថែម
-use Illuminate\Support\Facades\Notification as NotificationFacade; // បានเอา comment ចេញ
+use Illuminate\Support\Str; 
+use Illuminate\Support\Facades\Notification as NotificationFacade; 
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Storage;
 use App\Exports\GradebookExport;
@@ -46,7 +46,6 @@ use PhpOffice\PhpWord\Shared\Converter;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 // use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Cloudinary\Configuration\Configuration;
 
 
@@ -137,22 +136,8 @@ class ProfessorController extends Controller
     }
 
 
-public function markAsRead(Request $request, Announcement $announcement)
-{
-    // Check if the authenticated user is a professor
-    if (Auth::user()->role === 'professor') {
-        $announcement->is_read = true;
-        $announcement->save();
 
-        return response()->json(['message' => 'សេចក្តីប្រកាសត្រូវបានសម្គាល់ថាបានអានហើយ។']);
-    }
 
-    return response()->json(['message' => 'គ្មានការអនុញ្ញាត.'], 403);
-}
-// assessments
-    /**
-     * Display a list of course offerings taught by the authenticated professor.
-     */
     public function myCourseOfferings()
     {
         $user = Auth::user();
@@ -204,66 +189,6 @@ public function markAsRead(Request $request, Announcement $announcement)
         $courseOfferings = CourseOffering::with('course', 'lecturer')->paginate(10);
         return view('professor.all-course-offerings.index', compact('courseOfferings'));
     }
-
-// public function manageGrades($offering_id)
-// {
-//     $courseOffering = CourseOffering::with([
-//         'course',
-//         'studentCourseEnrollments.student.studentProfile' 
-//     ])->findOrFail($offering_id);
-
-//     // ១. ទាញយក Assignments, Exams, Quizzes
-//     $assignments = \App\Models\Assignment::where('course_offering_id', $offering_id)->get();
-//     $exams = \App\Models\Exam::where('course_offering_id', $offering_id)->get();
-//     $quizzes = \App\Models\Quiz::where('course_offering_id', $offering_id)->get();
-
-//     $assessments = collect($assignments)->concat($exams)->concat($quizzes)->sortBy('created_at');
-
-//     // ២. រៀបចំ Gradebook ដើម្បីយកមកគណនា Rank
-//     $gradebook = [];
-//     $students = $courseOffering->studentCourseEnrollments->map(function ($enrollment) use ($assessments, &$gradebook) {
-//         $student = $enrollment->student;
-//         $totalScore = $student->attendance_score ?? 0;
-
-//         foreach ($assessments as $assessment) {
-//             // កំណត់ប្រភេទឱ្យត្រូវតាម Class (assignment, quiz, exam)
-//             $type = ($assessment instanceof \App\Models\Assignment) ? 'assignment' : 
-//                    (($assessment instanceof \App\Models\Quiz) ? 'quiz' : 'exam');
-
-//             // ទាញពិន្ទុពី ExamResult (ប្រើ assessment_id សម្រាប់គ្រប់ប្រភេទ)
-//             $score = \App\Models\ExamResult::where('assessment_id', $assessment->id)
-//                 ->where('student_user_id', $student->id)
-//                 ->where('assessment_type', $type) // ឆែកតាមប្រភេទ 'assignment', 'exam', 'quiz'
-//                 ->value('score_obtained');
-            
-//             // រក្សាទុកក្នុង Array សម្រាប់ផ្ញើទៅ Blade
-//             $gradebook[$student->id][$type . '_' . $assessment->id] = $score;
-            
-//             // បូកបញ្ចូលក្នុងពិន្ទុសរុប
-//             $totalScore += (is_numeric($score) ? $score : 0);
-//         }
-
-//         $student->temp_total = $totalScore;
-//         return $student;
-//     });
-
-//     // ៣. តម្រៀប Ranking (ទុកដដែល)
-//     $students = $students->sortByDesc('temp_total')->values();
-
-//     // ៤. ផ្ដល់ Rank និង Grade (ទុកដដែល)
-//     foreach ($students as $index => $student) {
-//         $student->rank = $index + 1;
-//         $ts = $student->temp_total;
-//         if ($ts >= 85) $student->letterGrade = 'A';
-//         elseif ($ts >= 80) $student->letterGrade = 'B+';
-//         elseif ($ts >= 70) $student->letterGrade = 'B';
-//         elseif ($ts >= 65) $student->letterGrade = 'C+';
-//         elseif ($ts >= 50) $student->letterGrade = 'C';
-//         else $student->letterGrade = 'F';
-//     }
-
-//     return view('professor.grades.index', compact('courseOffering', 'students', 'assessments', 'gradebook'));
-// }
 
 
 public function manageGrades($offering_id)
@@ -1454,9 +1379,7 @@ public function storeGrades(Request $request, $assessment_id)
         return view('professor.grading-categories.index', compact('course'));
     }
 
-    /**
-     * Store a new grading category for a specific course.
-     */
+
     public function storeGradingCategory(Request $request, Course $course)
     {
         $validated = $request->validate([
@@ -1518,50 +1441,7 @@ public function storeGrades(Request $request, $assessment_id)
         return view('professor.profile.edit', compact('user', 'userProfile'));
     }
 
-    /**
-     * Update the professor's profile in storage.
-     */
-// public function updateProfile(Request $request)
-// {
-//     $user = Auth::user();
 
-//     $validator = Validator::make($request->all(), [
-//         'full_name_km' => 'required|string|max:255',
-//         'full_name_en' => 'nullable|string|max:255',
-//         'gender' => 'required|in:male,female',
-//         'date_of_birth' => 'nullable|date',
-//         'phone_number' => 'nullable|string|max:20',
-//         'telegram_user' => 'nullable|string|max:255', // បន្ថែមចំណុចនេះ
-//         'address' => 'nullable|string|max:255',
-//         'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-//     ]);
-
-//     if ($validator->fails()) {
-//         return redirect()->back()->withErrors($validator)->withInput();
-//     }
-
-//     $userProfile = $user->userProfile()->firstOrNew(['user_id' => $user->id]);
-
-//     // ការគ្រប់គ្រងរូបភាព Profile
-//     if ($request->hasFile('profile_picture')) {
-//         if ($userProfile->profile_picture_url) {
-//             Storage::disk('public')->delete($userProfile->profile_picture_url);
-//         }
-//         $path = $request->file('profile_picture')->store('profile_pictures', 'public');
-//         $userProfile->profile_picture_url = $path;
-//     }
-
-//     // រក្សាទុកទិន្នន័យទាំងអស់ រួមទាំង telegram_user ថ្មី
-//     $userProfile->fill($validator->validated());
-//     $userProfile->save();
-
-//     Session::flash('success', 'ប្រវត្តិរូបរបស់អ្នកត្រូវបានកែប្រែដោយជោគជ័យ!');
-
-//     return redirect()->route('professor.profile.show');
-// }
-
-
-// updateProfilePicture
 
 
 public function updateProfile(Request $request) {
@@ -1614,6 +1494,7 @@ public function updateProfile(Request $request) {
         ->with('success', 'ប្រវត្តិរូបរបស់អ្នកត្រូវបានកែប្រែដោយជោគជ័យ!');
 }
 
+
 public function toggleClassLeader($offeringId, $studentUserId)
 {
     // ១. ស្វែងរក record ក្នុង table student_course_enrollments
@@ -1639,7 +1520,21 @@ public function toggleClassLeader($offeringId, $studentUserId)
 }
 
 
+public function markAsRead(Request $request, Announcement $announcement)
+{
+    // ពិនិត្យមើលថាតើអ្នកប្រើប្រាស់គឺជាសាស្ត្រាចារ្យឬអត់
+    if (Auth::user()->role === 'professor') {
+        $announcement->is_read = true;
+        $announcement->save();
 
+        return response()->json([
+            'success' => true, 
+            'message' => 'សេចក្តីប្រកាសត្រូវបានសម្គាល់ថាបានអានហើយ។'
+        ]);
+    }
+
+    return response()->json(['success' => false, 'message' => 'គ្មានការអនុញ្ញាត។'], 403);
+}
 
 
 

@@ -252,25 +252,35 @@
         </div>
     </div>
 
-    <script>
-        const readText = "{{ __('បានអានហើយ') }}";
-        function markAsRead(id) {
-            fetch(`/professor/announcements/${id}/mark-as-read`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.message === 'Announcement marked as read.') {
-                    const el = document.getElementById(`announcement-${id}`);
-                    el.classList.add('opacity-60');
+<script>
+    const readText = "{{ __('បានអានហើយ') }}";
+
+    function markAsRead(id) {
+        fetch(`/professor/announcements/${id}/mark-as-read`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            // ប្រើ data.success ដើម្បីផ្ទៀងផ្ទាត់វិញទើបមានសុវត្ថិភាពជាង
+            if (data.success) {
+                const el = document.getElementById(`announcement-${id}`);
+                if (el) {
+                    el.classList.add('opacity-60'); // បន្ថយពណ៌អត្ថបទ
                     const btn = el.querySelector('button');
-                    if(btn) btn.outerHTML = `<span class="text-xs text-green-600 font-bold">${readText}</span>`;
+                    if(btn) {
+                        btn.outerHTML = `<span class="text-xs text-green-600 font-bold">${readText}</span>`;
+                    }
                 }
-            });
-        }
-    </script>
+            } else {
+                alert(data.message); // បង្ហាញសារកំហុសបើមាន
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+</script>
 </x-app-layout>

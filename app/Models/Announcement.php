@@ -15,6 +15,7 @@ class Announcement extends Model
         'title_en',
         'content_km',
         'content_en',
+        'is_read',
         'target_role',
         'course_offering_id',
     ];
