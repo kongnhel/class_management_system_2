@@ -105,6 +105,7 @@
                             </div>
 
                         </div>
+                        
                         <div x-show="userRole === 'professor'" x-cloak class="space-y-6 mt-6">
                             <h4 class="text-2xl font-bold text-gray-800 mb-4">{{ __('ព័ត៌មានសាស្ត្រាចារ្យ') }}</h4>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -127,6 +128,7 @@
                                     <x-input-error :messages="$errors->get('department_id')" class="mt-2" />
                                 </div>
                             </div>
+                        </div>
 
                         <div class="border-t border-gray-100 pt-8">
                             <h4 class="text-xl font-bold text-gray-800 mb-6 flex items-center">

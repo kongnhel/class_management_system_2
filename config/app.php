@@ -42,7 +42,7 @@ return [
     */
 
     'debug' => (bool) env('APP_DEBUG', false),
-
+    'Cloudinary' => CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary::class,
     /*
     |--------------------------------------------------------------------------
     | Application URL
