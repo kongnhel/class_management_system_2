@@ -5,11 +5,9 @@ namespace App\Http\Controllers\admin;
 use App\Http\Controllers\Controller;
 use App\Models\Room;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Kreait\Firebase\Factory;
-use Illuminate\Support\Facades\Http;
-// បន្ថែម Cloudinary Facade
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class RoomController extends Controller
 {
@@ -31,13 +29,14 @@ class RoomController extends Controller
     }
 
     /**
-     * ផ្ញើសញ្ញាទៅ Firebase
+     * ផ្ញើសញ្ញាទៅ Firebase ជាមួយសារជាក់លាក់
+     * ប្តូរទៅកាន់ Reference 'rooms_sync' ដើម្បីឱ្យត្រូវជាមួយ JS ក្នុង Navigation
      */
     private function syncWithFirebase($message = 'ទិន្នន័យបន្ទប់ត្រូវបានធ្វើបច្ចុប្បន្នភាព')
     {
         try {
             $this->getFirebaseDatabase()
-                ->getReference('rooms_sync')
+                ->getReference('rooms_sync') // ប្រើ rooms_sync សម្រាប់ទំព័របន្ទប់
                 ->set([
                     'updated_at' => now()->timestamp,
                     'message' => $message 
@@ -57,11 +56,10 @@ class RoomController extends Controller
     {
         return view('admin.rooms.create');
     }
-
     public function show(Room $room)
-    {
-        return view('admin.rooms.show', compact('room'));
-    }
+{
+    return view('admin.rooms.show', compact('room'));
+}
 
     public function store(Request $request)
     {
@@ -73,33 +71,24 @@ class RoomController extends Controller
             'type_of_room'     => 'nullable|string|max:255',
         ]);
 
-$data = $request->except('wifi_qr_code');
+        $data = $request->all();
 
-    if ($request->hasFile('wifi_qr_code')) {
-        $file = $request->file('wifi_qr_code');
-        
-        // ផ្ញើរូបភាពទៅ ImgBB API
-        $response = Http::asMultipart()->post('https://api.imgbb.com/1/upload', [
-            'key' => env('IMGBB_API_KEY'),
-            'image' => base64_encode(file_get_contents($file->getRealPath())),
-        ]);
-
-        if ($response->successful()) {
-            // យក URL ដែល ImgBB ផ្ដល់ឱ្យមកក្នុង Database
-            $data['wifi_qr_code'] = $response->json()['data']['url'];
-        } else {
-            return back()->withErrors(['wifi_qr_code' => 'ការ Upload ទៅ ImgBB បរាជ័យ']);
+        if ($request->hasFile('wifi_qr_code')) {
+            $imagePath = $request->file('wifi_qr_code')->store('rooms/qrcodes', 'public');
+            $data['wifi_qr_code'] = $imagePath;
         }
-    }
 
-    $room = Room::create($data);
+        $room = Room::create($data);
 
+        // --- បញ្ជូនទិន្នន័យ និងផ្ញើសារទៅ Firebase ---
         try {
             $this->getFirebaseDatabase()->getReference('rooms/' . $room->id)->set([
                 'room_number' => $room->room_number,
                 'capacity'    => $room->capacity,
                 'updated_at'  => now()->toDateTimeString()
             ]);
+            
+            // ផ្ញើសារប្រាប់ថាបានបង្កើតបន្ទប់ថ្មី
             $this->syncWithFirebase("បន្ទប់លេខ " . $room->room_number . " ត្រូវបានបង្កើតថ្មី!"); 
         } catch (\Exception $e) {
             Log::error('Firebase Store Error: ' . $e->getMessage());
@@ -108,14 +97,10 @@ $data = $request->except('wifi_qr_code');
         return redirect()->route('admin.rooms.index')->with('success', 'បន្ទប់ត្រូវបានបង្កើតដោយជោគជ័យ!');
     }
 
-
-    // App\Http\Controllers\admin\RoomController.php
-
-public function edit(Room $room)
-{
-    // បង្ហាញទំព័រ Form សម្រាប់កែប្រែទិន្នន័យបន្ទប់
-    return view('admin.rooms.edit', compact('room'));
-}
+    public function edit(Room $room)
+    {
+        return view('admin.rooms.edit', compact('room'));
+    }
 
     public function update(Request $request, Room $room)
     {
@@ -127,29 +112,27 @@ public function edit(Room $room)
             'type_of_room'     => 'nullable|string|max:255',
         ]);
 
-$data = $request->except('wifi_qr_code');
+        $data = $request->all();
 
-    if ($request->hasFile('wifi_qr_code')) {
-        $file = $request->file('wifi_qr_code');
-        
-        $response = Http::asMultipart()->post('https://api.imgbb.com/1/upload', [
-            'key' => env('IMGBB_API_KEY'),
-            'image' => base64_encode(file_get_contents($file->getRealPath())),
-        ]);
-
-        if ($response->successful()) {
-            $data['wifi_qr_code'] = $response->json()['data']['url'];
+        if ($request->hasFile('wifi_qr_code')) {
+            if ($room->wifi_qr_code) {
+                Storage::disk('public')->delete($room->wifi_qr_code);
+            }
+            $imagePath = $request->file('wifi_qr_code')->store('rooms/qrcodes', 'public');
+            $data['wifi_qr_code'] = $imagePath;
         }
-    }
 
-    $room->update($data);
+        $room->update($data);
 
+        // --- Update ទៅ Firebase ---
         try {
             $this->getFirebaseDatabase()->getReference('rooms/' . $room->id)->update([
                 'room_number' => $room->room_number,
                 'capacity'    => $room->capacity,
                 'updated_at'  => now()->toDateTimeString()
             ]);
+            
+            // ផ្ញើសារប្រាប់ថាបានកែប្រែ
             $this->syncWithFirebase("ទិន្នន័យបន្ទប់លេខ " . $room->room_number . " ត្រូវបានកែប្រែ!");
         } catch (\Exception $e) {
             Log::error('Firebase Update Error: ' . $e->getMessage());
@@ -163,11 +146,17 @@ $data = $request->except('wifi_qr_code');
         $roomNumber = $room->room_number;
         $roomId = $room->id;
 
-        // ចំណាំ៖ ការលុបលើ Cloudinary ត្រូវការ Public ID ប្រសិនបើអ្នកចង់សម្អាត Storage
+        if ($room->wifi_qr_code) {
+            Storage::disk('public')->delete($room->wifi_qr_code);
+        }
+
         $room->delete();
 
+        // --- លុបចេញពី Firebase ---
         try {
             $this->getFirebaseDatabase()->getReference('rooms/' . $roomId)->remove();
+            
+            // ផ្ញើសារប្រាប់ថាបានលុប
             $this->syncWithFirebase("បន្ទប់លេខ " . $roomNumber . " ត្រូវបានលុបចេញពីប្រព័ន្ធ!");
         } catch (\Exception $e) {
             Log::error('Firebase Delete Error: ' . $e->getMessage());

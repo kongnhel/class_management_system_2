@@ -1,4 +1,9 @@
 <x-app-layout>
+    @php
+        // ទាញយក URL រូបភាពពី ImgBB ដោយផ្ទាល់ចេញពី userProfile
+        $profileUrl = $user->userProfile?->profile_picture_url;
+    @endphp
+
     <div class="py-12 bg-[#f8fafc] min-h-screen font-['Battambang']">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             
@@ -9,10 +14,12 @@
                 <div class="relative h-32 bg-gradient-to-r from-indigo-600 to-blue-500">
                     <div class="absolute -bottom-16 left-0 right-0 flex justify-center">
                         <div class="relative group">
+                            {{-- Profile Picture Container --}}
                             <div id="profile-picture-container" class="w-32 h-32 md:w-36 md:h-36 rounded-[2.5rem] bg-white p-1.5 shadow-2xl cursor-pointer overflow-hidden transition-transform active:scale-95">
                                 <div class="w-full h-full rounded-[2rem] overflow-hidden bg-slate-100 flex items-center justify-center">
-                                    @if ($studentProfile && $studentProfile->profile_picture_url)
-                                        <img src="{{ asset('storage/' . $studentProfile->profile_picture_url) }}" alt="{{ $user->name }}" class="object-cover w-full h-full" id="profile-picture-preview">
+                                    {{-- បង្ហាញរូបភាពពី ImgBB ដោយផ្ទាល់ (លុប asset('storage/') ចេញ) --}}
+                                    @if ($profileUrl)
+                                        <img src="{{ $profileUrl }}" alt="{{ $user->name }}" class="object-cover w-full h-full" id="profile-picture-preview">
                                     @else
                                         <div id="profile-picture-placeholder" class="text-indigo-500 text-4xl font-black">
                                             {{ Str::upper(Str::substr($user->name, 0, 1)) }}
@@ -38,7 +45,14 @@
                         <p class="text-sm text-slate-400 font-medium mt-1">{{ __('រក្សាទុកព័ត៌មានផ្ទាល់ខ្លួនរបស់អ្នកឱ្យទាន់សម័យ') }}</p>
                     </div>
 
-                    {{-- Alert Messages --}}
+                    {{-- Message Alerts --}}
+                    @if (session('success'))
+                        <div class="bg-emerald-50 border border-emerald-100 text-emerald-600 p-4 rounded-2xl mb-8 flex items-center gap-3">
+                            <i class="fas fa-check-circle"></i>
+                            <span class="text-sm font-bold">{{ session('success') }}</span>
+                        </div>
+                    @endif
+
                     @if (session('error'))
                         <div class="bg-red-50 border border-red-100 text-red-600 p-4 rounded-2xl mb-8 flex items-center gap-3">
                             <i class="fas fa-exclamation-circle"></i>
@@ -61,10 +75,11 @@
                                     <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
                                         <i class="fas fa-user-tag"></i>
                                     </span>
-                                    <input type="text" name="full_name_km" id="full_name_km" value="{{ old('full_name_km', $studentProfile->full_name_km ?? '') }}" required 
+                                    <input type="text" name="full_name_km" id="full_name_km" value="{{ old('full_name_km', $user->userProfile->full_name_km ?? '') }}" required 
                                            class="block w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white outline-none transition-all font-bold text-slate-700" 
                                            placeholder="បញ្ជាក់ឈ្មោះជាភាសាខ្មែរ">
                                 </div>
+                                <x-input-error :messages="$errors->get('full_name_km')" class="mt-2" />
                             </div>
 
                             {{-- Full Name (English) --}}
@@ -74,7 +89,7 @@
                                     <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
                                         <i class="fas fa-id-card"></i>
                                     </span>
-                                    <input type="text" name="full_name_en" id="full_name_en" value="{{ old('full_name_en', $studentProfile->full_name_en ?? '') }}" 
+                                    <input type="text" name="full_name_en" id="full_name_en" value="{{ old('full_name_en', $user->userProfile->full_name_en ?? '') }}" 
                                            class="block w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white outline-none transition-all font-bold text-slate-700" 
                                            placeholder="Full Name in English">
                                 </div>
@@ -90,8 +105,8 @@
                                     <select id="gender" name="gender" required 
                                             class="block w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white outline-none transition-all font-bold text-slate-700 appearance-none cursor-pointer">
                                         <option value="" disabled selected>{{ __('ជ្រើសរើសភេទ') }}</option>
-                                        <option value="male" @if(old('gender', $studentProfile->gender ?? '') == 'male') selected @endif>{{ __('ប្រុស') }}</option>
-                                        <option value="female" @if(old('gender', $studentProfile->gender ?? '') == 'female') selected @endif>{{ __('ស្រី') }}</option>
+                                        <option value="male" @if(old('gender', $user->userProfile->gender ?? '') == 'male') selected @endif>{{ __('ប្រុស') }}</option>
+                                        <option value="female" @if(old('gender', $user->userProfile->gender ?? '') == 'female') selected @endif>{{ __('ស្រី') }}</option>
                                     </select>
                                 </div>
                             </div>
@@ -103,7 +118,7 @@
                                     <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
                                         <i class="fas fa-calendar-alt"></i>
                                     </span>
-                                    <input type="date" name="date_of_birth" id="date_of_birth" value="{{ old('date_of_birth', $studentProfile && $studentProfile->date_of_birth ? \Carbon\Carbon::parse($studentProfile->date_of_birth)->format('Y-m-d') : '') }}" 
+                                    <input type="date" name="date_of_birth" id="date_of_birth" value="{{ old('date_of_birth', isset($user->userProfile->date_of_birth) ? \Carbon\Carbon::parse($user->userProfile->date_of_birth)->format('Y-m-d') : '') }}" 
                                            class="block w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white outline-none transition-all font-bold text-slate-700">
                                 </div>
                             </div>
@@ -115,9 +130,9 @@
                                     <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
                                         <i class="fas fa-phone-alt"></i>
                                     </span>
-                                    <input type="text" name="phone_number" id="phone_number" value="{{ old('phone_number', $studentProfile->phone_number ?? '') }}" 
+                                    <input type="text" name="phone_number" id="phone_number" value="{{ old('phone_number', $user->userProfile->phone_number ?? '') }}" 
                                            class="block w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white outline-none transition-all font-bold text-slate-700" 
-                                           placeholder="ឧទាហរណ៍៖ 012 345 678">
+                                           placeholder="012 345 678">
                                 </div>
                             </div>
 
@@ -128,7 +143,7 @@
                                     <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
                                         <i class="fas fa-map-marker-alt"></i>
                                     </span>
-                                    <input type="text" name="address" id="address" value="{{ old('address', $studentProfile->address ?? '') }}" 
+                                    <input type="text" name="address" id="address" value="{{ old('address', $user->userProfile->address ?? '') }}" 
                                            class="block w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white outline-none transition-all font-bold text-slate-700" 
                                            placeholder="រាជធានីភ្នំពេញ, កម្ពុជា">
                                 </div>
@@ -155,15 +170,14 @@
     </div>
 
     <script>
-        // Trigger file input
+        // Trigger file input នៅពេលចុចលើរង្វង់រូបភាព
         document.getElementById('profile-picture-container').addEventListener('click', function() {
             document.getElementById('profile_picture').click();
         });
 
-        // Preview image
+        // បង្ហាញរូបភាព Preview ភ្លាមៗ
         document.getElementById('profile_picture').addEventListener('change', function(e) {
             const file = e.target.files[0];
-            const container = document.getElementById('profile-picture-container');
             let preview = document.getElementById('profile-picture-preview');
             let placeholder = document.getElementById('profile-picture-placeholder');
 

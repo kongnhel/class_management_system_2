@@ -14,6 +14,7 @@ use App\Models\Program;
 
 class ProfessorProfileController extends Controller
 {
+    // updateProfilePicture
     /**
      * មុខងារជំនួយសម្រាប់ទាញយក Profile របស់សាស្ត្រាចារ្យដែលបានផ្ទៀងផ្ទាត់។
      *

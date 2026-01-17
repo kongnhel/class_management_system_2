@@ -28,9 +28,9 @@
 @php
     $user = Auth::user();
     
-    // ១. ទាញយក URL រូបភាព (ឆែកទាំងពីរកន្លែង)
-    $profilePath = $user->userProfile?->profile_picture_url ?? $user->studentProfile?->profile_picture_url;
-    $profileUrl = $profilePath ? asset('storage/' . $profilePath) : null;
+    // ១. ទាញយក URL រូបភាព (ប្រើ URL ពី ImgBB ដោយផ្ទាល់)
+    // លុប asset('storage/' . ...) ចេញ ដើម្បីកុំឱ្យមាន Error 403
+    $profileUrl = $user->userProfile?->profile_picture_url ?? $user->studentProfile?->profile_picture_url;
 
     // ២. កំណត់អត្ថបទ Role
     $roleText = match ($user->role) {
@@ -40,15 +40,15 @@
         default => ''
     };
 
-    // ៣. បន្ថែម Logic ឆែកមើលថាជាប្រធានថ្នាក់ឬអត់ (ឆែកក្នុង Table enrollment)
+    // ៣. បន្ថែម Logic ឆែកមើលថាជាប្រធានថ្នាក់ឬអត់
     $isClassLeader = false;
-        if($user->role === 'student') {
-                $isClassLeader = \DB::table('student_course_enrollments')
-                    ->where('student_user_id', $user->id)
-                    ->where('is_class_leader', 1)
-                    ->exists();
-            }
-        @endphp
+    if($user->role === 'student') {
+        $isClassLeader = \DB::table('student_course_enrollments')
+            ->where('student_user_id', $user->id)
+            ->where('is_class_leader', 1)
+            ->exists();
+    }
+@endphp
     <div class="flex flex-col h-full p-6 ">
         
 
@@ -60,11 +60,17 @@
     <a href="{{ route('dashboard') }}" class="flex flex-col items-center space-y-2">
         <div class="mt-4 relative group">
             <div class="h-20 w-20 rounded-full overflow-hidden flex items-center justify-center text-3xl font-bold bg-gradient-to-br from-green-500 to-green-700 ring-4 ring-green-500 shadow-lg transition-transform hover:scale-105">
-                @if($profileUrl)
-                    <img src="{{ $profileUrl }}" alt="{{ __('Profile Picture') }}" class="h-full w-full object-cover">
-                @else
-                    {{ Str::substr($user->name, 0, 1) }}
-                @endif
+    @if($profileUrl)
+        {{-- បង្ហាញរូបភាពពី ImgBB ដោយផ្ទាល់ --}}
+        <img src="{{ $profileUrl }}" 
+             alt="{{ __('Profile Picture') }}" 
+             class="h-full w-full object-cover">
+    @else
+        {{-- បង្ហាញអក្សរកាត់ក្នុងករណីមិនមានរូបភាព --}}
+        <span class="text-3xl font-bold">
+            {{ Str::upper(Str::substr($user->name, 0, 1)) }}
+        </span>
+    @endif
             </div>
 
             {{-- User Role & Class Leader Badge --}}
@@ -450,7 +456,7 @@
     </div>
 @endauth
 </nav>
-
+{{-- profile --}}
 <style>
     /* Scrollbar styles remain the same but use the default white color */
     .custom-scrollbar::-webkit-scrollbar {

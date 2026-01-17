@@ -1561,14 +1561,14 @@ public function storeGrades(Request $request, $assessment_id)
 // }
 
 
-
+// updateProfilePicture
 
 
 public function updateProfile(Request $request) {
     $user = Auth::user();
     
-    // Validation
-    $validator = Validator::make($request->all(), [
+    // ១. ការត្រួតពិនិត្យទិន្នន័យ (Validation)
+    $request->validate([
         'full_name_km' => 'required|string|max:255',
         'full_name_en' => 'nullable|string|max:255',
         'gender' => 'required|in:male,female',
@@ -1579,46 +1579,33 @@ public function updateProfile(Request $request) {
         'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
     ]);
     
-    if ($validator->fails()) {
-        return back()->withErrors($validator)->withInput();
-    }
-    
+    // ២. ទាញយក ឬបង្កើត Profile ថ្មី
     $userProfile = $user->userProfile()->firstOrNew(['user_id' => $user->id]);
     
-    // Set configuration
-    Configuration::instance([
-        'cloud' => [
-            'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
-            'api_key' => env('CLOUDINARY_API_KEY'),
-            'api_secret' => env('CLOUDINARY_API_SECRET')
-        ]
-    ]);
-    
-    // Upload to Cloudinary
-// ✅ ត្រូវប្រើឈ្មោះ 'profile_picture' ឱ្យត្រូវតាម Form Blade
-if ($request->hasFile('profile_picture')) { 
-    try {
-        $result = cloudinary()->upload($request->file('profile_picture')->getRealPath(), [
-            'folder' => 'profile_pictures',
-            'public_id' => 'user_' . $user->id,
-            'transformation' => [
-                'width' => 400, 
-                'height' => 400, 
-                'crop' => 'fill', 
-                'gravity' => 'face', 
-                'radius' => 'max'
-            ]
-        ]);
-        
-        // រក្សាទុក URL ចូលក្នុង Database Column 'profile_picture_url'
-        $userProfile->profile_picture_url = $result->getSecurePath();
-        
-    } catch (\Exception $e) {
-        \Log::error('Cloudinary Upload Error: ' . $e->getMessage());
+    // ៣. បង្ហោះរូបភាពទៅកាន់ ImgBB
+    if ($request->hasFile('profile_picture')) { 
+        try {
+            $image = $request->file('profile_picture');
+            
+            // ប្រើប្រាស់ Http Facade ដើម្បីបញ្ជូនរូបភាពទៅកាន់ ImgBB API
+            $response = Http::asMultipart()->post('https://api.imgbb.com/1/upload', [
+                'key' => env('IMGBB_API_KEY'), // ប្រាកដថាអ្នកមាន key ក្នុង .env
+                'image' => base64_encode(file_get_contents($image->getRealPath())),
+            ]);
+
+            if ($response->successful()) {
+                // រក្សាទុក URL ពេញលេញដែលទទួលបានពី ImgBB
+                $userProfile->profile_picture_url = $response->json()['data']['url'];
+            } else {
+                \Log::error('ImgBB Upload Error: ' . $response->body());
+            }
+            
+        } catch (\Exception $e) {
+            \Log::error('Upload Error: ' . $e->getMessage());
+        }
     }
-}
     
-    // Save all data
+    // ៤. រក្សាទុកទិន្នន័យផ្សេងៗចូលក្នុង Database
     $userProfile->fill($request->except(['profile_picture']));
     $userProfile->save();
     

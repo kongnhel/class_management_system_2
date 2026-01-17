@@ -1,27 +1,23 @@
 <x-app-layout>
-    {{-- <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <h2 class="font-extrabold text-3xl text-gray-900 dark:text-gray-100 tracking-wide">
-                {{ __('ប្រវត្តិរូប') }}
-            </h2>
-        </div>
-    </x-slot> --}}
     @php
+        // ១. ទាញយកទិន្នន័យ User និង Profile
         $user = Auth::user()->loadMissing('userProfile');
-        $profilePath = $user->userProfile?->profile_picture_url;
-        $profileUrl = $profilePath ? asset('storage/' . $profilePath) : null;
+        
+        // ២. ទាញយក URL ពី ImgBB ដោយផ្ទាល់ (មិនប្រើ asset() ឡើយ ដើម្បីជៀសវាង Error 403)
+        $profileUrl = $user->userProfile?->profile_picture_url;
     @endphp
 
     <div class="py-12 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
         <div class="max-w-5xl mx-auto px-6 lg:px-8 space-y-10">
 
+            {{-- ១. ផ្នែកប្តូររូបភាព Profile (PROFILE PICTURE CARD) --}}
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-10">
                 <header class="text-center mb-10">
                     <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
                         {{ __('រូបភាពប្រវត្តិរូប') }}
                     </h2>
                     <p class="mt-2 text-gray-600 dark:text-gray-400">
-                        {{ __("ធ្វើបច្ចុប្បន្នភាពរូបភាពប្រវត្តិរូបគណនីរបស់អ្នក។") }}
+                        {{ __("ធ្វើបច្ចុប្បន្នភាពរូបភាពប្រវត្តិរូបគណនីរបស់អ្នកតាមរយៈ ImgBB Cloud។") }}
                     </p>
                 </header>
 
@@ -29,28 +25,28 @@
                     @csrf
 
                     <div class="flex flex-col items-center space-y-6">
-                        <label for="profile_picture" class="block text-xl font-semibold text-gray-700 dark:text-gray-200 sr-only">{{ __('រូបភាព Profile') }}</label>
-                        
+                        {{-- កន្លែងបង្ហាញរូបភាព និងជ្រើសរើសរូបភាព --}}
                         <div 
                             class="relative w-36 h-36 rounded-full overflow-hidden border-4 border-green-400 dark:border-green-600 shadow-xl group cursor-pointer" 
                             id="profile-picture-container"
                         >
-                            @if ($profileUrl ?? false)
+                            @if ($profileUrl)
+                                {{-- បង្ហាញរូបភាពពី ImgBB --}}
                                 <img src="{{ $profileUrl }}" alt="{{ $user->name }}" class="object-cover w-full h-full transition-all duration-300" id="profile-picture-preview">
                             @else
+                                {{-- បង្ហាញអក្សរកាត់ឈ្មោះក្នុងករណីមិនទាន់មានរូបភាព --}}
                                 <div id="profile-picture-placeholder" class="w-full h-full bg-green-100 dark:bg-green-700 flex items-center justify-center text-green-600 dark:text-green-100 text-6xl font-extrabold tracking-tight">
                                     {{ Str::upper(Str::substr($user->name, 0, 1)) }}
                                 </div>
                             @endif
 
+                            {{-- Overlay ពេល Hover --}}
                             <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                 <span class="text-white text-center font-bold">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
-                                    <span class="text-sm mt-1">
-                                        {{ __('ផ្លាស់ប្តូររូប') }}
-                                    </span>
+                                    <span class="text-sm mt-1">{{ __('ផ្លាស់ប្តូររូប') }}</span>
                                 </span>
                             </div>
                         </div>
@@ -71,7 +67,7 @@
                 </form>
             </div>
 
-            {{-- PROFILE INFO CARD --}}
+            {{-- ២. ផ្នែកព័ត៌មានប្រវត្តិរូប (PROFILE INFO CARD) --}}
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-10">
                 <header class="text-center mb-10">
                     <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ __('ព័ត៌មានប្រវត្តិរូប') }}</h2>
@@ -113,7 +109,7 @@
                 </form>
             </div>
 
-            {{-- PASSWORD UPDATE --}}
+            {{-- ៣. ផ្នែកប្តូរលេខសម្ងាត់ (PASSWORD UPDATE CARD) --}}
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-10">
                 <header class="text-center mb-10">
                     <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ __('ផ្លាស់ប្តូរលេខសម្ងាត់') }}</h2>
@@ -126,24 +122,27 @@
 
                     <div class="grid grid-cols-1 gap-6">
                         <div>
-                            <x-input-label for="current_password" :value="__('លេខសម្ងាត់បច្ចុប្បន្ន')" />
-                            <x-text-input id="current_password" name="current_password" type="password"
+                            <x-input-label for="update_password_current_password" :value="__('លេខសម្ងាត់បច្ចុប្បន្ន')" />
+                            <x-text-input id="update_password_current_password" name="current_password" type="password"
                                 class="mt-2 block w-full rounded-xl border-gray-300 shadow-sm focus:ring-green-600 focus:border-green-600 dark:bg-gray-900 dark:border-gray-700"
                                 autocomplete="current-password" />
+                            <x-input-error :messages="$errors->updatePassword->get('current_password')" class="mt-2" />
                         </div>
 
                         <div>
-                            <x-input-label for="password" :value="__('លេខសម្ងាត់ថ្មី')" />
-                            <x-text-input id="password" name="password" type="password"
+                            <x-input-label for="update_password_password" :value="__('លេខសម្ងាត់ថ្មី')" />
+                            <x-text-input id="update_password_password" name="password" type="password"
                                 class="mt-2 block w-full rounded-xl border-gray-300 shadow-sm focus:ring-green-600 focus:border-green-600 dark:bg-gray-900 dark:border-gray-700"
                                 autocomplete="new-password" />
+                            <x-input-error :messages="$errors->updatePassword->get('password')" class="mt-2" />
                         </div>
 
                         <div>
-                            <x-input-label for="password_confirmation" :value="__('បញ្ជាក់លេខសម្ងាត់')" />
-                            <x-text-input id="password_confirmation" name="password_confirmation" type="password"
+                            <x-input-label for="update_password_password_confirmation" :value="__('បញ្ជាក់លេខសម្ងាត់')" />
+                            <x-text-input id="update_password_password_confirmation" name="password_confirmation" type="password"
                                 class="mt-2 block w-full rounded-xl border-gray-300 shadow-sm focus:ring-green-600 focus:border-green-600 dark:bg-gray-900 dark:border-gray-700"
                                 autocomplete="new-password" />
+                            <x-input-error :messages="$errors->updatePassword->get('password_confirmation')" class="mt-2" />
                         </div>
                     </div>
 
@@ -155,14 +154,15 @@
                 </form>
             </div>
 
-            {{-- DELETE ACCOUNT --}}
+            {{-- ៤. ផ្នែកលុបគណនី (DELETE ACCOUNT CARD) --}}
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-10 text-center">
                 <h2 class="text-2xl font-bold text-red-600">{{ __('លុបគណនី') }}</h2>
                 <p class="mt-3 text-gray-600 dark:text-gray-400">
-                    {{ __('ការលុបគណនីនឹងលុបទិន្នន័យទាំងអស់ជាអចិន្ត្រៃយ៍។ សូមប្រាកដមុនធ្វើ។') }}
+                    {{ __('ការលុបគណនីនឹងលុបទិន្នន័យទាំងអស់ជាអចិន្ត្រៃយ៍។ សូមប្រាកដមុនពេលអនុវត្ត។') }}
                 </p>
 
                 <x-danger-button 
+                    x-data=""
                     x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')" 
                     class="mt-6 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-8 rounded-xl shadow-lg">
                     {{ __('លុបគណនី') }}
@@ -171,46 +171,34 @@
         </div>
     </div>
 
-<script>
-    document.getElementById('profile-picture-container').addEventListener('click', function() {
-        document.getElementById('profile_picture').click();
-    });
+    {{-- JavaScript សម្រាប់គ្រប់គ្រងការជ្រើសរើសរូបភាព --}}
+    <script>
+        // នៅពេលចុចលើរង្វង់រូបភាព ឱ្យវាហៅ Input File
+        document.getElementById('profile-picture-container').addEventListener('click', function() {
+            document.getElementById('profile_picture').click();
+        });
 
-    document.getElementById('profile_picture').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        const previewContainer = document.getElementById('profile-picture-container');
-        let previewElement = document.getElementById('profile-picture-preview');
-        let placeholder = document.getElementById('profile-picture-placeholder');
+        // បង្ហាញរូបភាពភ្លាមៗ (Preview) នៅពេលជ្រើសរើស File
+        document.getElementById('profile_picture').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            let previewElement = document.getElementById('profile-picture-preview');
+            let placeholder = document.getElementById('profile-picture-placeholder');
 
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                if (previewElement) {
-                    previewElement.src = e.target.result;
-                } else if (placeholder) {
-                    // Create an <img> element if only a placeholder exists
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.id = 'profile-picture-preview';
-                    img.alt = 'Profile Picture Preview';
-                    img.className = 'object-cover w-full h-full transition-all duration-300';
-                    placeholder.replaceWith(img);
-                }
-            };
-            reader.readAsDataURL(file);
-        } else {
-            // Optional: Revert to original if the file input is cleared. 
-            // This is complex without Alpine/a backend way to store the original URL easily here.
-            // For now, if no file, we keep the current image/placeholder.
-        }
-    });
-
-    // Store the original image URL on page load for potential future use or to prevent image disappearing on form error
-    document.addEventListener('DOMContentLoaded', () => {
-        const previewElement = document.getElementById('profile-picture-preview');
-        if (previewElement) {
-            previewElement.dataset.originalSrc = previewElement.src;
-        }
-    });
-</script>
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if (previewElement) {
+                        previewElement.src = e.target.result;
+                    } else if (placeholder) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.id = 'profile-picture-preview';
+                        img.className = 'object-cover w-full h-full transition-all duration-300';
+                        placeholder.replaceWith(img);
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
 </x-app-layout>

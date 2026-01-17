@@ -167,6 +167,8 @@ public function dashboard()
     ));
 }
 
+// profile
+
 // course_title_km
     /**
      * បង្ហាញផ្ទាំងគ្រប់គ្រងសម្រាប់សិស្ស។
@@ -242,6 +244,8 @@ public function dashboard()
             'message' => 'Announcement not found.'
         ], 404);
     }
+
+    // room
 public function notifications()
 {
     $user = Auth::user();
@@ -753,7 +757,7 @@ public function myAttendance()
 
     return view('student.my-attendance', compact('user', 'attendances'));
 }
-
+// image
     /**
      * បង្ហាញមុខវិជ្ជាដែលមានសម្រាប់សិស្សចុះឈ្មោះ។
      * Display the available courses for student enrollment.

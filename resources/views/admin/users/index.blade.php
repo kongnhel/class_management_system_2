@@ -164,13 +164,16 @@
                 <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
                     <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-50">
                         <div class="flex items-center space-x-3 min-w-0">
-                            @if ($admin->profile && $admin->profile->profile_picture_url)
-                                <img src="{{ asset('storage/' . $admin->profile->profile_picture_url) }}" class="h-12 w-12 rounded-full object-cover border border-gray-100">
-                            @else
-                                <div class="h-12 w-12 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center text-white font-black text-xl shadow-md flex-shrink-0">
-                                    {{ strtoupper(substr($admin->name, 0, 1)) }}
-                                </div>
-                            @endif
+@if ($admin->profile && $admin->profile->profile_picture_url)
+    {{-- ប្តូរមកប្រើ URL ផ្ទាល់ពី ImgBB --}}
+    <img src="{{ $admin->profile->profile_picture_url }}" 
+         class="h-12 w-12 rounded-full object-cover border border-gray-100"
+         alt="{{ $admin->name }}">
+@else
+    <div class="h-12 w-12 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center text-white font-black text-xl shadow-md flex-shrink-0">
+        {{ strtoupper(substr($admin->name, 0, 1)) }}
+    </div>
+@endif
                             <div class="min-w-0">
                                 <h4 class="text-base font-black text-gray-900 truncate tracking-tight uppercase">{{ $admin->name }}</h4>
                                 <p class="text-xs text-gray-500 truncate">{{ $admin->email }}</p>
@@ -231,13 +234,16 @@
                     @foreach ($professors as $professor)
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-6 py-3">
-                                @if ($professor->profile && $professor->profile->profile_picture_url)
-                                    <img src="{{ asset('storage/' . $professor->profile->profile_picture_url) }}" class="h-10 w-10 rounded-full object-cover border border-gray-100">
-                                @else
-                                    <div class="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
-                                        {{ strtoupper(substr($professor->name, 0, 1)) }}
-                                    </div>
-                                @endif
+@if ($professor->profile && $professor->profile->profile_picture_url)
+    {{-- លុប asset('storage/' . ...) ចេញ ហើយប្រើ URL ពី database ដោយផ្ទាល់ --}}
+    <img src="{{ $professor->profile->profile_picture_url }}" 
+         class="h-10 w-10 rounded-full object-cover border border-gray-100"
+         alt="{{ $professor->name }}">
+@else
+    <div class="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+        {{ strtoupper(substr($professor->name, 0, 1)) }}
+    </div>
+@endif
                             </td>
                             <td class="px-6 py-3 font-semibold text-gray-900">{{ $professor->name }}</td>
                             <td class="px-6 py-3 text-gray-600">{{ $professor->email }}</td>
@@ -261,13 +267,16 @@
                 <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
                     <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-50">
                         <div class="flex items-center space-x-3 min-w-0">
-                            @if ($professor->profile && $professor->profile->profile_picture_url)
-                                <img src="{{ asset('storage/' . $professor->profile->profile_picture_url) }}" class="h-12 w-12 rounded-full object-cover border border-gray-100">
-                            @else
-                                <div class="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-black text-xl shadow-md flex-shrink-0">
-                                    {{ strtoupper(substr($professor->name, 0, 1)) }}
-                                </div>
-                            @endif
+@if ($professor->profile && $professor->profile->profile_picture_url)
+    {{-- ប្តូរ src ឱ្យទៅហៅ URL ពី ImgBB ដោយផ្ទាល់ ដោយមិនប្រើ asset('storage/...') --}}
+    <img src="{{ $professor->profile->profile_picture_url }}" 
+         class="h-12 w-12 rounded-full object-cover border border-gray-100"
+         alt="{{ $professor->name }}">
+@else
+    <div class="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-black text-xl shadow-md flex-shrink-0">
+        {{ strtoupper(substr($professor->name, 0, 1)) }}
+    </div>
+@endif
                             <div class="min-w-0">
                                 <h4 class="text-base font-black text-gray-900 truncate tracking-tight uppercase">{{ $professor->name }}</h4>
                                 <p class="text-xs text-gray-500 truncate">{{ $professor->email }}</p>
@@ -328,13 +337,16 @@
                     @foreach ($students as $student)
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-6 py-3">
-                                @if ($student->studentProfile && $student->studentProfile->profile_picture_url)
-                                    <img src="{{ asset('storage/' . $student->studentProfile->profile_picture_url) }}" class="h-10 w-10 rounded-full object-cover border border-gray-100">
-                                @else
-                                    <div class="h-10 w-10 rounded-full bg-green-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
-                                        {{ strtoupper(substr($student->name, 0, 1)) }}
-                                    </div>
-                                @endif
+@if ($student->studentProfile && $student->studentProfile->profile_picture_url)
+    {{-- ប្តូរមកប្រើ URL ពី ImgBB ដោយផ្ទាល់ ដើម្បីជៀសវាងកំហុស 403 --}}
+    <img src="{{ $student->studentProfile->profile_picture_url }}" 
+         class="h-10 w-10 rounded-full object-cover border border-gray-100"
+         alt="{{ $student->name }}">
+@else
+    <div class="h-10 w-10 rounded-full bg-green-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+        {{ strtoupper(substr($student->name, 0, 1)) }}
+    </div>
+@endif
                             </td>
                             <td class="px-6 py-3 font-semibold text-gray-900">{{ $student->name }}</td>
                             <td class="px-6 py-3 text-gray-600">{{ $student->email }}</td>
@@ -360,13 +372,16 @@
                     <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-50">
                         <div class="flex items-center space-x-3 min-w-0">
                             {{-- Check for Profile Pic or use First Letter --}}
-                            @if ($student->studentProfile && $student->studentProfile->profile_picture_url)
-                                <img src="{{ asset('storage/' . $student->studentProfile->profile_picture_url) }}" class="h-12 w-12 rounded-full object-cover border border-gray-100">
-                            @else
-                                <div class="h-12 w-12 rounded-full bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center text-white font-black text-xl shadow-md flex-shrink-0">
-                                    {{ strtoupper(substr($student->name, 0, 1)) }}
-                                </div>
-                            @endif
+@if ($student->studentProfile && $student->studentProfile->profile_picture_url)
+    {{-- ប្រើប្រាស់ URL ពី ImgBB ដោយផ្ទាល់ ដើម្បីជៀសវាងបញ្ហា 403 Forbidden --}}
+    <img src="{{ $student->studentProfile->profile_picture_url }}" 
+         class="h-12 w-12 rounded-full object-cover border border-gray-100"
+         alt="{{ $student->name }}">
+@else
+    <div class="h-12 w-12 rounded-full bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center text-white font-black text-xl shadow-md flex-shrink-0">
+        {{ strtoupper(substr($student->name, 0, 1)) }}
+    </div>
+@endif
                             <div class="min-w-0">
                                 <h4 class="text-base font-black text-gray-900 truncate tracking-tight uppercase">{{ $student->name }}</h4>
                                 <p class="text-xs text-gray-500 truncate">{{ $student->email }}</p>

@@ -9,9 +9,13 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
-use Illuminate\Support\Facades\Storage;
+// use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use App\Models\StudentProfile;
 use App\Models\UserProfile;
+use Illuminate\Support\Facades\Http;    
+// use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+
 use Illuminate\Http\Request;
 
 class UserController extends Controller
@@ -211,10 +215,24 @@ public function searchUsers(Request $request)
             }
 
             // Handle the profile picture upload
-            if ($request->hasFile('profile_picture')) {
-                $path = $request->file('profile_picture')->store('profile_pictures', 'public');
-                $profile->profile_picture_url = $path;
-            }
+            // if ($request->hasFile('profile_picture')) {
+            //     $path = $request->file('profile_picture')->store('profile_pictures', 'public');
+            //     $profile->profile_picture_url = $path;
+            // }
+if ($request->hasFile('profile_picture')) {
+    $image = $request->file('profile_picture');
+    
+    // ផ្ញើរូបភាពទៅ ImgBB
+    $response = Http::asMultipart()->post('https://api.imgbb.com/1/upload', [
+        'key' => env('IMGBB_API_KEY'),
+        'image' => base64_encode(file_get_contents($image->getRealPath())),
+    ]);
+
+    if ($response->successful()) {
+        // រក្សាទុក URL ពេញលេញពី ImgBB
+        $profile->profile_picture_url = $response->json()['data']['url'];
+    }
+}
 
             // Save the profile to the correct relationship
             if ($request->role === 'student') {
@@ -243,110 +261,117 @@ public function searchUsers(Request $request)
     /**
      * Update the specified user in storage.
      */
-    public function updateUser(Request $request, User $user)
-    {
-        // --- Validation rules ---
-        $rules = [
-            'name' => 'required|string|max:255',
-            'role' => ['required', 'string', Rule::in(['admin', 'professor', 'student'])],
-            // Profile fields
-            'full_name_km' => 'nullable|string|max:255',
-            'full_name_en' => 'nullable|string|max:255',
-            'gender' => 'nullable|string|max:10',
-            'date_of_birth' => 'nullable|date',
-            'phone_number' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:255',
-            'profile_picture' => 'nullable|image|max:2048',
-            'generation' => 'nullable|string|max:255',
-        ];
-        if ($request->role === 'student') {
+public function updateUser(Request $request, User $user)
+{
+    // --- ១. ការកំណត់លក្ខខណ្ឌ Validation ---
+    $rules = [
+        'name' => 'required|string|max:255',
+        'role' => ['required', 'string', Rule::in(['admin', 'professor', 'student'])],
+        'full_name_km' => 'nullable|string|max:255',
+        'full_name_en' => 'nullable|string|max:255',
+        'gender' => 'nullable|string|max:10',
+        'date_of_birth' => 'nullable|date',
+        'phone_number' => 'nullable|string|max:20',
+        'address' => 'nullable|string|max:255',
+        'profile_picture' => 'nullable|image|max:2048', // កម្រិត ២MB
+        'generation' => 'nullable|string|max:255',
+    ];
 
-            $rules['student_id_code'] = ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)];
-            $rules['generation'] = ['required', 'string', 'max:255'];
-            $rules['program_id'] = 'required|exists:programs,id';
-        } else { // Admin & Professor
-            $rules['email'] = ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)];
-            $rules['password'] = 'nullable|string|min:8|confirmed';
-            if ($request->role === 'professor') {
-                $rules['department_id'] = 'required|exists:departments,id';
-            }
+    if ($request->role === 'student') {
+        $rules['student_id_code'] = ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)];
+        $rules['generation'] = ['required', 'string', 'max:255'];
+        $rules['program_id'] = 'required|exists:programs,id';
+    } else {
+        $rules['email'] = ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)];
+        $rules['password'] = 'nullable|string|min:8|confirmed';
+        if ($request->role === 'professor') {
+            $rules['department_id'] = 'required|exists:departments,id';
         }
-        $request->validate($rules);
-
-        // --- Update User core data ---
-        $user->fill($request->only(['name', 'role']));
-        $user->student_id_code = ($request->role === 'student') ? $request->student_id_code : null;
-        $user->department_id = ($request->role === 'professor') ? $request->department_id : null;
-        $user->program_id = ($request->role === 'student') ? $request->program_id : null;
-        
-        if ($request->role !== 'student') {
-            $user->email = $request->email;
-            if ($request->filled('password')) $user->password = Hash::make($request->password);
-        }
-        $user->save();
-
-        // --- Conditional Profile Handling ---
-        $profileData = $request->only(['full_name_km', 'full_name_en', 'gender', 'date_of_birth', 'phone_number', 'address']);
-        
-        if ($request->role === 'student') {
-            $profile = $user->studentProfile()->firstOrNew(['user_id' => $user->id]);
-              $profile->generation = $request->generation; 
-
-            if ($user->profile) { // Clean up staff profile if role was changed to student
-                if($user->profile->profile_picture_url) Storage::disk('public')->delete($user->profile->profile_picture_url);
-                $user->profile->delete();
-            }
-        } else { // Admin or Professor
-            $profile = $user->profile()->firstOrNew(['user_id' => $user->id]);
-            if ($user->studentProfile) { // Clean up student profile if role was changed
-                 if($user->studentProfile->profile_picture_url) Storage::disk('public')->delete($user->studentProfile->profile_picture_url);
-                $user->studentProfile->delete();
-            }
-        }
-        $profile->fill($profileData);
-
-        // Handle Profile Picture
-        if ($request->hasFile('profile_picture')) {
-            if ($profile->profile_picture_url && Storage::disk('public')->exists($profile->profile_picture_url)) {
-                Storage::disk('public')->delete($profile->profile_picture_url);
-            }
-            $path = $request->file('profile_picture')->store('profile_pictures', 'public');
-            $profile->profile_picture_url = $path;
-        } elseif ($request->has('remove_profile_picture')) {
-            if ($profile->profile_picture_url && Storage::disk('public')->exists($profile->profile_picture_url)) {
-                Storage::disk('public')->delete($profile->profile_picture_url);
-            }
-            $profile->profile_picture_url = null;
-        }
-        $profile->save();
-
-        return redirect()->route('admin.manage-users')->with('success', 'អ្នកប្រើប្រាស់ត្រូវបានធ្វើបច្ចុប្បន្នភាពដោយជោគជ័យ។');
     }
+    
+    $request->validate($rules);
+
+    // --- ២. ធ្វើបច្ចុប្បន្នភាពទិន្នន័យគោលរបស់ User ---
+    $user->fill($request->only(['name', 'role']));
+    $user->student_id_code = ($request->role === 'student') ? $request->student_id_code : null;
+    $user->department_id = ($request->role === 'professor') ? $request->department_id : null;
+    $user->program_id = ($request->role === 'student') ? $request->program_id : null;
+    
+    if ($request->role !== 'student') {
+        $user->email = $request->email;
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
+    }
+    $user->save();
+
+    // --- ៣. ការគ្រប់គ្រង Profile តាមតួនាទី ---
+    $profileData = $request->only(['full_name_km', 'full_name_en', 'gender', 'date_of_birth', 'phone_number', 'address']);
+    
+    if ($request->role === 'student') {
+        $profile = $user->studentProfile()->firstOrNew(['user_id' => $user->id]);
+        $profile->generation = $request->generation; 
+
+        if ($user->profile) {
+            // លុប Profile ចាស់ចោលប្រសិនបើប្តូរតួនាទីពីបុគ្គលិកមកជានិស្សិត
+            $user->profile->delete();
+        }
+    } else {
+        $profile = $user->profile()->firstOrNew(['user_id' => $user->id]);
+        if ($user->studentProfile) {
+            // លុប Profile ចាស់ចោលប្រសិនបើប្តូរតួនាទីពីនិស្សិតមកជាបុគ្គលិក
+            $user->studentProfile->delete();
+        }
+    }
+    $profile->fill($profileData);
+
+    // --- ៤. ការ Upload រូបភាពទៅកាន់ ImgBB ---
+    if ($request->hasFile('profile_picture')) {
+        $file = $request->file('profile_picture');
+
+        // ប្រើប្រាស់ Http Facade ដើម្បីបញ្ជូនរូបភាពទៅ ImgBB API
+        $response = Http::asMultipart()->post('https://api.imgbb.com/1/upload', [
+            'key' => env('IMGBB_API_KEY'),
+            'image' => base64_encode(file_get_contents($file->getRealPath())),
+        ]);
+
+        if ($response->successful()) {
+            // រក្សាទុក URL ពេញលេញដែលទទួលបានពី ImgBB
+            $profile->profile_picture_url = $response->json()['data']['url'];
+        }
+    }
+
+    $profile->save();
+
+    return redirect()->route('admin.manage-users')->with('success', 'ព័ត៌មានអ្នកប្រើប្រាស់ត្រូវបានធ្វើបច្ចុប្បន្នភាពដោយជោគជ័យ។');
+}
 
     /**
      * Remove the specified user from storage.
      */
     public function deleteUser(User $user)
-    {
-        $user->load('profile', 'studentProfile');
-        // Delete staff profile and picture if it exists
-        if ($user->profile) {
-            if ($user->profile->profile_picture_url) {
-                Storage::disk('public')->delete($user->profile->profile_picture_url);
-            }
-            $user->profile->delete();
-        }
-        // Delete student profile and picture if it exists
-        if ($user->studentProfile) {
-            if ($user->studentProfile->profile_picture_url) {
-                Storage::disk('public')->delete($user->studentProfile->profile_picture_url);
-            }
-            $user->studentProfile->delete();
-        }
-        // Finally, delete the user
-        $user->delete();
-        return redirect()->route('admin.manage-users')->with('success', 'អ្នកប្រើប្រាស់ត្រូវបានលុបដោយជោគជ័យ។');
+{
+    // Load profile ទាំងពីរប្រភេទដើម្បីធានាថាមានទិន្នន័យសម្រាប់លុប
+    $user->load('profile', 'studentProfile');
+
+    // ១. លុប Staff Profile ប្រសិនបើមាន (Admin ឬ Professor)
+    if ($user->profile) {
+        // ចំណាំ៖ ImgBB មិនអនុញ្ញាតឱ្យលុបរូបភាពតាម API កម្រិតឥតគិតថ្លៃទេ 
+        // ដូច្នេះយើងគ្រាន់តែលុបទិន្នន័យ Profile ចេញពី Database ជាការស្រេច
+        $user->profile->delete();
     }
+
+    // ២. លុប Student Profile ប្រសិនបើមាន
+    if ($user->studentProfile) {
+        $user->studentProfile->delete();
+    }
+
+    // ៣. ជាចុងក្រោយ លុបគណនីអ្នកប្រើប្រាស់ (User Account)
+    $user->delete();
+
+    return redirect()->route('admin.manage-users')
+        ->with('success', 'អ្នកប្រើប្រាស់ត្រូវបានលុបចេញពីប្រព័ន្ធដោយជោគជ័យ។');
+}
 
     
 }

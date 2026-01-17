@@ -308,7 +308,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/my -course-offerings/{offering_id}/quizzes/{quiz}/questions', 'manageQuestions')->name('quizzes.manage-questions');
 
             Route::post('/telegram/webhook', [TelegramController::class, 'handle']);
-
+// update-picture
 
     Route::post('/professor/send-grade-telegram/{enrollment_id}', [ProfessorController::class, 'sendGradeTelegram'])
     ->name('send_grade_telegram');
