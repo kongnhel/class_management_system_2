@@ -102,13 +102,20 @@
             </div>
 
             {{-- រូបភាព Profile --}}
-            <div class="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center text-sm font-bold bg-white-600 text-white shadow-md shadow-blue-200 border border-white">
-                @if($profileUrl) 
-                    <img src="{{ $profileUrl }}" class="h-full w-full object-cover" alt="{{ $user->name }}">
-                @else 
-                    {{ Str::substr($user->name, 0, 1) }} 
-                @endif
-            </div>
+{{-- រូបភាព Profile --}}
+<div class="w-12 h-12 rounded-2xl overflow-hidden flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-100 border-2 border-white transition-transform hover:scale-105 duration-300">
+    @if($profileUrl)
+        {{-- បង្ហាញរូបភាពពី ImgBB ដោយផ្ទាល់ --}}
+        <img src="{{ $profileUrl }}" 
+             alt="{{ __('Profile Picture') }}" 
+             class="h-full w-full object-cover">
+    @else
+        {{-- បង្ហាញអក្សរកាត់ក្នុងករណីមិនមានរូបភាព --}}
+        <span class="text-xl font-black tracking-tighter">
+            {{ Str::upper(Str::substr($user->name, 0, 1)) }}
+        </span>
+    @endif
+</div>
         </a>
     @endauth
 </div>
