@@ -36,7 +36,7 @@
                         <span class="font-medium">{{ session('success') }}</span>
                     </div>
                 @endif
-
+{{-- img --}}
                 {{-- ៣. បញ្ជីមុខវិជ្ជា --}}
                 <div class="mt-6 md:mt-8">
                     @if ($enrollments->isEmpty())
@@ -76,8 +76,10 @@
                                             {{-- Lecturer Card --}}
                                             <div class="flex items-center justify-between bg-gray-50 p-3 md:p-4 rounded-2xl border border-gray-100">
                                                 <div class="flex items-center">
+                                                    
                                                     @if ($lecturerProfile && $lecturerProfile->profile_picture_url)
-                                                        <img class="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover mr-3 border-2 border-white shadow-sm" src="{{ asset('storage/' . $lecturerProfile->profile_picture_url) }}">
+                                                        <img class="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover mr-3 border-2 border-white shadow-sm" src="{{$lecturerProfile->profile_picture_url }}">
+
                                                     @else
                                                         <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-green-200 flex items-center justify-center mr-3 text-green-700">
                                                             <i class="fas fa-user-tie text-lg md:text-xl"></i>
