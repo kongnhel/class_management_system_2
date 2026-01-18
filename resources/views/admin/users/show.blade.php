@@ -30,7 +30,7 @@
                                 $profile = $user->role === 'student' ? $user->studentProfile : $user->profile;
                             @endphp
                             @if ($profile && $profile->profile_picture_url)
-                                <img src="{{ asset('storage/' . $profile->profile_picture_url) }}" alt="{{ $user->name }}" class="w-40 h-40 rounded-full object-cover mx-auto border-4 border-indigo-400 shadow-lg">
+                                <img src="{{ $profile->profile_picture_url }}" alt="{{ $user->name }}" class="w-40 h-40 rounded-full object-cover mx-auto border-4 border-indigo-400 shadow-lg">
                             @else
                                 <div class="w-40 h-40 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-6xl font-bold mx-auto border-4 border-indigo-400 shadow-lg">
                                     {{ Str::upper(Str::substr($user->name, 0, 1)) }}
