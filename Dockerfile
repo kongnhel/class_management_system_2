@@ -35,3 +35,5 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 
 # ១០. បើក Port 80
 EXPOSE 80
+
+CMD ["apache2-foreground"]
