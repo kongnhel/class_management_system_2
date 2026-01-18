@@ -79,7 +79,8 @@
 
                 <!-- Alpine.js data for managing active tab and delete modal state -->
                 <div x-data="{ 
-                    activeTab: '{{ request()->query('tab', 'professors') }}', 
+                    {{-- activeTab: '{{ request()->query('tab', 'professors') }}',  --}}
+                    activeTab: $persist('admins').as('user_manage_tab'),   
                     searchQuery: '{{ request('search') }}',
                     showDeleteModal: false,
                     deletingUserId: null,
