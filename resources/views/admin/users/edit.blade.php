@@ -13,10 +13,10 @@
                 </h3>
 
                 <form method="POST" action="{{ route('admin.update-user', $user->id) }}" enctype="multipart/form-data"
-                    x-data="{
-                        userRole: '{{ old('role', $user->role) }}',
-                        profilePicturePreview: '{{ $user->profile?->profile_picture_url ? asset('storage/' . $user->profile->profile_picture_url) : ($user->studentProfile?->profile_picture_url ? asset('storage/' . $user->studentProfile->profile_picture_url) : '') }}'
-                    }" class="space-y-8">
+x-data="{
+    userRole: '{{ old('role', $user->role) }}',
+    profilePicturePreview: '{{ $user->profile?->profile_picture_url ?? $user->studentProfile?->profile_picture_url ?? '' }}'
+}"class="space-y-8">
                     @csrf
                     @method('PUT')
 
@@ -183,21 +183,23 @@
                     <div class="border-t border-gray-200/50 pt-8 mt-8">
                         <h4 class="text-2xl font-bold text-gray-800 mb-6">{{ __('ព័ត៌មាន Profile') }}</h4>
                         
-                        <div class="mb-8">
-                            <x-input-label class="flex items-center text-lg text-gray-700 font-semibold mb-2">
-                                <i class="fas fa-camera-retro mr-3 text-green-500"></i> {{ __('រូបភាព Profile') }}
-                            </x-input-label>
-                            <div class="mt-2 flex items-center space-x-6">
-                                <div class="shrink-0">
-                                    <img x-show="profilePicturePreview" :src="profilePicturePreview" class="h-20 w-20 rounded-full object-cover shadow-md" alt="Current profile photo">
-                                    <div x-show="!profilePicturePreview" class="h-20 w-20 rounded-full bg-gray-200 flex items-center justify-center text-gray-400">
-                                        <i class="fas fa-user text-3xl"></i>
+                                <div class="flex flex-col items-center space-y-4">
+                                    <div class="relative group">
+                                        <div class="h-32 w-32 rounded-2xl bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden relative">
+                                            <template x-if="profilePicturePreview">
+                                                <img :src="profilePicturePreview" class="h-full w-full object-cover">
+                                            </template>
+                                            <template x-if="!profilePicturePreview">
+                                                <i class="fas fa-camera text-3xl text-gray-300"></i>
+                                            </template>
+                                        </div>
+                                        <label class="absolute -bottom-2 -right-2 bg-green-600 text-white p-2 rounded-lg cursor-pointer hover:bg-green-700 shadow-lg transition">
+                                            <i class="fas fa-pen text-xs"></i>
+                                            <input type="file" name="profile_picture" class="hidden" @change="profilePicturePreview = URL.createObjectURL($event.target.files[0])">
+                                        </label>
                                     </div>
+                                    <p class="text-xs text-gray-500">{{ __('រូបភាព Profile (4x6)') }}</p>
                                 </div>
-                                <label class="block">
-                                    <input type="file" name="profile_picture" @change="profilePicturePreview = URL.createObjectURL($event.target.files[0])" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"/>
-                                </label>
-                            </div>
                             <div class="mt-4">
                                  <label for="remove_profile_picture" class="flex items-center">
                                     <x-checkbox id="remove_profile_picture" name="remove_profile_picture" value="1" />

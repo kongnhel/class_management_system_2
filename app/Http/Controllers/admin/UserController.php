@@ -9,6 +9,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\Auth;
 // use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use App\Models\StudentProfile;
@@ -248,6 +249,16 @@ if ($request->hasFile('profile_picture')) {
     /**
      * Show the form for editing the specified user.
      */
+    // public function editUser(User $user)
+    // {
+    //     $user->load('profile', 'studentProfile', 'department.faculty', 'program'); 
+    //     $faculties = Faculty::all();
+    //     $departments = Department::all();
+    //     $programs = Program::all();
+    //     $generations = User::where('role', 'student')->whereNotNull('generation')->distinct()->pluck('generation');
+    //     return view('admin.users.edit', compact('user', 'departments', 'programs', 'faculties', 'generations'));
+    // }
+
     public function editUser(User $user)
     {
         $user->load('profile', 'studentProfile', 'department.faculty', 'program'); 
@@ -255,96 +266,172 @@ if ($request->hasFile('profile_picture')) {
         $departments = Department::all();
         $programs = Program::all();
         $generations = User::where('role', 'student')->whereNotNull('generation')->distinct()->pluck('generation');
+        
         return view('admin.users.edit', compact('user', 'departments', 'programs', 'faculties', 'generations'));
+    }
+
+    public function updateUser(Request $request, User $user)
+    {
+        $rules = [
+            'name' => 'required|string|max:255',
+            'role' => ['required', 'string', Rule::in(['admin', 'professor', 'student'])],
+            'full_name_km' => 'nullable|string|max:255',
+            'full_name_en' => 'nullable|string|max:255',
+            'gender' => 'nullable|string|max:10',
+            'date_of_birth' => 'nullable|date',
+            'phone_number' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:255',
+            'profile_picture' => 'nullable|image|max:2048', 
+            'generation' => 'nullable|string|max:255',
+        ];
+
+        if ($request->role === 'student') {
+            $rules['student_id_code'] = ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)];
+            $rules['program_id'] = 'required|exists:programs,id';
+        } else {
+            $rules['email'] = ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)];
+            $rules['password'] = 'nullable|string|min:8|confirmed';
+            if ($request->role === 'professor') {
+                $rules['department_id'] = 'required|exists:departments,id';
+            }
+        }
+        
+        $request->validate($rules);
+
+        // ១. Update User Core Data
+        $user->name = $request->name;
+        $user->role = $request->role;
+        $user->student_id_code = ($request->role === 'student') ? $request->student_id_code : null;
+        $user->department_id = ($request->role === 'professor') ? $request->department_id : null;
+        $user->program_id = ($request->role === 'student') ? $request->program_id : null;
+        $user->generation = ($request->role === 'student') ? $request->generation : null;
+        
+        if ($request->role !== 'student') {
+            $user->email = $request->email;
+            if ($request->filled('password')) {
+                $user->password = Hash::make($request->password);
+            }
+        }
+        $user->save();
+
+        // ២. Profile Logic
+        if ($request->role === 'student') {
+            $profile = $user->studentProfile()->firstOrNew(['user_id' => $user->id]);
+            if ($user->profile) $user->profile->delete();
+        } else {
+            $profile = $user->profile()->firstOrNew(['user_id' => $user->id]);
+            if ($user->studentProfile) $user->studentProfile->delete();
+        }
+
+        $profile->fill($request->only(['full_name_km', 'full_name_en', 'gender', 'date_of_birth', 'phone_number', 'address']));
+
+        // ៣. Handle ImgBB Upload
+        if ($request->hasFile('profile_picture')) {
+            $file = $request->file('profile_picture');
+            $response = Http::asMultipart()->post('https://api.imgbb.com/1/upload', [
+                'key' => env('IMGBB_API_KEY'),
+                'image' => base64_encode(file_get_contents($file->getRealPath())),
+            ]);
+
+            if ($response->successful()) {
+                // រក្សាទុក Full URL ពី ImgBB
+                $profile->profile_picture_url = $response->json()['data']['url'];
+            }
+        }
+
+        $profile->save();
+
+        return redirect()->route('admin.manage-users')->with('success', 'ព័ត៌មានត្រូវបានធ្វើបច្ចុប្បន្នភាព។');
     }
 
     /**
      * Update the specified user in storage.
      */
-public function updateUser(Request $request, User $user)
-{
-    // --- ១. ការកំណត់លក្ខខណ្ឌ Validation ---
-    $rules = [
-        'name' => 'required|string|max:255',
-        'role' => ['required', 'string', Rule::in(['admin', 'professor', 'student'])],
-        'full_name_km' => 'nullable|string|max:255',
-        'full_name_en' => 'nullable|string|max:255',
-        'gender' => 'nullable|string|max:10',
-        'date_of_birth' => 'nullable|date',
-        'phone_number' => 'nullable|string|max:20',
-        'address' => 'nullable|string|max:255',
-        'profile_picture' => 'nullable|image|max:2048', // កម្រិត ២MB
-        'generation' => 'nullable|string|max:255',
-    ];
+// public function updateUser(Request $request, User $user)
+// {
+//     // --- ១. ការកំណត់លក្ខខណ្ឌ Validation ---
+//     $rules = [
+//         'name' => 'required|string|max:255',
+//         'role' => ['required', 'string', Rule::in(['admin', 'professor', 'student'])],
+//         'full_name_km' => 'nullable|string|max:255',
+//         'full_name_en' => 'nullable|string|max:255',
+//         'gender' => 'nullable|string|max:10',
+//         'date_of_birth' => 'nullable|date',
+//         'phone_number' => 'nullable|string|max:20',
+//         'address' => 'nullable|string|max:255',
+//         'profile_picture' => 'nullable|image|max:2048', // កម្រិត ២MB
+//         'generation' => 'nullable|string|max:255',
+//     ];
 
-    if ($request->role === 'student') {
-        $rules['student_id_code'] = ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)];
-        $rules['generation'] = ['required', 'string', 'max:255'];
-        $rules['program_id'] = 'required|exists:programs,id';
-    } else {
-        $rules['email'] = ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)];
-        $rules['password'] = 'nullable|string|min:8|confirmed';
-        if ($request->role === 'professor') {
-            $rules['department_id'] = 'required|exists:departments,id';
-        }
-    }
+//     if ($request->role === 'student') {
+//         $rules['student_id_code'] = ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)];
+//         $rules['generation'] = ['required', 'string', 'max:255'];
+//         $rules['program_id'] = 'required|exists:programs,id';
+//     } else {
+//         $rules['email'] = ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)];
+//         $rules['password'] = 'nullable|string|min:8|confirmed';
+//         if ($request->role === 'professor') {
+//             $rules['department_id'] = 'required|exists:departments,id';
+//         }
+//     }
     
-    $request->validate($rules);
+//     $request->validate($rules);
 
-    // --- ២. ធ្វើបច្ចុប្បន្នភាពទិន្នន័យគោលរបស់ User ---
-    $user->fill($request->only(['name', 'role']));
-    $user->student_id_code = ($request->role === 'student') ? $request->student_id_code : null;
-    $user->department_id = ($request->role === 'professor') ? $request->department_id : null;
-    $user->program_id = ($request->role === 'student') ? $request->program_id : null;
+//     // --- ២. ធ្វើបច្ចុប្បន្នភាពទិន្នន័យគោលរបស់ User ---
+//     $user->fill($request->only(['name', 'role']));
+//     $user->student_id_code = ($request->role === 'student') ? $request->student_id_code : null;
+//     $user->department_id = ($request->role === 'professor') ? $request->department_id : null;
+//     $user->program_id = ($request->role === 'student') ? $request->program_id : null;
     
-    if ($request->role !== 'student') {
-        $user->email = $request->email;
-        if ($request->filled('password')) {
-            $user->password = Hash::make($request->password);
-        }
-    }
-    $user->save();
+//     if ($request->role !== 'student') {
+//         $user->email = $request->email;
+//         if ($request->filled('password')) {
+//             $user->password = Hash::make($request->password);
+//         }
+//     }
+//     $user->save();
 
-    // --- ៣. ការគ្រប់គ្រង Profile តាមតួនាទី ---
-    $profileData = $request->only(['full_name_km', 'full_name_en', 'gender', 'date_of_birth', 'phone_number', 'address']);
+//     // --- ៣. ការគ្រប់គ្រង Profile តាមតួនាទី ---
+//     $profileData = $request->only(['full_name_km', 'full_name_en', 'gender', 'date_of_birth', 'phone_number', 'address']);
     
-    if ($request->role === 'student') {
-        $profile = $user->studentProfile()->firstOrNew(['user_id' => $user->id]);
-        $profile->generation = $request->generation; 
+//     if ($request->role === 'student') {
+//         $profile = $user->studentProfile()->firstOrNew(['user_id' => $user->id]);
+//         $profile->generation = $request->generation; 
 
-        if ($user->profile) {
-            // លុប Profile ចាស់ចោលប្រសិនបើប្តូរតួនាទីពីបុគ្គលិកមកជានិស្សិត
-            $user->profile->delete();
-        }
-    } else {
-        $profile = $user->profile()->firstOrNew(['user_id' => $user->id]);
-        if ($user->studentProfile) {
-            // លុប Profile ចាស់ចោលប្រសិនបើប្តូរតួនាទីពីនិស្សិតមកជាបុគ្គលិក
-            $user->studentProfile->delete();
-        }
-    }
-    $profile->fill($profileData);
+//         if ($user->profile) {
+//             // លុប Profile ចាស់ចោលប្រសិនបើប្តូរតួនាទីពីបុគ្គលិកមកជានិស្សិត
+//             $user->profile->delete();
+//         }
+//     } else {
+//         $profile = $user->profile()->firstOrNew(['user_id' => $user->id]);
+//         if ($user->studentProfile) {
+//             // លុប Profile ចាស់ចោលប្រសិនបើប្តូរតួនាទីពីនិស្សិតមកជាបុគ្គលិក
+//             $user->studentProfile->delete();
+//         }
+//     }
+//     $profile->fill($profileData);
 
-    // --- ៤. ការ Upload រូបភាពទៅកាន់ ImgBB ---
-    if ($request->hasFile('profile_picture')) {
-        $file = $request->file('profile_picture');
+    
+//     // --- ៤. ការ Upload រូបភាពទៅកាន់ ImgBB ---
+//     if ($request->hasFile('profile_picture')) {
+//         $file = $request->file('profile_picture');
 
-        // ប្រើប្រាស់ Http Facade ដើម្បីបញ្ជូនរូបភាពទៅ ImgBB API
-        $response = Http::asMultipart()->post('https://api.imgbb.com/1/upload', [
-            'key' => env('IMGBB_API_KEY'),
-            'image' => base64_encode(file_get_contents($file->getRealPath())),
-        ]);
+//         // ប្រើប្រាស់ Http Facade ដើម្បីបញ្ជូនរូបភាពទៅ ImgBB API
+//         $response = Http::asMultipart()->post('https://api.imgbb.com/1/upload', [
+//             'key' => env('IMGBB_API_KEY'),
+//             'image' => base64_encode(file_get_contents($file->getRealPath())),
+//         ]);
 
-        if ($response->successful()) {
-            // រក្សាទុក URL ពេញលេញដែលទទួលបានពី ImgBB
-            $profile->profile_picture_url = $response->json()['data']['url'];
-        }
-    }
+//         if ($response->successful()) {
+//             // រក្សាទុក URL ពេញលេញដែលទទួលបានពី ImgBB
+//             $profile->profile_picture_url = $response->json()['data']['url'];
+//         }
+//     }
 
-    $profile->save();
+//     $profile->save();
 
-    return redirect()->route('admin.manage-users')->with('success', 'ព័ត៌មានអ្នកប្រើប្រាស់ត្រូវបានធ្វើបច្ចុប្បន្នភាពដោយជោគជ័យ។');
-}
+//     return redirect()->route('admin.manage-users')->with('success', 'ព័ត៌មានអ្នកប្រើប្រាស់ត្រូវបានធ្វើបច្ចុប្បន្នភាពដោយជោគជ័យ។');
+// }
 
     /**
      * Remove the specified user from storage.
