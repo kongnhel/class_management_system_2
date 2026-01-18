@@ -62,22 +62,68 @@
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div class="relative">
-                                    <x-input-label for="password" class="font-semibold text-gray-600 mb-1">{{ __('ពាក្យសម្ងាត់') }}</x-input-label>
-                                    <div class="relative">
-                                        <x-text-input id="password" type="password" name="password" class="block w-full rounded-xl border-gray-300 shadow-sm pr-10" />
-                                        <button type="button" @click="$refs.password.type = ($refs.password.type === 'password' ? 'text' : 'password')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400">
-                                            <i class="fas fa-eye" x-ref="eyeIcon"></i>
-                                        </button>
-                                    </div>
-                                    <x-input-error :messages="$errors->get('password')" class="mt-2" />
-                                </div>
 
-                                <div>
-                                    <x-input-label for="password_confirmation" class="font-semibold text-gray-600 mb-1">{{ __('បញ្ជាក់ពាក្យសម្ងាត់') }}</x-input-label>
-                                    <x-text-input id="password_confirmation" type="password" name="password_confirmation" class="block w-full rounded-xl border-gray-300 shadow-sm" />
-                                </div>
-                            </div>
+    <!-- Password -->
+    <div>
+        <x-input-label for="password" class="font-semibold text-gray-600 mb-1">
+            {{ __('ពាក្យសម្ងាត់') }}
+        </x-input-label>
+
+        <div class="relative">
+            <x-text-input
+                id="password"
+                type="password"
+                name="password"
+                autocomplete="new-password"
+                class="block w-full rounded-xl border-gray-300 shadow-sm pr-12"
+            />
+
+            <!-- Toggle Button -->
+            <button
+                type="button"
+                id="togglePassword"
+                class="absolute inset-y-0 right-0 px-4 flex items-center text-gray-400 hover:text-gray-600 transition"
+            >
+                <i class="fas fa-eye"></i>
+            </button>
+        </div>
+
+        <!-- Password Strength -->
+        <p id="password-strength" class="text-sm mt-2"></p>
+
+        <x-input-error :messages="$errors->get('password')" class="mt-2" />
+    </div>
+
+    <!-- Password Confirmation -->
+    <div>
+        <x-input-label for="password_confirmation" class="font-semibold text-gray-600 mb-1">
+            {{ __('បញ្ជាក់ពាក្យសម្ងាត់') }}
+        </x-input-label>
+
+        <div class="relative">
+            <x-text-input
+                id="password_confirmation"
+                type="password"
+                name="password_confirmation"
+                autocomplete="new-password"
+                class="block w-full rounded-xl border-gray-300 shadow-sm pr-12"
+            />
+
+            <!-- Toggle Button -->
+            <button
+                type="button"
+                id="togglePasswordConfirm"
+                class="absolute inset-y-0 right-0 px-4 flex items-center text-gray-400 hover:text-gray-600 transition"
+            >
+                <i class="fas fa-eye"></i>
+            </button>
+        </div>
+
+        <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
+    </div>
+
+</div>
+
                         </div>
 
                         <div x-show="userRole === 'student'" x-transition class="bg-blue-50/50 p-6 rounded-2xl border border-blue-100 space-y-6">
@@ -234,9 +280,7 @@
                 }
             }
         });
-    </script>
 
-    <script>
     document.addEventListener('DOMContentLoaded', function() {
         // --- 1. Toggle Password Visibility Logic ---
         function togglePassword(inputId, buttonId) {

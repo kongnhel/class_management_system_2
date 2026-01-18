@@ -54,20 +54,69 @@
             <x-text-input id="email" class="block w-full rounded-xl py-3 px-4" type="email" name="email" :value="old('email', $user->email)" required />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
-        <div>
-            <x-input-label for="password" class="flex items-center text-lg text-gray-700 font-semibold mb-2">
-                <i class="fas fa-lock mr-3 text-green-500"></i> {{ __('ពាក្យសម្ងាត់ថ្មី') }}
-            </x-input-label>
-            <x-text-input id="password" class="block w-full rounded-xl py-3 px-4" type="password" name="password" placeholder="ទុកឱ្យនៅទទេប្រសិនបើមិនប្តូរ" />
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+
+    <!-- New Password -->
+    <div>
+        <x-input-label for="password" class="flex items-center text-lg text-gray-700 font-semibold mb-2">
+            <i class="fas fa-lock mr-3 text-green-500"></i>
+            {{ __('ពាក្យសម្ងាត់ថ្មី') }}
+        </x-input-label>
+
+        <div class="relative">
+            <x-text-input
+                id="password"
+                type="password"
+                name="password"
+                autocomplete="new-password"
+                placeholder="ទុកឱ្យនៅទទេប្រសិនបើមិនប្តូរ"
+                class="block w-full rounded-xl py-3 px-4 pr-12"
+            />
+
+            <!-- Toggle Password -->
+            <button
+                type="button"
+                id="togglePassword"
+                class="absolute inset-y-0 right-0 px-4 flex items-center text-gray-400 hover:text-gray-600 transition"
+            >
+                <i class="fas fa-eye"></i>
+            </button>
         </div>
-        {{-- បន្ថែម Field នេះដើម្បីឱ្យ Validation 'confirmed' ដំណើរការ --}}
-        <div class="md:col-start-2">
-            <x-input-label for="password_confirmation" class="flex items-center text-lg text-gray-700 font-semibold mb-2">
-                <i class="fas fa-shield-alt mr-3 text-green-500"></i> {{ __('បញ្ជាក់ពាក្យសម្ងាត់ថ្មី') }}
-            </x-input-label>
-            <x-text-input id="password_confirmation" class="block w-full rounded-xl py-3 px-4" type="password" name="password_confirmation" placeholder="វាយពាក្យសម្ងាត់ម្តងទៀត" />
+
+        <!-- Password Strength -->
+        <p id="password-strength" class="text-sm mt-2"></p>
+
+        <x-input-error :messages="$errors->get('password')" class="mt-2" />
+    </div>
+
+    <!-- Confirm New Password -->
+    <div>
+        <x-input-label for="password_confirmation" class="flex items-center text-lg text-gray-700 font-semibold mb-2">
+            <i class="fas fa-shield-alt mr-3 text-green-500"></i>
+            {{ __('បញ្ជាក់ពាក្យសម្ងាត់ថ្មី') }}
+        </x-input-label>
+
+        <div class="relative">
+            <x-text-input
+                id="password_confirmation"
+                type="password"
+                name="password_confirmation"
+                autocomplete="new-password"
+                placeholder="វាយពាក្យសម្ងាត់ម្តងទៀត"
+                class="block w-full rounded-xl py-3 px-4 pr-12"
+            />
+
+            <!-- Toggle Password Confirm -->
+            <button
+                type="button"
+                id="togglePasswordConfirm"
+                class="absolute inset-y-0 right-0 px-4 flex items-center text-gray-400 hover:text-gray-600 transition"
+            >
+                <i class="fas fa-eye"></i>
+            </button>
         </div>
+    </div>
+
+
     </div>
 </div>
 
@@ -253,6 +302,65 @@
                 }
             }
         });
+
+
+
+
+
+
+          document.addEventListener('DOMContentLoaded', function() {
+        // --- 1. Toggle Password Visibility Logic ---
+        function togglePassword(inputId, buttonId) {
+            const input = document.getElementById(inputId);
+            const button = document.getElementById(buttonId);
+            
+            if (input && button) {
+                button.addEventListener('click', function() {
+                    const type = input.type === 'password' ? 'text' : 'password';
+                    input.type = type;
+                    const icon = this.querySelector('i');
+                    // Toggle the eye icon between 'fa-eye' (show) and 'fa-eye-slash' (hide)
+                    icon.classList.toggle('fa-eye');
+                    icon.classList.toggle('fa-eye-slash');
+                });
+            }
+        }
+
+        // Apply toggle to both password fields
+        togglePassword('password', 'togglePassword');
+        togglePassword('password_confirmation', 'togglePasswordConfirm');
+
+        // --- 2. Password Strength Checker Logic ---
+        const passwordInput = document.getElementById('password');
+        const strengthText = document.getElementById('password-strength');
+
+        if (passwordInput && strengthText) {
+            passwordInput.addEventListener('input', () => {
+                const value = passwordInput.value;
+                let strength = 0;
+                // Criteria checks
+                if (/[A-Z]/.test(value)) strength++;       // Uppercase
+                if (/[a-z]/.test(value)) strength++;       // Lowercase
+                if (/[0-9]/.test(value)) strength++;       // Numbers
+                if (/[@$!%*?&]/.test(value)) strength++;   // Symbols
+                if (value.length >= 8) strength++;         // Length
+
+                const levels = ['ខ្សោយ', 'មធ្យម', 'ល្អ', 'ខ្លាំង', 'ខ្លាំងណាស់'];
+                const colors = ['text-red-400', 'text-yellow-400', 'text-green-400', 'text-green-500', 'text-green-600'];
+                
+                // Reset classes before setting the new one
+                strengthText.className = 'text-sm mt-2'; 
+                
+                if (value) {
+                    const levelIndex = strength > 0 ? strength - 1 : 0;
+                    strengthText.textContent = 'កម្លាំងពាក្យសម្ងាត់៖ ' + levels[levelIndex];
+                    strengthText.classList.add(colors[levelIndex]);
+                } else {
+                    strengthText.textContent = '';
+                }
+            });
+        }
+    });
     </script>
 </x-app-layout>
 
