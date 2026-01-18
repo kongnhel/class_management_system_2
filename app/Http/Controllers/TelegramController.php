@@ -42,7 +42,7 @@ public function handleWebhook(Request $request)
         $schedule->call(function () {
             // ១. ទាញយកសាស្ត្រាចារ្យទាំងឡាយណាដែលមាន Telegram Chat ID
             $users = User::whereNotNull('telegram_chat_id')->get();
-            $botToken = env('TELEGRAM_BOT_TOKEN'); // កុំភ្លេចដាក់ក្នុង .env
+            $botToken = env('TELEGRAM_BOT_TOKEN2'); // កុំភ្លេចដាក់ក្នុង .env
 
             foreach ($users as $user) {
                 // ២. ទាញយកកាលវិភាគថ្ងៃនេះរបស់សាស្ត្រាចារ្យម្នាក់ៗ
