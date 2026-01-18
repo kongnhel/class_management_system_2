@@ -217,39 +217,53 @@
                             <span class="bg-blue-50 text-blue-600 text-[10px] font-black px-2 py-1 rounded-lg">LIVE</span>
                         </div>
 
-                        <div class="space-y-4">
-                            @forelse ($combinedFeed as $item)
-                                <div id="{{ $item->type }}-{{ $item->id }}" 
-                                     class="p-4 rounded-2xl border transition-all {{ $item->is_read ? 'bg-gray-50 border-gray-100 opacity-60' : 'bg-white border-blue-50 shadow-sm' }}">
-                                    <div class="flex gap-4">
-                                        <div class="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center {{ $item->type === 'announcement' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600' }}">
-                                            <i class="fas {{ $item->type === 'announcement' ? 'fa-thumbtack' : 'fa-bell' }} text-sm"></i>
-                                        </div>
-                                        <div class="flex-grow min-w-0">
-                                            <div class="flex justify-between items-start mb-1">
-                                                <h5 class="text-xs font-black text-gray-800 truncate">{{ $item->title }}</h5>
-                                            </div>
-                                            <p class="text-[11px] text-gray-500 line-clamp-2 leading-relaxed mb-2">{{ $item->content }}</p>
-                                            
-                                            <div class="flex items-center justify-between">
-                                                <span class="text-[9px] text-gray-400 font-bold"><i class="far fa-clock mr-1"></i> {{ $item->created_at->diffForHumans() }}</span>
-                                                @if(!$item->is_read)
-                                                    <button onclick="markAsRead('{{ $item->type }}', '{{ $item->id }}')" 
-                                                            class="text-[10px] font-black text-blue-600 uppercase hover:underline">
-                                                        {{ __('អានរួច') }}
-                                                    </button>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @empty
-                                <div class="text-center py-12 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-                                    <i class="fas fa-inbox text-gray-200 text-3xl mb-3"></i>
-                                    <p class="text-gray-400 font-bold text-xs">{{ __('មិនទាន់មានព័ត៌មាន') }}</p>
-                                </div>
-                            @endforelse
+<div class="space-y-4">
+    @forelse ($combinedFeed as $item)
+        <div id="{{ $item->type }}-{{ $item->id }}" 
+             class="group relative p-5 rounded-[2rem] border transition-all duration-300 {{ $item->is_read ? 'bg-gray-50/50 border-gray-100 opacity-75' : 'bg-white border-blue-100 shadow-md shadow-blue-50/50' }}">
+            
+            <div class="flex gap-5">
+                {{-- Icon --}}
+                <div class="flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center {{ $item->type === 'announcement' ? 'bg-emerald-100 text-emerald-600' : 'bg-indigo-100 text-indigo-600' }}">
+                    <i class="fas {{ $item->type === 'announcement' ? 'fa-bullhorn' : 'fa-bell' }} text-lg"></i>
+                </div>
+
+                <div class="flex-grow min-w-0">
+                    <div class="flex flex-col mb-2">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md {{ $item->type === 'announcement' ? 'bg-emerald-50 text-emerald-700' : 'bg-indigo-50 text-indigo-700' }}">
+                                {{ $item->type === 'announcement' ? __('សេចក្តីជូនដំណឹង') : __('ការជូនដំណឹង') }}
+                            </span>
+                            <span class="text-[10px] text-gray-400 font-bold">• {{ $item->created_at->diffForHumans() }}</span>
                         </div>
+                        <h5 class="text-sm font-black text-gray-800 leading-snug">{{ $item->title }}</h5>
+                    </div>
+
+                    <p class="text-[12px] text-gray-500 line-clamp-2 leading-relaxed mb-3">{{ $item->content }}</p>
+
+                    <div class="flex items-center justify-between pt-3 border-t border-gray-50">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center">
+                                <i class="fas fa-user-tie text-[10px] text-slate-400"></i>
+                            </div>
+                            {{-- បង្ហាញឈ្មោះអ្នកបង្ហោះ (គ្រូ ឬ Admin) --}}
+                            <span class="text-[11px] font-extrabold text-slate-600">{{ $item->sender_name }}</span>
+                        </div>
+
+                        @if(!$item->is_read)
+                            <button onclick="markAsRead('{{ $item->type }}', '{{ $item->id }}')" 
+                                    class="px-3 py-1 rounded-xl bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-wider hover:bg-blue-600 hover:text-white transition-all">
+                                {{ __('អានរួច') }}
+                            </button>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    @empty
+        {{-- Empty State --}}
+    @endforelse
+</div>
                     </div>
                 </div>
             </div>

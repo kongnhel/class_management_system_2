@@ -123,29 +123,46 @@ public function dashboard()
     $totalCoursesInProgram = $studentProgram ? $studentProgram->courses->count() : 0;
 
     // 6. Announcements & Notifications (Feed) - រួមបញ្ចូល Logic បកប្រែភាសា និង is_read
-    $allAnnouncements = Announcement::where('target_role', 'all')
-        ->orWhere('target_role', 'student')
-        ->with(['reads' => function($query) use ($user) {
-            $query->where('user_id', $user->id);
-        }])
-        ->orderBy('created_at', 'desc')
-        ->get()
-        ->map(function ($announcement) {
-            $announcement->type = 'announcement';
-            // រក្សាទុក Logic បកប្រែចំណងជើង និងខ្លឹមសារ
-            $announcement->title = $announcement->title_km ?? $announcement->title_en;
-            $announcement->content = $announcement->content_km ?? $announcement->content_en;
-            $announcement->is_read = $announcement->reads->isNotEmpty();
-            return $announcement;
-        });
-
-    $allNotifications = $user->notifications->map(function ($notification) {
-        $notification->type = 'notification';
-        $notification->title = $notification->data['title'] ?? 'ការជូនដំណឹងថ្មី';
-        $notification->content = $notification->data['message'] ?? 'អ្នកមានការជូនដំណឹងថ្មី។';
-        $notification->is_read = $notification->read_at !== null;
-        return $notification;
+$allAnnouncements = Announcement::where('target_role', 'all')
+    ->orWhere('target_role', 'student')
+    ->with(['poster', 'reads' => function($query) use ($user) {
+        $query->where('user_id', $user->id);
+    }])
+    ->orderBy('created_at', 'desc')
+    ->get()
+    ->map(function ($announcement) {
+        $announcement->type = 'announcement';
+        $announcement->title = $announcement->title_km ?? $announcement->title_en;
+        $announcement->content = $announcement->content_km ?? $announcement->content_en;
+        $announcement->is_read = $announcement->reads->isNotEmpty();
+        
+        // ទាញយកឈ្មោះអ្នកបង្ហោះចេញពី Relationship 'poster'
+        $announcement->sender_name = $announcement->poster->name ?? __('រដ្ឋបាលសាលា');
+        return $announcement;
     });
+
+    // $allNotifications = $user->notifications->map(function ($notification) {
+    //     $notification->type = 'notification';
+    //     $notification->title = $notification->data['title'] ?? 'ការជូនដំណឹងថ្មី';
+    //     $notification->content = $notification->data['message'] ?? 'អ្នកមានការជូនដំណឹងថ្មី។';
+    //     $notification->is_read = $notification->read_at !== null;
+    //     return $notification;
+    // });
+    $allNotifications = $user->notifications->map(function ($notification) {
+    $notification->type = 'notification';
+    
+    // ទាញយកទិន្នន័យពី JSON field 'data'
+    $data = $notification->data; 
+    
+    $notification->title = $data['title'] ?? 'ការជូនដំណឹងថ្មី';
+    $notification->content = $data['message'] ?? 'អ្នកមានការជូនដំណឹងថ្មី។';
+    
+    // --- ចំណុចសំខាន់៖ បន្ថែមឈ្មោះគ្រូបង្រៀន ---
+    $notification->sender_name = $data['from_user_name'] ?? 'ប្រព័ន្ធ';
+    
+    $notification->is_read = $notification->read_at !== null;
+    return $notification;
+});
 
     $combinedFeed = $allAnnouncements->merge($allNotifications)->sortByDesc('created_at');
 
