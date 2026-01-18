@@ -448,7 +448,7 @@ public function myGrades(Request $request)
     // --- ១. ទាញយកពិន្ទុពី ExamResult (Import ពី Excel) ---
     $examResults = \App\Models\ExamResult::where('student_user_id', $user->id)
         ->get()
-        ->map(function ($result) {
+        ->map(function ($result) use ($user) {
             $assessment = null;
             $typeLabel = '';
 
@@ -465,12 +465,19 @@ public function myGrades(Request $request)
 
             if (!$assessment) return null;
 
+            // --- បញ្ចូលពិន្ទុវត្តមាន ---
+            $courseOfferingId = $assessment->course_offering_id;
+            // ប្រើប្រាស់ Method ដែលអ្នកមានក្នុង User/Student Model
+            $attendanceScore = $user->getAttendanceScoreByCourse($courseOfferingId) ?? 0;
+
             return (object)[
                 'assessment_id'   => $result->assessment_id,
+                'course_offering_id' => $courseOfferingId, // រក្សាទុកសម្រាប់ប្រើប្រាស់បន្ត
                 'type_category'   => $result->assessment_type,
                 'course_title_en' => $assessment->courseOffering->course->title_en ?? 'Unknown Course',
                 'course_title_km' => $assessment->courseOffering->course->title_km ?? 'មិនស្គាល់មុខវិជ្ជា',
                 'assessment_type' => $typeLabel . ($assessment->title_en ?? 'N/A'),
+                'attendance'      => (float) $attendanceScore, // បញ្ជូនពិន្ទុវត្តមានទៅ View
                 'score'           => (float) $result->score_obtained,
                 'max_score'       => (float) ($assessment->max_score ?? 0),
                 'date'            => $result->updated_at,
@@ -482,13 +489,18 @@ public function myGrades(Request $request)
         ->whereNotNull('grade_received')
         ->with(['assignment.courseOffering.course'])
         ->get()
-        ->map(function ($submission) {
+        ->map(function ($submission) use ($user) {
+            $courseOfferingId = $submission->assignment->course_offering_id;
+            $attendanceScore = $user->getAttendanceScoreByCourse($courseOfferingId) ?? 0;
+
             return (object)[
                 'assessment_id'   => $submission->assignment_id,
+                'course_offering_id' => $courseOfferingId,
                 'type_category'   => 'assignment',
                 'course_title_en' => $submission->assignment->courseOffering->course->title_en ?? 'Unknown Course',
                 'course_title_km' => $submission->assignment->courseOffering->course->title_km ?? 'មិនស្គាល់មុខវិជ្ជា',
                 'assessment_type' => 'កិច្ចការ: ' . ($submission->assignment->title_en ?? 'N/A'),
+                'attendance'      => (float) $attendanceScore,
                 'score'           => (float) $submission->grade_received,
                 'max_score'       => (float) ($submission->assignment->max_score ?? 0),
                 'date'            => $submission->updated_at,
@@ -499,9 +511,13 @@ public function myGrades(Request $request)
         return $item->type_category . $item->assessment_id;
     });
 
-    // --- ៣. គណនា Grade និង Rank សម្រាប់ Assessment នីមួយៗ ---
+    // --- ៣. គណនា Grade និង Rank (បូកបញ្ជូលពិន្ទុវត្តមានក្នុងផលបូកសរុប) ---
     $gradedItems = $allGrades->map(function ($item) {
-        $item->grade = $this->calculateGrade($item->score, $item->max_score);
+        // ពិន្ទុសរុបសម្រាប់ជួរនេះ = ពិន្ទុវត្តមាន + ពិន្ទុ Assessment
+        $totalForCalculation = $item->score + $item->attendance;
+        $maxForCalculation = $item->max_score + 15; // ១៥ ជាពិន្ទុពេញនៃវត្តមាន
+
+        $item->grade = $this->calculateGrade($totalForCalculation, $maxForCalculation);
         
         $higherScores = \App\Models\ExamResult::where('assessment_id', $item->assessment_id)
             ->where('assessment_type', $item->type_category)
@@ -512,17 +528,17 @@ public function myGrades(Request $request)
         return $item;
     })->sortByDesc('course_title_en');
 
-    // --- ៤. គណនា Overall Rank & Average Score ---
-    $averageScore = $allGrades->avg('score') ?? 0;
-    $averageMax   = $allGrades->avg('max_score') ?: 100;
+    // --- ៤. គណនា Overall Stats ---
+    // បូកបញ្ចូលមធ្យមភាគវត្តមានទៅក្នុង Overall
+    $averageScore = $allGrades->avg(fn($g) => $g->score + $g->attendance) ?? 0;
+    $averageMax   = $allGrades->avg(fn($g) => $g->max_score + 15) ?: 115;
     $overallGrade = $this->calculateGrade($averageScore, $averageMax);
 
-    // ដោះស្រាយបញ្ហា Rank #1 គ្រប់គ្នា និងជួសជុល Error: assessment() not found
+    // (រក្សាទុក Logic Ranking ដើមរបស់អ្នក...)
     $overallRank = 'N/A';
     $firstRes = \App\Models\ExamResult::where('student_user_id', $user->id)->first();
     
     if ($firstRes) {
-        // កំណត់ស្វែងរក Assessment ដើម្បយក offering_id
         $asmt = null;
         if ($firstRes->assessment_type === 'assignment') $asmt = \App\Models\Assignment::find($firstRes->assessment_id);
         elseif ($firstRes->assessment_type === 'quiz') $asmt = \App\Models\Quiz::find($firstRes->assessment_id);
@@ -530,22 +546,18 @@ public function myGrades(Request $request)
 
         if ($asmt) {
             $offering_id = $asmt->course_offering_id;
-
-            // ១. ទាញយក IDs Assessments ទាំងអស់ក្នុងថ្នាក់នេះ
             $asmtIds = collect()
                 ->concat(\App\Models\Assignment::where('course_offering_id', $offering_id)->pluck('id'))
                 ->concat(\App\Models\Quiz::where('course_offering_id', $offering_id)->pluck('id'))
                 ->concat(\App\Models\Exam::where('course_offering_id', $offering_id)->pluck('id'));
 
-            // ២. ទាញយកសិស្សក្នុងថ្នាក់
             $enrollments = \App\Models\StudentCourseEnrollment::where('course_offering_id', $offering_id)->get();
 
-            // ៣. គណនា Rank
             $rankings = $enrollments->map(function ($enrollment) use ($offering_id, $asmtIds) {
                 $sid = $enrollment->student_user_id;
-                $attendance = \App\Models\User::find($sid)->getAttendanceScoreByCourse($offering_id) ?? 0;
+                $sModel = \App\Models\User::find($sid);
+                $attendance = $sModel ? $sModel->getAttendanceScoreByCourse($offering_id) : 0;
                 
-                // ប្រើ whereIn ជំនួស whereHas ដើម្បីការពារ Error BadMethodCallException
                 $scores = \App\Models\ExamResult::where('student_user_id', $sid)
                     ->whereIn('assessment_id', $asmtIds)
                     ->sum('score_obtained');
@@ -561,7 +573,7 @@ public function myGrades(Request $request)
         }
     }
 
-    // --- ៥. Pagination & UI Colors ---
+    // --- ៥. Pagination & UI ---
     $perPage = 10;
     $currentPage = \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPage();
     $grades = new \Illuminate\Pagination\LengthAwarePaginator(
@@ -570,10 +582,10 @@ public function myGrades(Request $request)
     );
 
     $colorPalette = [
-        ['bg' => 'bg-blue-50', 'text' => 'text-blue-600', 'border' => 'border-blue-100', 'hover' => 'hover:bg-blue-50/50', 'accent' => 'bg-blue-500'],
-        ['bg' => 'bg-indigo-50', 'text' => 'text-indigo-600', 'border' => 'border-indigo-100', 'hover' => 'hover:bg-indigo-50/50', 'accent' => 'bg-indigo-500'],
-        ['bg' => 'bg-purple-50', 'text' => 'text-purple-600', 'border' => 'border-purple-100', 'hover' => 'hover:bg-purple-50/50', 'accent' => 'bg-purple-500'],
-        ['bg' => 'bg-rose-50', 'text' => 'text-rose-600', 'border' => 'border-rose-100', 'hover' => 'hover:bg-rose-50/50', 'accent' => 'bg-rose-500'],
+        ['bg' => 'bg-blue-50', 'text' => 'text-blue-600', 'border' => 'border-blue-100', 'accent' => 'bg-blue-500'],
+        ['bg' => 'bg-indigo-50', 'text' => 'text-indigo-600', 'border' => 'border-indigo-100', 'accent' => 'bg-indigo-500'],
+        ['bg' => 'bg-purple-50', 'text' => 'text-purple-600', 'border' => 'border-purple-100', 'accent' => 'bg-purple-500'],
+        ['bg' => 'bg-rose-50', 'text' => 'text-rose-600', 'border' => 'border-rose-100', 'accent' => 'bg-rose-500'],
     ];
 
     $grades->getCollection()->transform(function ($grade, $key) use ($colorPalette) {

@@ -44,20 +44,32 @@
 
                     <div class="border-t border-gray-200/50 pt-8 mt-8">
                         
-                        <div x-show="userRole === 'admin' || userRole === 'professor'" x-cloak class="space-y-6">
-                            <h4 class="text-2xl font-bold text-gray-800 mb-4">{{ __('ព័ត៌មានគណនី') }}</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <x-input-label for="email" class="flex items-center text-lg text-gray-700 font-semibold mb-2"><i class="fas fa-envelope mr-3 text-green-500"></i> {{ __('អ៊ីម៉ែល') }}</x-input-label>
-                                    <x-text-input id="email" class="block w-full rounded-xl py-3 px-4" type="email" name="email" :value="old('email', $user->email)" required />
-                                    <x-input-error :messages="$errors->get('email')" class="mt-2" />
-                                </div>
-                                <div>
-                                    <x-input-label for="password" class="flex items-center text-lg text-gray-700 font-semibold mb-2"><i class="fas fa-lock mr-3 text-green-500"></i> {{ __('ពាក្យសម្ងាត់ថ្មី') }}</x-input-label>
-                                    <x-text-input id="password" class="block w-full rounded-xl py-3 px-4" type="password" name="password" placeholder="ទុកឱ្យនៅទទេប្រសិនបើមិនប្តូរ" />
-                                </div>
-                            </div>
-                        </div>
+<div x-show="userRole === 'admin' || userRole === 'professor'" x-cloak class="space-y-6">
+    <h4 class="text-2xl font-bold text-gray-800 mb-4">{{ __('ព័ត៌មានគណនី') }}</h4>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+            <x-input-label for="email" class="flex items-center text-lg text-gray-700 font-semibold mb-2">
+                <i class="fas fa-envelope mr-3 text-green-500"></i> {{ __('អ៊ីម៉ែល') }}
+            </x-input-label>
+            <x-text-input id="email" class="block w-full rounded-xl py-3 px-4" type="email" name="email" :value="old('email', $user->email)" required />
+            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+        </div>
+        <div>
+            <x-input-label for="password" class="flex items-center text-lg text-gray-700 font-semibold mb-2">
+                <i class="fas fa-lock mr-3 text-green-500"></i> {{ __('ពាក្យសម្ងាត់ថ្មី') }}
+            </x-input-label>
+            <x-text-input id="password" class="block w-full rounded-xl py-3 px-4" type="password" name="password" placeholder="ទុកឱ្យនៅទទេប្រសិនបើមិនប្តូរ" />
+            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+        </div>
+        {{-- បន្ថែម Field នេះដើម្បីឱ្យ Validation 'confirmed' ដំណើរការ --}}
+        <div class="md:col-start-2">
+            <x-input-label for="password_confirmation" class="flex items-center text-lg text-gray-700 font-semibold mb-2">
+                <i class="fas fa-shield-alt mr-3 text-green-500"></i> {{ __('បញ្ជាក់ពាក្យសម្ងាត់ថ្មី') }}
+            </x-input-label>
+            <x-text-input id="password_confirmation" class="block w-full rounded-xl py-3 px-4" type="password" name="password_confirmation" placeholder="វាយពាក្យសម្ងាត់ម្តងទៀត" />
+        </div>
+    </div>
+</div>
 
                         <div x-show="userRole === 'student'" x-cloak class="space-y-6 mt-6">
                             <h4 class="text-2xl font-bold text-gray-800 mb-4">{{ __('ព័ត៌មាននិស្សិត') }}</h4>
