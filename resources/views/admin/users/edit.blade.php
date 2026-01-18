@@ -12,11 +12,12 @@
                     {{ __('កែប្រែព័ត៌មានអ្នកប្រើប្រាស់') . ': ' . ($user->name ?? 'N/A') }}
                 </h3>
 
-                <form method="POST" action="{{ route('admin.update-user', $user->id) }}" enctype="multipart/form-data"
-x-data="{
-    userRole: '{{ old('role', $user->role) }}',
-    profilePicturePreview: '{{ $user->profile?->profile_picture_url ?? $user->studentProfile?->profile_picture_url ?? '' }}'
-}"class="space-y-8">
+<form method="POST" action="{{ route('admin.update-user', $user->id) }}" enctype="multipart/form-data"
+    x-data="{
+        userRole: '{{ old('role', $user->role) }}',
+        profilePicturePreview: '{{ $user->profile?->profile_picture_url ?? $user->studentProfile?->profile_picture_url ?? '' }}'
+    }" 
+    class="space-y-8">
                     @csrf
                     @method('PUT')
 
@@ -47,13 +48,19 @@ x-data="{
 <div x-show="userRole === 'admin' || userRole === 'professor'" x-cloak class="space-y-6">
     <h4 class="text-2xl font-bold text-gray-800 mb-4">{{ __('ព័ត៌មានគណនី') }}</h4>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-            <x-input-label for="email" class="flex items-center text-lg text-gray-700 font-semibold mb-2">
-                <i class="fas fa-envelope mr-3 text-green-500"></i> {{ __('អ៊ីម៉ែល') }}
-            </x-input-label>
-            <x-text-input id="email" class="block w-full rounded-xl py-3 px-4" type="email" name="email" :value="old('email', $user->email)" required />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
+<div>
+    <x-input-label for="email" class="flex items-center text-lg text-gray-700 font-semibold mb-2">
+        <i class="fas fa-envelope mr-3 text-green-500"></i> {{ __('អ៊ីម៉ែល') }}
+    </x-input-label>
+    {{-- បន្ថែម :required អាស្រ័យលើ userRole --}}
+    <x-text-input id="email" 
+        class="block w-full rounded-xl py-3 px-4" 
+        type="email" 
+        name="email" 
+        :value="old('email', $user->email)" 
+        ::required="userRole !== 'student'" /> {{-- បន្ថែមបន្ទាត់នេះ --}}
+    <x-input-error :messages="$errors->get('email')" class="mt-2" />
+</div>
 
     <!-- New Password -->
     <div>
