@@ -78,20 +78,28 @@
                 @endif
 
                 <!-- Alpine.js data for managing active tab and delete modal state -->
-                <div x-data="{ 
-                    {{-- activeTab: '{{ request()->query('tab', 'professors') }}',  --}}
-                    activeTab: $persist('admins').as('user_manage_tab'),   
-                    searchQuery: '{{ request('search') }}',
-                    showDeleteModal: false,
-                    deletingUserId: null,
-                    deletingUserType: '',
+<div x-data="{ 
+activeTab: $persist('admins').as('user_manage_tab'),
 
-                    confirmDelete(userId, userType) {
-                        this.deletingUserId = userId;
-                        this.deletingUserType = userType;
-                        this.showDeleteModal = true;
-                    }
-                }" class="mt-8">
+    init() {
+        // ២. ឆែកមើលក្នុង URL បើមាន Parameter 'tab' គឺត្រូវយកតម្លៃនោះមកប្រើជំនួស $persist ភ្លាមៗ
+        const urlParams = new URLSearchParams(window.location.search);
+        const tabParam = urlParams.get('tab');
+        if (tabParam) {
+            this.activeTab = tabParam;
+        }
+    },
+
+    showDeleteModal: false,
+    deletingUserId: null,
+    deletingUserType: '',
+
+    confirmDelete(userId, userType) {
+        this.deletingUserId = userId;
+        this.deletingUserType = userType;
+        this.showDeleteModal = true;
+    }
+}" class="mt-8">
                     <div class="border-b-2 border-gray-200">
                         <nav class="-mb-0.5 flex space-x-6" aria-label="Tabs">
                             <a href="{{ route('admin.manage-users', ['tab' => 'admins', 'search' => request('search')]) }}" @click.prevent="activeTab = 'admins'"

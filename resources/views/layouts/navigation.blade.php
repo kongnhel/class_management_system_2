@@ -96,6 +96,16 @@
 
 <div 
     x-data="{
+    activeTab: $persist('admins').as('user_manage_tab'),
+
+    init() {
+        // ២. ឆែកមើលក្នុង URL បើមាន Parameter 'tab' គឺត្រូវយកតម្លៃនោះមកប្រើជំនួស $persist
+        const urlParams = new URLSearchParams(window.location.search);
+        const tabParam = urlParams.get('tab');
+        if (tabParam) {
+            this.activeTab = tabParam;
+        }
+    },
         show: false,
         msg: '',
         timer: 10,
@@ -212,55 +222,64 @@
                 @endphp
 
                 {{-- Dropdown for Admin Users --}}
-                <div x-data="{ adminUserDropdownOpen: {{ $isAdminUserActive ? 'true' : 'false' }} }" class="relative">
-                    <button @click="adminUserDropdownOpen = !adminUserDropdownOpen"
-                            aria-controls="admin-user-submenu"
-                            :aria-expanded="adminUserDropdownOpen"
-                            class="flex items-center justify-between w-full px-5 py-3 text-base font-medium rounded-xl hover:bg-gray-700/80 hover:text-green-300 transition duration-200 ease-in-out {{ $isAdminUserActive ? 'bg-green-700 text-white shadow-lg' : 'text-gray-200' }}">
-                        <div class="flex items-center">
-                            {{-- Users Cog SVG (Replaces fas fa-users-cog) --}}
-                            <svg class="h-6 w-6 me-3 text-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5m-5 0a2 2 0 100-4m0 4a2 2 0 110-4m-9-1h4m-4 0v4m-4-2H3a2 2 0 00-2 2v4m7-4V7a2 2 0 00-2-2H5a2 2 0 00-2 2v4m7-4v4"></path></svg>
-                            <span>{{ __('គ្រប់គ្រងអ្នកប្រើប្រាស់') }}</span>
-                        </div>
-                        <svg class="h-5 w-5 transform transition-transform duration-200" :class="{ 'rotate-180': adminUserDropdownOpen, 'rotate-0': !adminUserDropdownOpen }" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-                    </button>
-                    
-                    <div x-show="adminUserDropdownOpen" id="admin-user-submenu" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                        class="mt-2 space-y-1 ps-10">
-                        
-                        {{-- Admin Tab --}}
-                        <x-nav-link :href="route('admin.manage-users', ['tab' => 'admins'])" :active="request()->routeIs('admin.manage-users') && request()->query('tab') === 'admins'"
-                            class="flex items-center w-full px-5 py-3 text-base font-medium rounded-xl hover:bg-gray-700/80 hover:text-green-300 transition duration-200 ease-in-out {{ request()->routeIs('admin.manage-users') && request()->query('tab') === 'admins' ? 'bg-green-700 text-white shadow-lg' : 'text-gray-200' }}">
-                            {{-- User Shield SVG (Replaces fas fa-user-shield) --}}
-                            <svg class="h-5 w-5 me-3 text-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.001 12.001 0 002.944 12c.045 4.02 1.325 7.625 3.844 10.323l.115.115a.997.997 0 001.414 0l.115-.115c2.519-2.698 3.799-6.303 3.844-10.323a12.001 12.001 0 00-2.67-8.984z"></path></svg>
-                            <span>{{ __('អ្នកគ្រប់គ្រង') }}</span>
-                        </x-nav-link>
-                        
-                        {{-- Professor Tab --}}
-                        <x-nav-link :href="route('admin.manage-users', ['tab' => 'professors'])" :active="request()->routeIs('admin.manage-users') && request()->query('tab') === 'professors'"
-                            class="flex items-center w-full px-5 py-3 text-base font-medium rounded-xl hover:bg-gray-700/80 hover:text-green-300 transition duration-200 ease-in-out {{ request()->routeIs('admin.manage-users') && request()->query('tab') === 'professors' ? 'bg-green-700 text-white shadow-lg' : 'text-gray-200' }}">
-                            {{-- Teacher SVG (Replaces fas fa-chalkboard-teacher) --}}
-                            <svg class="h-5 w-5 me-3 text-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14v6m-3-3h6M6 10h2m4 0h2m4 0h2M3 10a2 2 0 012-2h14a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6z"></path></svg>
-                            <span>{{ __('លោកគ្រូអ្នកគ្រូ') }}</span>
-                        </x-nav-link>
-                        
-                        {{-- Student Tab --}}
-                        <x-nav-link :href="route('admin.manage-users', ['tab' => 'students'])" :active="request()->routeIs('admin.manage-users') && request()->query('tab') === 'students'"
-                            class="flex items-center w-full px-5 py-3 text-base font-medium rounded-xl hover:bg-gray-700/80 hover:text-green-300 transition duration-200 ease-in-out {{ request()->routeIs('admin.manage-users') && request()->query('tab') === 'students' ? 'bg-green-700 text-white shadow-lg' : 'text-gray-200' }}">
-                            {{-- Student Hat SVG (Replaces fas fa-user-graduate) --}}
-                            <svg class="h-5 w-5 me-3 text-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14v5m-1-7l-1 4h2l-1-4zm-4 7h6m-3-11v2m0 0h.01M12 3c-4.418 0-8 3.582-8 8s3.582 8 8 8 8-3.582 8-8-3.582-8-8-8z"></path></svg>
-                            <span>{{ __('និស្សិត') }}</span>
-                        </x-nav-link>
-                        
-                        {{-- Create User Link --}}
-                        <x-nav-link :href="route('admin.create-user')" :active="request()->routeIs('admin.create-user')"
-                            class="flex items-center w-full px-5 py-3 text-base font-medium rounded-xl hover:bg-gray-700/80 hover:text-green-300 transition duration-200 ease-in-out {{ request()->routeIs('admin.create-user') ? 'bg-green-700 text-white shadow-lg' : 'text-gray-200' }}">
-                            {{-- Plus Circle SVG (Replaces fas fa-plus-circle) --}}
-                            <svg class="h-6 w-6 me-3 text-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            <span>{{ __('បង្កើតអ្នកប្រើប្រាស់ថ្មី') }}</span>
-                        </x-nav-link>
-                    </div>
-                </div>
+<div x-data="{ adminUserDropdownOpen: {{ $isAdminUserActive ? 'true' : 'false' }} }" class="relative">
+    <button @click="adminUserDropdownOpen = !adminUserDropdownOpen"
+            aria-controls="admin-user-submenu"
+            :aria-expanded="adminUserDropdownOpen"
+            class="flex items-center justify-between w-full px-5 py-3 text-base font-medium rounded-xl hover:bg-gray-700/80 hover:text-green-300 transition duration-200 ease-in-out {{ $isAdminUserActive ? 'bg-green-700 text-white shadow-lg' : 'text-gray-200' }}">
+        <div class="flex items-center">
+            {{-- Users Cog SVG --}}
+            <svg class="h-6 w-6 me-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+            </svg>
+            <span>{{ __('គ្រប់គ្រងអ្នកប្រើប្រាស់') }}</span>
+        </div>
+        <svg class="h-5 w-5 transform transition-transform duration-200" :class="{ 'rotate-180': adminUserDropdownOpen, 'rotate-0': !adminUserDropdownOpen }" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+        </svg>
+    </button>
+    
+    <div x-show="adminUserDropdownOpen" 
+         id="admin-user-submenu" 
+         x-transition:enter="transition ease-out duration-200" 
+         x-transition:enter-start="opacity-0 scale-95" 
+         x-transition:enter-end="opacity-100 scale-100" 
+         x-transition:leave="transition ease-in duration-75" 
+         x-transition:leave-start="opacity-100 scale-100" 
+         x-transition:leave-end="opacity-0 scale-95"
+         class="mt-2 space-y-1 ps-10">
+        
+        {{-- Admin Tab Link --}}
+        <a href="{{ route('admin.manage-users', ['tab' => 'admins']) }}" 
+           class="flex items-center w-full px-4 py-2.5 text-sm font-medium rounded-lg transition duration-200 {{ request()->query('tab') === 'admins' ? 'text-green-400 bg-gray-700/50' : 'text-gray-400 hover:text-green-300 hover:bg-gray-700/30' }}">
+            <svg class="h-4 w-4 me-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.001 12.001 0 002.944 12c.045 4.02 1.325 7.625 3.844 10.323l.115.115a.997.997 0 001.414 0l.115-.115c2.519-2.698 3.799-6.303 3.844-10.323a12.001 12.001 0 00-2.67-8.984z"></path></svg>
+            {{ __('អ្នកគ្រប់គ្រង') }}
+        </a>
+        
+        {{-- Professor Tab Link --}}
+        <a href="{{ route('admin.manage-users', ['tab' => 'professors']) }}" 
+           class="flex items-center w-full px-4 py-2.5 text-sm font-medium rounded-lg transition duration-200 {{ request()->query('tab') === 'professors' ? 'text-green-400 bg-gray-700/50' : 'text-gray-400 hover:text-green-300 hover:bg-gray-700/30' }}">
+            <svg class="h-4 w-4 me-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2.5 2.5 0 00-2.5-2.5H14"></path></svg>
+            {{ __('លោកគ្រូអ្នកគ្រូ') }}
+        </a>
+        
+        {{-- Student Tab Link --}}
+        <a href="{{ route('admin.manage-users', ['tab' => 'students']) }}" 
+           class="flex items-center w-full px-4 py-2.5 text-sm font-medium rounded-lg transition duration-200 {{ request()->query('tab') === 'students' ? 'text-green-400 bg-gray-700/50' : 'text-gray-400 hover:text-green-300 hover:bg-gray-700/30' }}">
+            <svg class="h-4 w-4 me-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path></svg>
+            {{ __('និស្សិត') }}
+        </a>
+        
+        <div class="h-px bg-gray-700/50 my-2 mx-4"></div>
+
+        {{-- Create User Link --}}
+        <a href="{{ route('admin.create-user') }}" 
+           class="flex items-center w-full px-4 py-2.5 text-sm font-medium rounded-lg transition duration-200 {{ request()->routeIs('admin.create-user') ? 'text-green-400 bg-gray-700/50' : 'text-gray-400 hover:text-green-300 hover:bg-gray-700/30' }}">
+            <svg class="h-4 w-4 me-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            {{ __('បង្កើតអ្នកប្រើប្រាស់ថ្មី') }}
+        </a>
+    </div>
+</div>
 
                 {{-- Admin - Other Links --}}
                 <x-nav-link :href="route('admin.announcements.index')" :active="request()->routeIs('admin.announcements.index')"
