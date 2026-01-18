@@ -15,7 +15,7 @@ return [
     
 
     'name' => env('APP_NAME', 'Class Management System'),
-
+    'timezone' => 'Asia/Phnom_Penh',
 
     /*
     |

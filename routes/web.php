@@ -32,14 +32,19 @@ use Illuminate\Http\Request;
 
 
 
-Route::get('/run-scheduler/{key}', function ($key) {
-    // ប្តូរ 'your-secret-key' ទៅជាពាក្យអ្វីក៏បានដែលអ្នកចង់
-    if ($key !== 'scheduler-secret-key') {
-        return response()->json(['message' => 'Unauthorized'], 401);
-    }
+// Route::get('/run-scheduler/{key}', function ($key) {
+//     // ប្តូរ 'your-secret-key' ទៅជាពាក្យអ្វីក៏បានដែលអ្នកចង់
+//     if ($key !== 'scheduler-secret-key') {
+//         return response()->json(['message' => 'Unauthorized'], 401);
+//     }
 
+//     Artisan::call('schedule:run');
+//     return response()->json(['message' => 'Scheduler executed successfully!']);
+// });
+
+Route::get('/run-scheduler/scheduler-secret-key', function () {
     Artisan::call('schedule:run');
-    return response()->json(['message' => 'Scheduler executed successfully!']);
+    return "Scheduler is running!";
 });
 /*
 |--------------------------------------------------------------------------

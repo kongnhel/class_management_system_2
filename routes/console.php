@@ -53,5 +53,5 @@ $users = User::where('role', 'professor')
             ]);
         }
     }
-})->dailyAt('08:00') 
+})->dailyAt('08:15') 
   ->timezone('Asia/Phnom_Penh');
