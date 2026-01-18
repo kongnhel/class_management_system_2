@@ -89,7 +89,7 @@
                         <tbody class="divide-y divide-slate-50">
                             @forelse ($paginatedStudents as $student)
                                 @php
-                                    $profilePictureUrl = $student->studentProfile && $student->studentProfile->profile_picture_url ? asset('storage/' . $student->studentProfile->profile_picture_url) : null;
+                                    $profilePictureUrl = $student->userProfile?->profile_picture_url ?? $student->studentProfile?->profile_picture_url;
                                     $isLeader = DB::table('student_course_enrollments')->where('course_offering_id', $courseOffering->id)->where('student_user_id', $student->id)->where('is_class_leader', 1)->exists();
                                 @endphp
                                 <tr class="group hover:bg-blue-50/30 transition-all duration-200">
@@ -97,6 +97,7 @@
                                         <div class="flex items-center gap-3">
                                             <div class="relative flex-shrink-0">
                                                 <div class="w-9 h-9 md:w-12 md:h-12 rounded-lg md:rounded-2xl overflow-hidden flex items-center justify-center bg-white border-2 {{ $isLeader ? 'border-amber-400 ring-2 ring-amber-50' : 'border-slate-100' }}">
+
                                                     @if($profilePictureUrl)
                                                         <img src="{{ $profilePictureUrl }}" class="w-full h-full object-cover">
                                                     @else
@@ -104,6 +105,11 @@
                                                             {{ Str::substr($student->studentProfile->full_name_km ?? $student->name, 0, 1) }}
                                                         </span>
                                                     @endif
+                                                                    {{-- @if($profileUrl) 
+                    <img src="{{ $profileUrl }}" class="h-full w-full object-cover" alt="{{ $user->name }}">
+                @else 
+                    {{ Str::substr($user->name, 0, 1) }} 
+                @endif --}}
                                                 </div>
                                                 @if($isLeader)
                                                     <div class="absolute -top-1 -right-1 w-4 h-4 bg-amber-400 text-white rounded-md flex items-center justify-center shadow-md border border-white">
@@ -205,6 +211,7 @@
             </h1>
         </div>
     </div>
+    {{-- img --}}
 
     {{-- ព័ត៌មានវគ្គសិក្សា --}}
     <div class="mb-6 grid grid-cols-2 gap-y-2 text-[13px]">
