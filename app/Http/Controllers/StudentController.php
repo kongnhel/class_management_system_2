@@ -440,162 +440,122 @@ public function notifications()
     
 //     return view('student.my-grades', compact('user', 'grades', 'overallRank', 'averageScore', 'overallGrade'));
 // }
-
 public function myGrades(Request $request)
 {
     $user = Auth::user();
     
-    // --- ១. ទាញយកពិន្ទុពី ExamResult (Import ពី Excel) ---
-    $examResults = \App\Models\ExamResult::where('student_user_id', $user->id)
+    // ១. ទាញយកពិន្ទុទាំងអស់ពី ExamResult
+    $allExamResults = \App\Models\ExamResult::where('student_user_id', $user->id)
         ->get()
-        ->map(function ($result) use ($user) {
-            $assessment = null;
-            $typeLabel = '';
-
-            if ($result->assessment_type === 'assignment') {
-                $assessment = \App\Models\Assignment::with('courseOffering.course')->find($result->assessment_id);
-                $typeLabel = 'កិច្ចការ: ';
-            } elseif ($result->assessment_type === 'quiz') {
-                $assessment = \App\Models\Quiz::with('courseOffering.course')->find($result->assessment_id);
-                $typeLabel = 'កម្រងសំណួរ: ';
-            } else {
-                $assessment = \App\Models\Exam::with('courseOffering.course')->find($result->assessment_id);
-                $typeLabel = 'ការប្រឡង: ';
-            }
+        ->map(function ($result) {
+            $assessment = match($result->assessment_type) {
+                'assignment' => \App\Models\Assignment::with('courseOffering.course')->find($result->assessment_id),
+                'quiz'       => \App\Models\Quiz::with('courseOffering.course')->find($result->assessment_id),
+                default      => \App\Models\Exam::with('courseOffering.course')->find($result->assessment_id),
+            };
 
             if (!$assessment) return null;
 
-            // --- បញ្ចូលពិន្ទុវត្តមាន ---
-            $courseOfferingId = $assessment->course_offering_id;
-            // ប្រើប្រាស់ Method ដែលអ្នកមានក្នុង User/Student Model
-            $attendanceScore = $user->getAttendanceScoreByCourse($courseOfferingId) ?? 0;
+            $result->course_id = $assessment->course_offering_id;
+            $result->course_name_en = $assessment->courseOffering->course->title_en;
+            $result->course_name_km = $assessment->courseOffering->course->title_km;
+            $result->max_score = (float) $assessment->max_score;
 
-            return (object)[
-                'assessment_id'   => $result->assessment_id,
-                'course_offering_id' => $courseOfferingId, // រក្សាទុកសម្រាប់ប្រើប្រាស់បន្ត
-                'type_category'   => $result->assessment_type,
-                'course_title_en' => $assessment->courseOffering->course->title_en ?? 'Unknown Course',
-                'course_title_km' => $assessment->courseOffering->course->title_km ?? 'មិនស្គាល់មុខវិជ្ជា',
-                'assessment_type' => $typeLabel . ($assessment->title_en ?? 'N/A'),
-                'attendance'      => (float) $attendanceScore, // បញ្ជូនពិន្ទុវត្តមានទៅ View
-                'score'           => (float) $result->score_obtained,
-                'max_score'       => (float) ($assessment->max_score ?? 0),
-                'date'            => $result->updated_at,
-            ];
+            $result->grade = $this->calculateGrade($result->score_obtained, $result->max_score);
+
+
+            // កំណត់ប្រភេទសម្រាប់ការឆែកលក្ខខណ្ឌ (Midterm=15, Final=50)
+            if ($result->assessment_type === 'exam') {
+                $result->display_type = ($result->max_score == 15) ? 'midterm' : 'final';
+            } else {
+                $result->display_type = $result->assessment_type;
+            }
+
+            return $result;
         })->filter();
 
-    // --- ២. ទាញយកពិន្ទុពី Submission ---
-    $submissionGrades = \App\Models\Submission::where('student_user_id', $user->id)
-        ->whereNotNull('grade_received')
-        ->with(['assignment.courseOffering.course'])
-        ->get()
-        ->map(function ($submission) use ($user) {
-            $courseOfferingId = $submission->assignment->course_offering_id;
-            $attendanceScore = $user->getAttendanceScoreByCourse($courseOfferingId) ?? 0;
-
-            return (object)[
-                'assessment_id'   => $submission->assignment_id,
-                'course_offering_id' => $courseOfferingId,
-                'type_category'   => 'assignment',
-                'course_title_en' => $submission->assignment->courseOffering->course->title_en ?? 'Unknown Course',
-                'course_title_km' => $submission->assignment->courseOffering->course->title_km ?? 'មិនស្គាល់មុខវិជ្ជា',
-                'assessment_type' => 'កិច្ចការ: ' . ($submission->assignment->title_en ?? 'N/A'),
-                'attendance'      => (float) $attendanceScore,
-                'score'           => (float) $submission->grade_received,
-                'max_score'       => (float) ($submission->assignment->max_score ?? 0),
-                'date'            => $submission->updated_at,
-            ];
-        });
-
-    $allGrades = $examResults->concat($submissionGrades)->unique(function ($item) {
-        return $item->type_category . $item->assessment_id;
-    });
-
-    // --- ៣. គណនា Grade និង Rank (បូកបញ្ជូលពិន្ទុវត្តមានក្នុងផលបូកសរុប) ---
-    $gradedItems = $allGrades->map(function ($item) {
-        // ពិន្ទុសរុបសម្រាប់ជួរនេះ = ពិន្ទុវត្តមាន + ពិន្ទុ Assessment
-        $totalForCalculation = $item->score + $item->attendance;
-        $maxForCalculation = $item->max_score + 15; // ១៥ ជាពិន្ទុពេញនៃវត្តមាន
-
-        $item->grade = $this->calculateGrade($totalForCalculation, $maxForCalculation);
+    // ២. គ្រុបពិន្ទុតាមមុខវិជ្ជា និងអនុវត្តលក្ខខណ្ឌ
+    $courseGrades = $allExamResults->groupBy('course_id')->map(function ($items, $courseId) use ($user) {
+        $attendanceScore = $user->getAttendanceScoreByCourse($courseId);
         
-        $higherScores = \App\Models\ExamResult::where('assessment_id', $item->assessment_id)
-            ->where('assessment_type', $item->type_category)
-            ->where('score_obtained', '>', $item->score)
-            ->count();
+        // រាប់ចំនួនវត្តមាន (ដើម្បីបាត់ Error ក្នុង Blade)
+        $absCount = \App\Models\AttendanceRecord::where('student_user_id', $user->id)
+            ->where('course_offering_id', $courseId)
+            ->where('status', 'absent')->count();
+        $perCount = \App\Models\AttendanceRecord::where('student_user_id', $user->id)
+            ->where('course_offering_id', $courseId)
+            ->where('status', 'permission')->count();
+
+        $finalExamScore = $items->where('display_type', 'final')->sum('score_obtained');
+        $midtermScore   = $items->where('display_type', 'midterm')->sum('score_obtained');
+        $assignmentScore = $items->where('display_type', 'assignment')->sum('score_obtained');
+        $extraQuizScore  = $items->where('display_type', 'quiz')->sum('score_obtained');
         
-        $item->rank = $higherScores + 1;
-        return $item;
-    })->sortByDesc('course_title_en');
+        $totalObtained = $items->sum('score_obtained') + $attendanceScore;
 
-    // --- ៤. គណនា Overall Stats ---
-    // បូកបញ្ចូលមធ្យមភាគវត្តមានទៅក្នុង Overall
-    $averageScore = $allGrades->avg(fn($g) => $g->score + $g->attendance) ?? 0;
-    $averageMax   = $allGrades->avg(fn($g) => $g->max_score + 15) ?: 115;
-    $overallGrade = $this->calculateGrade($averageScore, $averageMax);
+        // លក្ខខណ្ឌកំណត់ "ប្រឡងសង"
+        $isFailed = ($finalExamScore < 24 || $midtermScore < 9 || $assignmentScore < 9 || $attendanceScore < 9);
 
-    // (រក្សាទុក Logic Ranking ដើមរបស់អ្នក...)
+        // --- គណនា Course Rank ---
+        $enrollments = \App\Models\StudentCourseEnrollment::where('course_offering_id', $courseId)->get();
+        $rankings = $enrollments->map(function ($enrol) use ($courseId) {
+            $student = \App\Models\User::find($enrol->student_user_id);
+            $att = $student ? $student->getAttendanceScoreByCourse($courseId) : 0;
+            $allPoints = \App\Models\ExamResult::where('student_user_id', $enrol->student_user_id)
+                ->whereIn('assessment_id', function($q) use ($courseId) {
+                    $q->select('id')->from('assignments')->where('course_offering_id', $courseId)
+                      ->union(\DB::table('quizzes')->select('id')->where('course_offering_id', $courseId))
+                      ->union(\DB::table('exams')->select('id')->where('course_offering_id', $courseId));
+                })->sum('score_obtained');
+            return ['id' => $enrol->student_user_id, 'total' => (float)$att + (float)$allPoints];
+        })->sortByDesc('total')->values();
+
+        $rankIndex = $rankings->search(fn($r) => $r['id'] == $user->id);
+
+        return (object)[
+            'course_rank'      => ($rankIndex !== false) ? $rankIndex + 1 : 'N/A',
+            'course_name_en'   => $items->first()->course_name_en,
+            'course_name_km'   => $items->first()->course_name_km,
+            'attendance_score' => $attendanceScore,
+            'absent_count'     => $absCount,      // បញ្ចូល Property នេះដើម្បីបាត់ Error
+            'permission_count' => $perCount,      // បញ្ចូល Property នេះដើម្បីបាត់ Error
+            'total_score'      => $totalObtained,
+            'grade'            => $isFailed ? 'F' : $this->calculateGrade($totalObtained, 100),
+            'is_failed'        => $isFailed,
+            'assessments'      => $items
+        ];
+    })->values();
+
+    // ៣. គណនា Overall Rank (ចំណាត់ថ្នាក់រួម)
     $overallRank = 'N/A';
-    $firstRes = \App\Models\ExamResult::where('student_user_id', $user->id)->first();
-    
-    if ($firstRes) {
-        $asmt = null;
-        if ($firstRes->assessment_type === 'assignment') $asmt = \App\Models\Assignment::find($firstRes->assessment_id);
-        elseif ($firstRes->assessment_type === 'quiz') $asmt = \App\Models\Quiz::find($firstRes->assessment_id);
-        else $asmt = \App\Models\Exam::find($firstRes->assessment_id);
-
-        if ($asmt) {
-            $offering_id = $asmt->course_offering_id;
-            $asmtIds = collect()
-                ->concat(\App\Models\Assignment::where('course_offering_id', $offering_id)->pluck('id'))
-                ->concat(\App\Models\Quiz::where('course_offering_id', $offering_id)->pluck('id'))
-                ->concat(\App\Models\Exam::where('course_offering_id', $offering_id)->pluck('id'));
-
-            $enrollments = \App\Models\StudentCourseEnrollment::where('course_offering_id', $offering_id)->get();
-
-            $rankings = $enrollments->map(function ($enrollment) use ($offering_id, $asmtIds) {
-                $sid = $enrollment->student_user_id;
-                $sModel = \App\Models\User::find($sid);
-                $attendance = $sModel ? $sModel->getAttendanceScoreByCourse($offering_id) : 0;
-                
-                $scores = \App\Models\ExamResult::where('student_user_id', $sid)
-                    ->whereIn('assessment_id', $asmtIds)
-                    ->sum('score_obtained');
-
-                return [
-                    'student_id' => $sid,
-                    'total' => (float)$attendance + (float)$scores
-                ];
-            });
-
-            $sorted = $rankings->sortByDesc('total')->values();
-            $overallRank = $sorted->search(fn($i) => $i['student_id'] == $user->id) + 1;
-        }
+    if ($courseGrades->isNotEmpty()) {
+        $firstOfferingId = $courseGrades->first()->course_id ?? \App\Models\StudentCourseEnrollment::where('student_user_id', $user->id)->first()->course_offering_id;
+        $enrollments = \App\Models\StudentCourseEnrollment::where('course_offering_id', $firstOfferingId)->get();
+        $overallRankings = $enrollments->map(function ($enrol) {
+            $sid = $enrol->student_user_id;
+            $studentModel = \App\Models\User::find($sid);
+            $totalPoints = \App\Models\ExamResult::where('student_user_id', $sid)->sum('score_obtained');
+            $totalAtt = 0;
+            foreach(\App\Models\StudentCourseEnrollment::where('student_user_id', $sid)->pluck('course_offering_id') as $cId) {
+                $totalAtt += $studentModel ? $studentModel->getAttendanceScoreByCourse($cId) : 0;
+            }
+            return ['id' => $sid, 'total' => (float)$totalPoints + (float)$totalAtt];
+        })->sortByDesc('total')->values();
+        $overallRank = $overallRankings->search(fn($r) => $r['id'] == $user->id) + 1;
     }
 
-    // --- ៥. Pagination & UI ---
-    $perPage = 10;
-    $currentPage = \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPage();
+    $averageScore = $courseGrades->avg('total_score') ?? 0;
+    $totalFinalScore = $courseGrades->sum('total_score');
+    $overallGrade = $this->calculateGrade($averageScore, 100);
+
     $grades = new \Illuminate\Pagination\LengthAwarePaginator(
-        $gradedItems->slice(($currentPage - 1) * $perPage, $perPage)->values(),
-        $gradedItems->count(), $perPage, $currentPage, ['path' => $request->url()]
+        $courseGrades->slice(($request->page ?? 1 - 1) * 10, 10)->values(),
+        $courseGrades->count(), 10, $request->page ?? 1, ['path' => $request->url()]
     );
 
-    $colorPalette = [
-        ['bg' => 'bg-blue-50', 'text' => 'text-blue-600', 'border' => 'border-blue-100', 'accent' => 'bg-blue-500'],
-        ['bg' => 'bg-indigo-50', 'text' => 'text-indigo-600', 'border' => 'border-indigo-100', 'accent' => 'bg-indigo-500'],
-        ['bg' => 'bg-purple-50', 'text' => 'text-purple-600', 'border' => 'border-purple-100', 'accent' => 'bg-purple-500'],
-        ['bg' => 'bg-rose-50', 'text' => 'text-rose-600', 'border' => 'border-rose-100', 'accent' => 'bg-rose-500'],
-    ];
-
-    $grades->getCollection()->transform(function ($grade, $key) use ($colorPalette) {
-        $colorIndex = $key % count($colorPalette);
-        $grade->ui = (object) $colorPalette[$colorIndex];
-        return $grade;
-    });
-    
-    return view('student.my-grades', compact('user', 'grades', 'overallRank', 'averageScore', 'overallGrade'));
+    return view('student.my-grades', compact('user', 'grades', 'averageScore', 'totalFinalScore', 'overallRank', 'overallGrade'));
 }
+
 
 
 private function calculateGrade($score, $maxScore)

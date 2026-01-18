@@ -275,20 +275,20 @@ public function attendances()
 //     return max(0, $score);
 // }
 
-public function getFinalAttendanceScore($course_id)
-{
-    $enrollment = \App\Models\StudentCourseEnrollment::where('student_user_id', $this->id)
-                    ->where('course_offering_id', $course_id)
-                    ->first();
+// public function getFinalAttendanceScore($course_id)
+// {
+//     $enrollment = \App\Models\StudentCourseEnrollment::where('student_user_id', $this->id)
+//                     ->where('course_offering_id', $course_id)
+//                     ->first();
 
-    // បើមានពិន្ទុដែលគ្រូបញ្ចូលដោយដៃ យកពិន្ទុដៃ
-    if ($enrollment && $enrollment->attendance_score_manual !== null) {
-        return $enrollment->attendance_score_manual;
-    }
+//     // បើមានពិន្ទុដែលគ្រូបញ្ចូលដោយដៃ យកពិន្ទុដៃ
+//     if ($enrollment && $enrollment->attendance_score_manual !== null) {
+//         return $enrollment->attendance_score_manual;
+//     }
 
-    // បើគ្មានទេ ប្រើ System គណនា
-    return $this->getAttendanceScoreByCourse($course_id);
-}
+//     // បើគ្មានទេ ប្រើ System គណនា
+//     return $this->getAttendanceScoreByCourse($course_id);
+// }
 
 /**
  * គណនាពិន្ទុវត្តមានស្វ័យប្រវត្តិ (Auto Calculation)
@@ -297,31 +297,43 @@ public function getAttendanceScoreByCourse($course_id)
 {
     $maxScore = 15; // ពិន្ទុពេញ ១៥
 
-    // រាប់ចំនួនអវត្តមាន (Absent) ក្នុងមុខវិជ្ជាជាក់លាក់
+    // ១. រាប់ចំនួនអវត្តមាន (Absent)
     $absentCount = $this->attendanceRecords()
                         ->where('course_offering_id', $course_id) 
                         ->where('status', 'absent')
                         ->count();
 
-    // រូបមន្ត៖ អវត្តមាន ២ ដង ដក ១ ពិន្ទុ
-    $deduction = floor($absentCount / 2); 
-    $score = $maxScore - $deduction;
+    // ២. រាប់ចំនួនសុំច្បាប់ (Permission)
+    $permissionCount = $this->attendanceRecords()
+                            ->where('course_offering_id', $course_id)
+                            ->where('status', 'permission')
+                            ->count();
+
+    // --- រូបមន្តដកពិន្ទុ ---
+    // អវត្តមាន ២ ដង ដក ១ ពិន្ទុ
+    $absentDeduction = floor($absentCount / 2);
+    
+    // ច្បាប់ ៤ ដង ដក ១ ពិន្ទុ (បន្ថែមថ្មី)
+    $permissionDeduction = floor($permissionCount / 4);
+
+    // គណនាពិន្ទុចុងក្រោយ
+    $score = $maxScore - ($absentDeduction + $permissionDeduction);
 
     return max(0, $score);
 }
-// នៅក្នុង Student Model
-public function calculateAutoAttendanceScore($courseOfferingId) {
-    $totalSessions = Attendance::where('course_offering_id', $courseOfferingId)->count();
-    $presentSessions = Attendance::where('course_offering_id', $courseOfferingId)
-                        ->where('student_id', $this->id)
-                        ->where('status', 'present')
-                        ->count();
+// // នៅក្នុង Student Model
+// public function calculateAutoAttendanceScore($courseOfferingId) {
+//     $totalSessions = Attendance::where('course_offering_id', $courseOfferingId)->count();
+//     $presentSessions = Attendance::where('course_offering_id', $courseOfferingId)
+//                         ->where('student_id', $this->id)
+//                         ->where('status', 'present')
+//                         ->count();
                         
-    if($totalSessions == 0) return 0;
+//     if($totalSessions == 0) return 0;
     
-    $attendanceWeight = 15; // ឬទាញពី $courseOffering->attendance_weight
-    return ($presentSessions / $totalSessions) * $attendanceWeight;
-}
+//     $attendanceWeight = 15; // ឬទាញពី $courseOffering->attendance_weight
+//     return ($presentSessions / $totalSessions) * $attendanceWeight;
+// }
 /**
  * យកពិន្ទុចុងក្រោយ (Manual Override vs Auto)
  */
