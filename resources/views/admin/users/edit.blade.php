@@ -202,15 +202,21 @@
                                         </div>
                                         <label class="absolute -bottom-2 -right-2 bg-green-600 text-white p-2 rounded-lg cursor-pointer hover:bg-green-700 shadow-lg transition">
                                             <i class="fas fa-pen text-xs"></i>
-                                            <input type="file" name="profile_picture" class="hidden" @change="profilePicturePreview = URL.createObjectURL($event.target.files[0])
-                                            if (file.size > 2 * 1024 * 1024) { {{-- បើលើស ២MB --}}
-            alert('រូបភាពធំពេក! សូមជ្រើសរើសរូបភាពដែលមានទំហំតូចជាង ២MB');
-            $event.target.value = ''; {{-- Clear input ចោល --}}
-            profilePicturePreview = ''; {{-- លុបរូប Preview ចោល --}}
-        } else {
-            profilePicturePreview = URL.createObjectURL(file);
-        }">
-                                        </label>
+<input type="file" name="profile_picture" class="hidden" 
+    @change="
+        const file = $event.target.files[0];
+        if (file) {
+            // Check ទំហំ (2MB = 2 * 1024 * 1024 bytes)
+            if (file.size > 2 * 1024 * 1024) {
+                alert('រូបភាពធំពេក! សូមជ្រើសរើសរូបភាពដែលមានទំហំតូចជាង ២MB');
+                $event.target.value = ''; // លុប file ចេញពី input
+                profilePicturePreview = ''; // លុបរូបភាព Preview ចោល
+            } else {
+                // បង្ហាញរូបភាព Preview ប្រសិនបើទំហំត្រឹមត្រូវ
+                profilePicturePreview = URL.createObjectURL(file);
+            }
+        }
+    ">                  </label>
                                     </div>
                                     <p class="text-xs text-gray-500">{{ __('រូបភាព Profile (4x6)') }}</p>
                                 </div>
