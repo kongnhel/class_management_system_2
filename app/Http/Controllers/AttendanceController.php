@@ -78,6 +78,7 @@ class AttendanceController extends Controller
     foreach ($absentStudents as $studentId) {
         \App\Models\AttendanceRecord::create([
             'student_user_id' => $studentId,
+            'user_id'         => $studentId,
             'course_offering_id' => $courseOfferingId,
             'date' => $today,
             'status' => 'absent',

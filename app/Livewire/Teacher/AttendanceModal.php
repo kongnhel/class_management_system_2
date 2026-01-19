@@ -13,6 +13,7 @@ class AttendanceModal extends Component
     public $isOpen = false;
     public $courseId;
     public $qrCodeImage;
+    public $showConfirmation = false;
 
     protected $listeners = ['openAttendanceModal' => 'open'];
 
@@ -71,6 +72,7 @@ class AttendanceModal extends Component
             if (!$hasRecord) {
                 AttendanceRecord::create([
                     'student_user_id' => $studentId,
+                    'user_id'         => $studentId,
                     'course_offering_id' => $this->courseId,
                     'date' => $today,
                     'status' => 'absent',       // ដាក់ថា អវត្តមាន
@@ -81,6 +83,7 @@ class AttendanceModal extends Component
         }
 
         // ៤. បិទ Modal ហើយជូនដំណឹង
+        $this->showConfirmation = false;
         $this->isOpen = false;
         
         // បងអាចប្រើ Session flash ឬ Dispatch event ដើម្បីប្រាប់ថាជោគជ័យ
