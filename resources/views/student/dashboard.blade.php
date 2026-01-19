@@ -259,6 +259,40 @@
                             </div>
                         @endif
                     </section>
+                                            @if ($studentProgram)
+    
+
+                            @if ($availableCoursesInProgram->isNotEmpty())
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    @foreach ($availableCoursesInProgram as $courseOffering)
+                                        <div class="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
+                                            <div class="mb-6">
+                                                <h6 class="font-black text-gray-800 mb-2 text-lg leading-tight">{{ $courseOffering->course->title_km ?? $courseOffering->course->title_en }}</h6>
+                                                <div class="flex items-center gap-2">
+                                                    <span class="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-1 rounded-md">{{ $courseOffering->course->code }}</span>
+                                                    <span class="text-xs text-gray-400">|</span>
+                                                    <span class="text-xs text-gray-500 italic">{{ $courseOffering->lecturer->name }}</span>
+                                                </div>
+                                            </div>
+                                            <form action="{{ route('student.enroll_self') }}" method="POST">
+                                                @csrf
+                                                <input type="hidden" name="course_offering_id" value="{{ $courseOffering->id }}">
+                                                <button class="w-full bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 group">
+                                                    <i class="fas fa-plus-circle transition-transform group-hover:rotate-90"></i> {{ __('ចុះឈ្មោះចូលរៀន') }}
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        @else
+                            <div class="bg-white p-12 rounded-[2.5rem] border border-dashed border-gray-300 text-center">
+                                <div class="w-16 h-16 bg-gray-50 text-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i class="fas fa-graduation-cap text-3xl"></i>
+                                </div>
+                                <p class="text-gray-500 font-bold">{{ __('មិនទាន់មានកម្មវិធីសិក្សា? សូមទាក់ទងរដ្ឋបាល។') }}</p>
+                            </div>
+                        @endif
 
                 </div>
 
