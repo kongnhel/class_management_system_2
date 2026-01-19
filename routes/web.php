@@ -26,6 +26,8 @@ use App\Http\Controllers\StudentNotificationController;
 use Kreait\Laravel\Firebase\Facades\Firebase;
 use Kreait\Firebase\Factory;
 use App\Http\Controllers\TelegramController;
+use App\Http\Controllers\Student\StudentDashboardController;
+
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Http\Request;
 
@@ -348,6 +350,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // API សម្រាប់ទទួលទិន្នន័យស្កែន
     Route::post('/student/process-scan', [AttendanceController::class, 'processScan'])
         ->name('process-scan');
+
+
+
+
+
+
         });
 
         Route::get('/check-time', function() {

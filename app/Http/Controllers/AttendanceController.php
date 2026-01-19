@@ -57,4 +57,34 @@ class AttendanceController extends Controller
 
         return response()->json(['success' => true, 'message' => 'វត្តមានត្រូវបានកត់ត្រា!']);
     }
+
+    public function closeAttendance($courseOfferingId)
+{
+    $today = now()->toDateString();
+
+    // ១. ទាញយកសិស្សទាំងអស់ដែលរៀនថ្នាក់នេះ (Enrolled Students)
+    $enrolledStudents = \App\Models\StudentCourseEnrollment::where('course_offering_id', $courseOfferingId)
+                        ->pluck('student_user_id'); // យកតែ ID សិស្ស
+
+    // ២. ទាញយកសិស្សដែលបានស្កែនរួចនៅថ្ងៃនេះ
+    $presentStudents = \App\Models\AttendanceRecord::where('course_offering_id', $courseOfferingId)
+                        ->where('date', $today)
+                        ->pluck('student_user_id');
+
+    // ៣. រកសិស្សដែលបាត់មុខ (Enrolled - Present = Absent)
+    $absentStudents = $enrolledStudents->diff($presentStudents);
+
+    // ៤. បញ្ចូលទិន្នន័យ 'absent' ឱ្យពួកគាត់
+    foreach ($absentStudents as $studentId) {
+        \App\Models\AttendanceRecord::create([
+            'student_user_id' => $studentId,
+            'course_offering_id' => $courseOfferingId,
+            'date' => $today,
+            'status' => 'absent',
+            'remarks' => 'Auto-generated (No Scan)',
+        ]);
+    }
+
+    return back()->with('success', 'បញ្ជីវត្តមានត្រូវបានបិទ! អ្នកមិនបានស្កែនត្រូវបានដាក់ថា អវត្តមាន។');
+}
 }

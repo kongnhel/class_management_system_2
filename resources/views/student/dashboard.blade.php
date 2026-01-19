@@ -103,6 +103,7 @@
                             @endforelse
                         </div>
                     </section>
+                    
                     {{-- ប៊ូតុងស្កែនវត្តមានថ្មី --}}
 <a href="{{ route('student.scan') }}" 
    class="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold shadow-lg shadow-blue-200 hover:shadow-blue-300 transform hover:-translate-y-0.5 transition-all">
