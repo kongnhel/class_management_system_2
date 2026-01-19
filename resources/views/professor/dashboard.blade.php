@@ -22,6 +22,40 @@
                             <span>{{ __('បានភ្ជាប់ Telegram Bot រួចរាល់') }}</span>
                         </div>
                     @endif
+                    {{-- ផ្នែកបង្ហាញមុខវិជ្ជាដែលកំពុងបង្រៀន --}}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+    {{-- ចំណាំ៖ ប្រើ $courseOfferings ព្រោះ Controller បងផ្ញើឈ្មោះនេះមក --}}
+    {{-- @foreach($courseOfferings as $offering)  --}}
+    @foreach($courseOfferings as $offering)  {{-- ប្រើ $courseOfferings តាម Controller --}}
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h3 class="font-bold text-lg text-gray-800">
+                        {{ $offering->course->title_en ?? 'N/A' }}
+                    </h3>
+                    <p class="text-sm text-gray-500">
+                        {{ __('ជំនាន់') }}: {{ $offering->generation }} | {{ __('បន្ទប់') }}: {{ $offering->room_number }}
+                    </p>
+                </div>
+                <span class="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-bold rounded-full">
+                    {{ $offering->day_of_week ?? 'Active' }}
+                </span>
+            </div>
+            
+            {{-- ប៊ូតុងបើក QR Code Modal --}}
+            <button onclick="Livewire.dispatch('openAttendanceModal', { courseOfferingId: {{ $offering->id }} })"
+                    class="w-full mt-2 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-200">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                </svg>
+                {{ __('ចាប់ផ្ដើមស្រង់វត្តមាន') }}
+            </button>
+        </div>
+    @endforeach
+</div>
+
+{{-- ដាក់ Livewire Modal នៅខាងក្រោមគេបង្អស់ (ក្រៅ Loop) --}}
+@livewire('teacher.attendance-modal')
 
                     <div id="telegramEntryModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-start justify-center z-[9999] p-4">
                         <div class="bg-white rounded-[32px] p-8 w-full max-w-md shadow-2xl border border-slate-100 mt-10">

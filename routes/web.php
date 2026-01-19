@@ -9,6 +9,7 @@ use App\Http\Controllers\admin\CourseController;
 use App\Http\Controllers\admin\CourseOfferingController;
 use App\Http\Controllers\admin\AnnouncementController;
 use App\Http\Controllers\admin\RoomController;
+use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\GradeController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\StudentProfileController;
@@ -340,7 +341,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('leader.report');
         Route::post('/student/update-telegram', [App\Http\Controllers\StudentController::class, 'updateTelegram'])
             ->name('update_telegram');
-    
+    Route::get('/student/scan', function () {
+        return view('student.scan');
+    })->name('scan');
+
+    // API សម្រាប់ទទួលទិន្នន័យស្កែន
+    Route::post('/student/process-scan', [AttendanceController::class, 'processScan'])
+        ->name('process-scan');
         });
 
         Route::get('/check-time', function() {
