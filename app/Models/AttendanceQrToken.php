@@ -9,14 +9,15 @@ class AttendanceQrToken extends Model
 {
     use HasFactory;
 
-    // បន្ថែមចំណុចនេះដើម្បីអនុញ្ញាតឱ្យបញ្ចូលទិន្នន័យបាន
+    protected $table = 'attendance_qr_tokens';
+
+    // ចំណុចសំខាន់៖ ត្រូវតែមានឈ្មោះ Field ទាំងនេះ
     protected $fillable = [
         'course_offering_id',
         'token_code',
         'expires_at',
     ];
 
-    // Optional: កំណត់ឱ្យវាស្គាល់ថាជាប្រភេទកាលបរិច្ឆេទ
     protected $casts = [
         'expires_at' => 'datetime',
     ];

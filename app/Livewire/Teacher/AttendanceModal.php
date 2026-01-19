@@ -38,7 +38,7 @@ class AttendanceModal extends Component
             AttendanceQrToken::create([
                 'course_offering_id' => $this->courseId,
                 'token_code' => $token,
-                'expires_at' => now()->addSeconds(20), // QR មានសុពលភាព ២០ វិនាទី
+                'expires_at' => now()->addSeconds(60), // R មានសុពលភាព ២០ វិនាទី
             ]);
 
             // បង្កើត QR

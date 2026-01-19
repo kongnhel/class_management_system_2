@@ -5,7 +5,7 @@
             
             {{-- ដាក់ wire:poll នៅទីនេះ ដើម្បីឱ្យវាដំណើរការតែពេល Modal បង្ហាញខ្លួន --}}
             <div class="bg-white p-8 rounded-3xl shadow-2xl max-w-md w-full relative transform transition-all scale-100"
-                 wire:poll.15s="generateToken"> 
+                wire:poll.50s="generateToken"> 
                 
                 {{-- ប៊ូតុងបិទ (Close Button) --}}
                 <button wire:click="close" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors">
