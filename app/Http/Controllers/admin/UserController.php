@@ -156,6 +156,10 @@ public function searchUsers(Request $request)
             'address' => 'nullable|string|max:255',
             'profile_picture' => 'nullable|image|max:2048', // Max 2MB
         ];
+        $messages = [
+            'profile_picture.max' => 'រូបភាពមិនអាចធំជាង ២MB ឡើយ!',
+            'profile_picture.image' => 'ឯកសារត្រូវតែជាប្រភេទរូបភាព!',
+        ];
 
         // --- Role-specific rules ---
         if ($request->role === 'student') {
@@ -202,6 +206,7 @@ public function searchUsers(Request $request)
             'password' => ($request->role !== 'student') ? Hash::make($request->password) : null,
             'generation' => ($request->role === 'student') ? $request->generation : null, // រក្សាទុក generation ទៅក្នុងតារាង users
         ]);
+
 
         // --- Conditional Profile Creation Logic ---
         $profileData = $request->only(['full_name_km', 'full_name_en', 'gender', 'date_of_birth', 'phone_number', 'address']);
@@ -283,6 +288,10 @@ if ($request->hasFile('profile_picture')) {
             'address' => 'nullable|string|max:255',
             'profile_picture' => 'nullable|image|max:2048', 
             'generation' => 'nullable|string|max:255',
+        ];
+        $messages = [
+            'profile_picture.max' => 'រូបភាពមិនអាចធំជាង ២MB ឡើយ!',
+            'profile_picture.image' => 'ឯកសារត្រូវតែជាប្រភេទរូបភាព!',
         ];
 
         if ($request->role === 'student') {
