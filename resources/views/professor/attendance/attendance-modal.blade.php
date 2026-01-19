@@ -1,5 +1,6 @@
 <div>
     @if($isOpen)
+        {{-- Custom CSS --}}
         <style>
             .scan-line {
                 width: 100%; height: 4px; background: #3b82f6; box-shadow: 0 0 10px #3b82f6;
@@ -78,23 +79,44 @@
                         @if(isset($attendances) && count($attendances) > 0)
                             @foreach($attendances as $index => $record)
                                 <div class="group flex items-center gap-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 animate-fade-in-up" style="animation-delay: {{ $index * 50 }}ms;">
+                                    
+                                    {{-- Avatar --}}
                                     <div class="relative">
-                                        <img src="{{ $record->student->profile_photo_url ?? 'https://ui-avatars.com/api/?name='.$record->student->name.'&background=random' }}" class="w-14 h-14 rounded-2xl object-cover border-2 border-white shadow-md group-hover:scale-105 transition-transform">
+                                        <img src="{{ $record->student->profile_photo_url ?? 'https://ui-avatars.com/api/?name='.$record->student->name.'&background=random' }}" 
+                                             class="w-14 h-14 rounded-2xl object-cover border-2 border-white shadow-md group-hover:scale-105 transition-transform">
                                         <div class="absolute -bottom-1 -right-1 bg-green-500 border-2 border-white w-4 h-4 rounded-full"></div>
                                     </div>
+                                    
+                                    {{-- Student Info --}}
                                     <div class="flex-1">
-                                        <div class="flex justify-between items-start">
-                                            <h4 class="font-bold text-gray-800 text-lg leading-tight">{{ $record->student->name }}</h4>
-                                            <span class="text-xs font-mono font-medium text-gray-400 bg-gray-100 px-2 py-1 rounded-lg">{{ $record->created_at->format('h:i:s A') }}</span>
+                                        {{-- Name --}}
+                                        <h4 class="font-bold text-gray-800 text-lg leading-tight mb-1">{{ $record->student->name }}</h4>
+                                        
+                                        <div class="flex justify-between items-center">
+                                            {{-- 👉 Status Badge (NEW) --}}
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide border
+                                                {{ $record->status === 'present' ? 'bg-green-50 text-green-700 border-green-200' : '' }}
+                                                {{ $record->status === 'late' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : '' }}
+                                                {{ $record->status === 'absent' ? 'bg-red-50 text-red-700 border-red-200' : '' }}">
+                                                
+                                                <span class="w-1.5 h-1.5 rounded-full 
+                                                    {{ $record->status === 'present' ? 'bg-green-500' : '' }}
+                                                    {{ $record->status === 'late' ? 'bg-yellow-500' : '' }}
+                                                    {{ $record->status === 'absent' ? 'bg-red-500' : '' }}"></span>
+                                                {{ $record->status }}
+                                            </span>
+
+                                            {{-- Time --}}
+                                            <span class="text-xs font-mono font-medium text-gray-400 bg-gray-100 px-2 py-1 rounded-lg flex items-center gap-1">
+                                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                {{ $record->created_at->format('h:i:s A') }}
+                                            </span>
                                         </div>
-                                        <p class="text-sm text-gray-500 mt-1 flex items-center gap-1">
-                                            <svg class="w-3 h-3 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg>
-                                            {{ __('បានកត់ត្រាវត្តមានជោគជ័យ') }}
-                                        </p>
                                     </div>
                                 </div>
                             @endforeach
                         @else
+                            {{-- Empty State --}}
                             <div class="flex flex-col items-center justify-center h-full text-center opacity-60">
                                 <div class="bg-gray-100 p-6 rounded-full mb-4 animate-bounce">
                                     <svg class="w-16 h-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4" /></svg>
@@ -111,7 +133,6 @@
                             {{ __('បិទផ្ទាំង') }}
                         </button>
 
-                        {{-- 👉 ប៊ូតុងនេះគ្រាន់តែបើកផ្ទាំង Confirm (អត់ប្រើ wire:confirm ទៀតទេ) --}}
                         <button wire:click="$set('showConfirmation', true)"
                                 class="group relative px-8 py-3 rounded-xl font-bold text-white bg-red-600 overflow-hidden shadow-lg shadow-red-200 transition-all hover:scale-105 active:scale-95">
                             <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
