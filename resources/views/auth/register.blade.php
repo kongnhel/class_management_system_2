@@ -1,191 +1,273 @@
 <x-guest-layout>
     <style>
-        /* 🎨 Custom Styling */
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
-        body {
-            font-family: 'Roboto', sans-serif;
-            /* Dark, subtle gradient background */
-            background: linear-gradient(135deg, #1f2937 0%, #0d121c 100%); 
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kantumruy+Pro:wght@300;400;700&display=swap');
+
+        :root {
+            /* 🌿 Using the Emerald Green from your image */
+            --primary-green: #10b981; 
+            --primary-hover: #059669;
         }
 
-        /* Override default Tailwind form styles for select to match input */
-        #program_id, #generation {
-            /* Ensuring select matches input styling perfectly */
-            appearance: none; /* Remove default arrow/styling in some browsers */
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239CA3AF' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        body {
+            font-family: 'Inter', 'Kantumruy Pro', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            background: #020617;
+        }
+
+        /* 🏛️ Full Screen Background Logic */
+        .full-screen-portal {
+            width: 100vw;
+            min-height: 100vh;
+            position: relative;
+            background-image: linear-gradient(rgba(2, 6, 23, 0.75), rgba(16, 24, 59, 0.85)), 
+                              url('{{ asset('assets/image/download (5).jpg') }}');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        /* Animated Grid Overlay */
+        .full-screen-portal::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(rgba(16, 185, 129, 0.08) 1.5px, transparent 1.5px);
+            background-size: 45px 45px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Entrance Animation */
+        .reveal {
+            animation: revealUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            z-index: 10;
+        }
+
+        @keyframes revealUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Premium Large Glass Card */
+        .glass-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.9);
+            width: 100%;
+            max-width: 700px; /* Increased width for a more "Full" feel */
+        }
+
+        .input-focus-green:focus {
+            border-color: var(--primary-green) !important;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2310b981' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
             background-repeat: no-repeat;
-            background-position: right 0.75rem center;
-            background-size: 1.5em 1.5em;
-            padding-right: 2.5rem !important; /* Make space for the custom arrow */
+            background-position: right 1rem center;
+            background-size: 1.2em 1.2em;
         }
     </style>
-
-    <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0">
-        <div>
-            <a href="/">
-                <img src="{{ asset('assets/image/nmu_Logo.png') }}" alt="NMU Logo" class="w-20 h-20 fill-current text-gray-500 rounded-full shadow-lg">
-            </a>
+    
+    <div class="full-screen-portal">
+        
+        <div class="reveal mb-10 text-center">
+            <div class="relative inline-block group">
+                <div class="absolute inset-0 rounded-full bg-emerald-500 blur-3xl opacity-30"></div>
+                <img src="{{ asset('assets/image/nmu_Logo.png') }}" alt="NMU Logo" 
+                     class="relative w-28 h-28 rounded-full border-2 border-white/20 shadow-2xl transition-all duration-700 group-hover:scale-110">
+            </div>
+            <h1 class="text-white mt-6 font-bold text-xl tracking-[0.6em] uppercase opacity-80">NMU Portal</h1>
         </div>
 
-        <div class="w-full sm:max-w-md mt-6 px-6 py-8 bg-gray-800 border border-gray-700 shadow-xl overflow-hidden sm:rounded-2xl">
-            <x-auth-session-status class="mb-6 text-center text-green-400 font-medium" :status="session('status')" />
+        <div class="glass-card p-10 sm:p-14 overflow-hidden sm:rounded-[3rem] reveal" style="animation-delay: 0.1s">
             
-            <div class="text-center mb-6">
-                <h2 class="text-2xl font-bold text-white">{{ __('ចុះឈ្មោះគណនីថ្មី') }}</h2>
-                <p class="text-sm text-gray-400 mt-2">{{ __('សូមបំពេញព័ត៌មានដើម្បីបញ្ចប់ការចុះឈ្មោះ។') }}</p>
+            <div class="mb-12 text-center">
+                <h2 class="text-4xl font-black text-white tracking-tight">{{ __('បង្កើតគណនីថ្មី') }}</h2>
+                <div class="flex items-center justify-center gap-4 mt-5">
+                    <div class="w-12 h-1.5 bg-emerald-500 rounded-full"></div>
+                    <p class="text-gray-300 text-sm font-semibold uppercase tracking-widest">{{ __('Student Enrollment') }}</p>
+                    <div class="w-12 h-1.5 bg-emerald-500 rounded-full"></div>
+                </div>
             </div>
 
-            <form method="POST" action="{{ route('register') }}" class="space-y-6">
+            <form method="POST" action="{{ route('register') }}" class="space-y-7">
                 @csrf
 
-                <div>
-                    <x-input-label for="student_id_code" :value="__('លេខសម្គាល់និស្សិត')" class="text-gray-300"/>
-                    <x-text-input id="student_id_code" class="block w-full px-4 py-3 rounded-lg border-gray-700 bg-gray-700 text-gray-200 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition duration-200" type="text" name="student_id_code" value="{{ old('student_id_code') }}" required autofocus />
-                    <x-input-error :messages="$errors->get('student_id_code')" class="mt-2" />
-                </div>
-
-                <div>
-                    <x-input-label for="email" :value="__('អ៊ីមែល')" class="text-gray-300"/>
-                    <x-text-input id="email" class="block w-full px-4 py-3 rounded-lg border-gray-700 bg-gray-700 text-gray-200 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition duration-200" type="email" name="email" value="{{ old('email') }}" required />
-                    <x-input-error :messages="$errors->get('email')" class="mt-2" />
-                </div>
-
-                <div>
-                    <x-input-label for="name" :value="__('ឈ្មោះបង្ហាញ')" class="text-gray-300"/>
-                    <x-text-input id="name" class="block w-full px-4 py-3 rounded-lg border-gray-700 bg-gray-700 text-gray-200 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition duration-200" type="text" name="name" value="{{ old('name') }}" required />
-                    <x-input-error :messages="$errors->get('name')" class="mt-2" />
-                </div>
-
-                <div>
-                    <x-input-label for="program_id" :value="__('កម្មវិធីសិក្សា')" class="text-gray-300"/>
-                    <select id="program_id" name="program_id" class="block w-full px-4 py-3 rounded-lg border-gray-700 bg-gray-700 text-gray-200 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition duration-200" required>
-                        <option value="">{{ __('ជ្រើសរើសកម្មវិធីសិក្សា') }}</option>
-                        @foreach ($programs as $program)
-                            <option value="{{ $program->id }}" {{ old('program_id') == $program->id ? 'selected' : '' }}>
-                                {{ $program->name_km }} ({{ $program->name_en }})
-                            </option>
-                        @endforeach
-                    </select>
-                    <x-input-error :messages="$errors->get('program_id')" class="mt-2" />
-                </div>
-                
-                <div>
-                    <x-input-label for="generation" :value="__('ជំនាន់')" class="text-gray-300"/>
-                    <select id="generation" name="generation" class="block w-full px-4 py-3 rounded-lg border-gray-700 bg-gray-700 text-gray-200 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition duration-200" required>
-                        <option value="">{{ __('ជ្រើសរើសជំនាន់') }}</option>
-                        @foreach($generations as $generation)
-                            <option value="{{ $generation }}" {{ old('generation') == $generation ? 'selected' : '' }}>
-                                {{ $generation }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <x-input-error :messages="$errors->get('generation')" class="mt-2" />
-                </div>
-
-                <div>
-                    <x-input-label for="password" :value="__('ពាក្យសម្ងាត់')" class="text-gray-300" />
-                    <div class="relative">
-                        <x-text-input id="password"
-                            class="block w-full px-4 py-3 rounded-lg border-gray-700 bg-gray-700 text-gray-200
-                                focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition duration-200 pr-10"
-                            type="password" name="password" required autocomplete="new-password" />
-
-                        <button type="button" id="togglePassword"
-                            class="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-200 focus:outline-none">
-                            <i class="fa-solid fa-eye"></i>
-                        </button>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-7">
+                    <div>
+                        <label class="block text-[11px] font-bold text-emerald-400 uppercase tracking-[0.2em] mb-3 ml-1">{{ __('លេខសម្គាល់និស្សិត') }}</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500"><i class="fa-solid fa-id-card"></i></span>
+                            <input id="student_id_code" type="text" name="student_id_code" value="{{ old('student_id_code') }}" required autofocus
+                                class="block w-full pl-12 pr-4 py-4 rounded-2xl border-white/10 bg-white/5 text-white placeholder-gray-600 transition-all input-focus-green outline-none"
+                                placeholder="ID-0000X" />
+                        </div>
+                        <x-input-error :messages="$errors->get('student_id_code')" class="mt-2 text-xs" />
                     </div>
 
-                    <div id="password-strength" class="text-sm mt-2 text-gray-400"></div>
-
-                    <x-input-error :messages="$errors->get('password')" class="mt-2" />
+                    <div>
+                        <label class="block text-[11px] font-bold text-emerald-400 uppercase tracking-[0.2em] mb-3 ml-1">{{ __('អ៊ីមែល') }}</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500"><i class="fa-solid fa-envelope"></i></span>
+                            <input id="email" type="email" name="email" value="{{ old('email') }}" required
+                                class="block w-full pl-12 pr-4 py-4 rounded-2xl border-white/10 bg-white/5 text-white placeholder-gray-600 transition-all input-focus-green outline-none"
+                                placeholder="name@nmu.edu.kh" />
+                        </div>
+                        <x-input-error :messages="$errors->get('email')" class="mt-2 text-xs" />
+                    </div>
                 </div>
 
                 <div>
-                    <x-input-label for="password_confirmation" :value="__('បញ្ជាក់ពាក្យសម្ងាត់')" class="text-gray-300" />
-
+                    <label class="block text-[11px] font-bold text-emerald-400 uppercase tracking-[0.2em] mb-3 ml-1">{{ __('ឈ្មោះបង្ហាញ') }}</label>
                     <div class="relative">
-                        <x-text-input id="password_confirmation"
-                            class="block w-full px-4 py-3 rounded-lg border-gray-700 bg-gray-700 text-gray-200
-                                focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition duration-200 pr-10"
-                            type="password" name="password_confirmation" required autocomplete="new-password" />
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500"><i class="fa-solid fa-user"></i></span>
+                        <input id="name" type="text" name="name" value="{{ old('name') }}" required
+                            class="block w-full pl-12 pr-4 py-4 rounded-2xl border-white/10 bg-white/5 text-white placeholder-gray-600 transition-all input-focus-green outline-none"
+                            placeholder="Full Name" />
+                    </div>
+                    <x-input-error :messages="$errors->get('name')" class="mt-2 text-xs" />
+                </div>
 
-                        <button type="button" id="togglePasswordConfirm"
-                            class="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-200 focus:outline-none">
-                            <i class="fa-solid fa-eye"></i>
-                        </button>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-7">
+                    <div>
+                        <label class="block text-[11px] font-bold text-emerald-400 uppercase tracking-[0.2em] mb-3 ml-1">{{ __('កម្មវិធីសិក្សា') }}</label>
+                        <select id="program_id" name="program_id" class="block w-full px-5 py-4 rounded-2xl border-white/10 bg-white/5 text-white transition-all input-focus-green outline-none" required>
+                            <option value="" class="bg-slate-900">{{ __('ជ្រើសរើសកម្មវិធី') }}</option>
+                            @foreach ($programs as $program)
+                                <option value="{{ $program->id }}" {{ old('program_id') == $program->id ? 'selected' : '' }} class="bg-slate-900">
+                                    {{ $program->name_km }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-[11px] font-bold text-emerald-400 uppercase tracking-[0.2em] mb-3 ml-1">{{ __('ជំនាន់') }}</label>
+                        <select id="generation" name="generation" class="block w-full px-5 py-4 rounded-2xl border-white/10 bg-white/5 text-white transition-all input-focus-green outline-none" required>
+                            <option value="" class="bg-slate-900">{{ __('ជ្រើសរើសជំនាន់') }}</option>
+                            @foreach($generations as $generation)
+                                <option value="{{ $generation }}" {{ old('generation') == $generation ? 'selected' : '' }} class="bg-slate-900">
+                                    {{ $generation }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-7">
+                    <div>
+                        <label class="block text-[11px] font-bold text-emerald-400 uppercase tracking-[0.2em] mb-3 ml-1">{{ __('ពាក្យសម្ងាត់') }}</label>
+                        <div class="relative">
+                            <input id="password" type="password" name="password" required
+                                class="block w-full pl-5 pr-12 py-4 rounded-2xl border-white/10 bg-white/5 text-white transition-all input-focus-green outline-none"
+                                placeholder="••••••••" />
+                            <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-emerald-400">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="mt-4 px-1">
+                            <div class="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                                <div id="strength-bar" class="h-full w-0 transition-all duration-700 ease-out"></div>
+                            </div>
+                        </div>
                     </div>
 
-                    <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
+                    <div>
+                        <label class="block text-[11px] font-bold text-emerald-400 uppercase tracking-[0.2em] mb-3 ml-1">{{ __('បញ្ជាក់ពាក្យសម្ងាត់') }}</label>
+                        <div class="relative">
+                            <input id="password_confirmation" type="password" name="password_confirmation" required
+                                class="block w-full pl-5 pr-12 py-4 rounded-2xl border-white/10 bg-white/5 text-white transition-all input-focus-green outline-none"
+                                placeholder="••••••••" />
+                            <button type="button" id="togglePasswordConfirm" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-emerald-400">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="flex items-center justify-center pt-2">
-                    <x-primary-button class="w-full py-3 text-lg font-bold bg-indigo-600 hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 rounded-lg shadow-md transition duration-200">
-                        {{ __('ចុះឈ្មោះ') }}
-                    </x-primary-button>
-                </div>
-                
-                <div class="text-center mt-4">
-                    <p class="text-sm text-gray-400">
-                        {{ __('មានគណនីរួចហើយ?') }} 
-                        <a href="{{ route('login') }}" class="underline text-indigo-400 hover:text-indigo-300 font-medium">{{ __('ចូលគណនី') }}</a>
-                    </p>
+                <div class="pt-8">
+                    <button type="submit" class="group relative w-full overflow-hidden rounded-2xl bg-emerald-600 px-8 py-5 font-black text-white transition-all hover:bg-emerald-500 active:scale-[0.98] shadow-2xl">
+                        <span class="relative z-10 flex items-center justify-center gap-4 uppercase tracking-[0.25em]">
+                            {{ __('ចុះឈ្មោះឥឡូវនេះ') }}
+                            <i class="fa-solid fa-chevron-right text-sm transition-transform group-hover:translate-x-2"></i>
+                        </span>
+                        <div class="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-1000 group-hover:translate-x-full"></div>
+                    </button>
                 </div>
             </form>
+
+            <div class="text-center mt-12">
+                <p class="text-gray-400 font-medium tracking-wide">
+                    {{ __('មានគណនីរួចហើយ?') }} 
+                    <a href="{{ route('login') }}" class="text-emerald-400 hover:text-emerald-300 font-black ml-2 transition-all underline underline-offset-8 decoration-2">
+                        {{ __('ចូលគណនី') }}
+                    </a>
+                </p>
+            </div>
         </div>
+
+        <footer class="mt-16 text-center reveal" style="animation-delay: 0.6s">
+            <div class="flex items-center justify-center gap-8 mb-6 text-gray-500 text-xs font-bold uppercase tracking-widest">
+                <a href="#" class="hover:text-emerald-400 transition-colors">Privacy</a>
+                <span class="w-1.5 h-1.5 bg-emerald-900 rounded-full"></span>
+                <a href="#" class="hover:text-emerald-400 transition-colors">Terms</a>
+                <span class="w-1.5 h-1.5 bg-emerald-900 rounded-full"></span>
+                <a href="#" class="hover:text-emerald-400 transition-colors">Support</a>
+            </div>
+            <p class="text-gray-600 text-[10px] uppercase tracking-[0.6em] font-black">
+                &copy; {{ date('Y') }} National Management University
+            </p>
+        </footer>
     </div>
     
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // --- 1. Toggle Password Visibility Logic ---
-        function togglePassword(inputId, buttonId) {
+        // Toggle Password Fields
+        function setupToggle(inputId, buttonId) {
             const input = document.getElementById(inputId);
             const button = document.getElementById(buttonId);
-            
             if (input && button) {
                 button.addEventListener('click', function() {
-                    const type = input.type === 'password' ? 'text' : 'password';
-                    input.type = type;
+                    const isPassword = input.type === 'password';
+                    input.type = isPassword ? 'text' : 'password';
                     const icon = this.querySelector('i');
-                    // Toggle the eye icon between 'fa-eye' (show) and 'fa-eye-slash' (hide)
-                    icon.classList.toggle('fa-eye');
-                    icon.classList.toggle('fa-eye-slash');
+                    icon.className = isPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
                 });
             }
         }
+        setupToggle('password', 'togglePassword');
+        setupToggle('password_confirmation', 'togglePasswordConfirm');
 
-        // Apply toggle to both password fields
-        togglePassword('password', 'togglePassword');
-        togglePassword('password_confirmation', 'togglePasswordConfirm');
+        // Password Strength Interaction
+        const pswInput = document.getElementById('password');
+        const sBar = document.getElementById('strength-bar');
 
-        // --- 2. Password Strength Checker Logic ---
-        const passwordInput = document.getElementById('password');
-        const strengthText = document.getElementById('password-strength');
-
-        if (passwordInput && strengthText) {
-            passwordInput.addEventListener('input', () => {
-                const value = passwordInput.value;
+        if (pswInput && sBar) {
+            pswInput.addEventListener('input', () => {
+                const val = pswInput.value;
                 let strength = 0;
-                // Criteria checks
-                if (/[A-Z]/.test(value)) strength++;       // Uppercase
-                if (/[a-z]/.test(value)) strength++;       // Lowercase
-                if (/[0-9]/.test(value)) strength++;       // Numbers
-                if (/[@$!%*?&]/.test(value)) strength++;   // Symbols
-                if (value.length >= 8) strength++;         // Length
+                if (val.length >= 8) strength++;
+                if (/[A-Z]/.test(val)) strength++;
+                if (/[0-9]/.test(val)) strength++;
+                if (/[!@#$%^&*]/.test(val)) strength++;
 
-                const levels = ['ខ្សោយ', 'មធ្យម', 'ល្អ', 'ខ្លាំង', 'ខ្លាំងណាស់'];
-                const colors = ['text-red-400', 'text-yellow-400', 'text-green-400', 'text-green-500', 'text-green-600'];
-                
-                // Reset classes before setting the new one
-                strengthText.className = 'text-sm mt-2'; 
-                
-                if (value) {
-                    const levelIndex = strength > 0 ? strength - 1 : 0;
-                    strengthText.textContent = 'កម្លាំងពាក្យសម្ងាត់៖ ' + levels[levelIndex];
-                    strengthText.classList.add(colors[levelIndex]);
-                } else {
-                    strengthText.textContent = '';
-                }
+                const colors = ['bg-transparent', 'bg-red-500', 'bg-orange-500', 'bg-yellow-400', 'bg-emerald-500'];
+                sBar.className = `h-full transition-all duration-700 ease-out ${colors[strength]}`;
+                sBar.style.width = (strength * 25) + '%';
             });
         }
     });
