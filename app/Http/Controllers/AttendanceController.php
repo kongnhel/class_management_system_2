@@ -51,7 +51,7 @@ class AttendanceController extends Controller
             'course_offering_id' => $qrData->course_offering_id,
             'date' => now()->toDateString(),
             'status' => 'present',
-            'notes' => 'QR Scan',
+            'remarks' => 'QR Scan',
         ]);
 
         return response()->json(['success' => true, 'message' => 'វត្តមានត្រូវបានកត់ត្រា!']);
