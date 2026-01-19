@@ -3,111 +3,146 @@
         {{-- Custom CSS --}}
         <style>
             .scan-line {
-                width: 100%; height: 4px; background: #3b82f6; box-shadow: 0 0 10px #3b82f6;
-                position: absolute; animation: scan 2.5s linear infinite; border-radius: 50%;
+                width: 100%; height: 4px; background: #60a5fa; box-shadow: 0 0 15px #60a5fa;
+                position: absolute; animation: scan 2s cubic-bezier(0.4, 0, 0.2, 1) infinite; border-radius: 50%;
+                z-index: 20;
             }
             @keyframes scan {
-                0%, 100% { top: 0%; opacity: 0; } 10%, 90% { opacity: 1; } 100% { top: 100%; opacity: 0; }
+                0% { top: 0%; opacity: 0; }
+                10% { opacity: 1; }
+                90% { opacity: 1; }
+                100% { top: 100%; opacity: 0; }
             }
-            .no-scrollbar::-webkit-scrollbar { display: none; }
-            .no-scrollbar { -ms-overflow-style: none;  scrollbar-width: none; }
+            /* Custom Scrollbar for sleek look */
+            .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+            .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+            .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #e2e8f0; border-radius: 20px; }
+            .custom-scrollbar:hover::-webkit-scrollbar-thumb { background-color: #cbd5e1; }
         </style>
 
-        {{-- 1. ផ្ទៃខាងក្រោយ (Main Backdrop) --}}
-        <div class="fixed inset-0 z-[60] flex justify-center bg-slate-900/80 backdrop-blur-md transition-opacity duration-300">
+        {{-- 1. Main Backdrop --}}
+        <div class="fixed inset-0 z-[60] flex items-start md:items-center justify-center bg-slate-950/90 backdrop-blur-sm transition-opacity duration-300">
             
-            {{-- 2. ប្រអប់ Modal ធំ (Main Container) --}}
-            <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-6xl mx-4 flex flex-col md:flex-row h-[85vh] overflow-hidden relative border border-white/20"
+            {{-- 2. Main Modal Container --}}
+            <div class="bg-white md:rounded-[2rem] shadow-2xl w-full md:max-w-7xl mx-auto flex flex-col lg:flex-row h-[100dvh] md:h-[90vh] overflow-hidden relative border border-white/10 ring-1 ring-black/5"
                  wire:poll.3s> 
 
-                {{-- ប៊ូតុងបិទ (Close X) --}}
-                <button wire:click="close" class="absolute top-6 right-6 z-20 p-2 rounded-full bg-white/10 hover:bg-white/20 text-gray-500 hover:text-red-500 backdrop-blur-sm transition-all shadow-sm">
-                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                {{-- Close Button (Absolute) --}}
+                <button wire:click="close" class="absolute top-4 right-4 lg:top-6 lg:right-6 z-30 p-2 rounded-full bg-black/20 hover:bg-red-500 hover:text-white text-white/70 backdrop-blur-md transition-all duration-200">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
 
-                {{-- === ផ្នែកខាងឆ្វេង: QR Presenter === --}}
-                <div class="w-full md:w-5/12 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-10 flex flex-col items-center justify-center relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-                    <div class="absolute bottom-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
+                {{-- === LEFT PANEL: QR Presenter === --}}
+                <div class="w-full lg:w-5/12 bg-slate-900 relative overflow-hidden flex flex-col items-center justify-center p-6 lg:p-10 shrink-0">
+                    
+                    {{-- Background Effects --}}
+                    <div class="absolute inset-0 bg-gradient-to-br from-indigo-900 via-slate-900 to-slate-950"></div>
+                    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150"></div>
+                    <div class="absolute -top-24 -left-24 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px]"></div>
+                    <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-purple-600/20 rounded-full blur-[100px]"></div>
 
-                    <div class="relative z-10 text-center mb-8">
-                        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/10 backdrop-blur-md mb-4">
-                            <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-                            <span class="text-xs font-bold tracking-wider uppercase text-green-300">{{ __('Live Attendance') }}</span>
-                        </div>
-                        <h2 class="text-4xl font-black tracking-tight mb-2">{{ __('ស្កែនវត្តមាន') }}</h2>
-                        <p class="text-slate-400 font-medium text-lg">{{ __('ID មុខវិជ្ជា:') }} <span class="text-white font-mono bg-slate-700 px-2 py-0.5 rounded ml-1">#{{ $courseId }}</span></p>
-                    </div>
-
-                    <div class="relative z-10 group">
-                        <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-[2rem] blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-                        <div class="relative p-6 bg-white rounded-[1.8rem] shadow-2xl">
-                            <div class="relative overflow-hidden rounded-xl">
-                                {!! $qrCodeImage !!}
-                                <div class="scan-line"></div>
+                    {{-- Content Wrapper --}}
+                    <div class="relative z-10 flex flex-col items-center w-full max-w-md mx-auto">
+                        
+                        {{-- Header Info --}}
+                        <div class="text-center mb-6 lg:mb-10">
+                            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-md mb-3">
+                                <span class="relative flex h-2.5 w-2.5">
+                                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                  <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                                </span>
+                                <span class="text-xs font-bold tracking-widest uppercase text-emerald-400">{{ __('Live Attendance') }}</span>
+                            </div>
+                            
+                            <h2 class="text-3xl lg:text-4xl font-black text-white tracking-tight mb-2 drop-shadow-lg">{{ __('ស្កែនវត្តមាន') }}</h2>
+                            
+                            <div class="mt-3 flex flex-col items-center">
+                                <p class="text-slate-400 text-sm font-medium uppercase tracking-wide mb-1">{{ __('មុខវិជ្ជា') }}</p>
+                                <h3 class="text-xl lg:text-2xl font-bold text-white bg-white/5 border border-white/10 px-6 py-2 rounded-xl backdrop-blur-sm shadow-inner">
+                                    {{ $courseName }}
+                                </h3>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="relative z-10 mt-8 flex items-center gap-3 bg-red-500/10 border border-red-500/20 px-5 py-3 rounded-2xl">
-                        <div class="bg-red-500/20 p-2 rounded-full text-red-400 animate-pulse">
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        {{-- QR Code Box --}}
+                        <div class="relative group mx-auto">
+                            <div class="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-3xl blur opacity-40 group-hover:opacity-75 transition duration-500"></div>
+                            <div class="relative bg-white p-4 rounded-2xl shadow-2xl overflow-hidden">
+                                <div class="relative overflow-hidden rounded-lg w-[200px] h-[200px] lg:w-[240px] lg:h-[240px] bg-white flex items-center justify-center">
+                                    {!! $qrCodeImage !!}
+                                    <div class="scan-line"></div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="text-left">
-                            <p class="text-white text-sm font-bold">{{ __('សុពលភាព QR') }}</p>
-                            <p class="text-red-300 text-xs">{{ __('ផ្លាស់ប្តូររៀងរាល់ 15 វិនាទីម្តង') }}</p>
+
+                        {{-- Countdown Timer --}}
+                        <div class="mt-8 w-full" 
+                             x-data="{ timeLeft: 15 }" 
+                             x-init="setInterval(() => { timeLeft = timeLeft > 1 ? timeLeft - 1 : 15 }, 1000)">
+                            
+                            <div class="flex items-center justify-between text-slate-300 text-sm font-medium mb-2 px-1">
+                                <span>{{ __('QR ប្តូរថ្មីក្នុងរយៈពេល') }}</span>
+                                <span class="font-mono text-white font-bold"><span x-text="timeLeft">15</span>s</span>
+                            </div>
+                            <div class="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-blue-400 to-indigo-500 transition-all duration-1000 ease-linear"
+                                     :style="'width: ' + (timeLeft / 15 * 100) + '%'"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {{-- === ផ្នែកខាងស្តាំ: Student List === --}}
-                <div class="w-full md:w-7/12 bg-white flex flex-col relative z-0">
-                    <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+                {{-- === RIGHT PANEL: Student List === --}}
+                <div class="flex-1 bg-slate-50 flex flex-col min-h-0 relative z-0 rounded-t-[2rem] lg:rounded-none mt-[-2rem] lg:mt-0 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] lg:shadow-none">
+                    
+                    {{-- Header --}}
+                    <div class="px-6 py-5 border-b border-slate-200 bg-white sticky top-0 z-20 flex justify-between items-center rounded-t-[2rem] lg:rounded-none">
                         <div>
-                            <h3 class="text-2xl font-bold text-gray-800">{{ __('បញ្ជីឈ្មោះសិស្ស') }}</h3>
-                            <p class="text-sm text-gray-400">{{ __('កំពុងរង់ចាំការស្កែនពីសិស្ស...') }}</p>
+                            <h3 class="text-xl font-bold text-slate-800">{{ __('បញ្ជីឈ្មោះសិស្ស') }}</h3>
+                            <p class="text-xs text-slate-500 font-medium mt-0.5">{{ __('កំពុងរង់ចាំការស្កែន...') }}</p>
                         </div>
-                        <div class="flex flex-col items-end">
-                            <span class="text-4xl font-black text-blue-600 leading-none">
+                        <div class="bg-indigo-50 px-4 py-2 rounded-xl border border-indigo-100 flex flex-col items-end">
+                            <span class="text-2xl font-black text-indigo-600 leading-none">
                                 {{ isset($attendances) ? str_pad(count($attendances), 2, '0', STR_PAD_LEFT) : '00' }}
                             </span>
-                            <span class="text-xs font-bold text-gray-400 uppercase tracking-wide">{{ __('Total Scanned') }}</span>
+                            <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">{{ __('Scanned') }}</span>
                         </div>
                     </div>
 
-                    <div class="flex-1 overflow-y-auto p-6 space-y-4 no-scrollbar bg-gray-50/50">
+                    {{-- Scrollable List --}}
+                    <div class="flex-1 overflow-y-auto p-4 lg:p-6 space-y-3 custom-scrollbar bg-slate-50">
                         @if(isset($attendances) && count($attendances) > 0)
                             @foreach($attendances as $index => $record)
-                                <div class="group flex items-center gap-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 animate-fade-in-up" style="animation-delay: {{ $index * 50 }}ms;">
+                                <div class="flex items-center gap-4 bg-white p-3 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 animate-fade-in-up" 
+                                     style="animation-delay: {{ $index * 50 }}ms;">
                                     
                                     {{-- Avatar --}}
-                                    <div class="relative">
-                                        <img src="{{ $record->student->profile_photo_url ?? 'https://ui-avatars.com/api/?name='.$record->student->name.'&background=random' }}" 
-                                             class="w-14 h-14 rounded-2xl object-cover border-2 border-white shadow-md group-hover:scale-105 transition-transform">
-                                        <div class="absolute -bottom-1 -right-1 bg-green-500 border-2 border-white w-4 h-4 rounded-full"></div>
+                                    <div class="relative shrink-0">
+                                        <img src="{{ $record->student->profile_photo_url ?? 'https://ui-avatars.com/api/?name='.$record->student->name.'&background=random&color=fff' }}" 
+                                             class="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm ring-1 ring-slate-100">
+                                        
+                                        {{-- Status Dot --}}
+                                        <div class="absolute bottom-0 right-0 w-3.5 h-3.5 border-2 border-white rounded-full
+                                            {{ $record->status === 'present' ? 'bg-green-500' : '' }}
+                                            {{ $record->status === 'late' ? 'bg-yellow-500' : '' }}
+                                            {{ $record->status === 'absent' ? 'bg-red-500' : '' }}">
+                                        </div>
                                     </div>
                                     
-                                    {{-- Student Info --}}
-                                    <div class="flex-1">
-                                        {{-- Name --}}
-                                        <h4 class="font-bold text-gray-800 text-lg leading-tight mb-1">{{ $record->student->name }}</h4>
-                                        
-                                        <div class="flex justify-between items-center">
-                                            {{-- 👉 Status Badge (NEW) --}}
-                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide border
+                                    {{-- Info --}}
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="font-bold text-slate-800 text-base truncate">{{ $record->student->name }}</h4>
+                                        <div class="flex flex-wrap gap-2 mt-1">
+                                            {{-- Status Badge --}}
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border
                                                 {{ $record->status === 'present' ? 'bg-green-50 text-green-700 border-green-200' : '' }}
                                                 {{ $record->status === 'late' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : '' }}
                                                 {{ $record->status === 'absent' ? 'bg-red-50 text-red-700 border-red-200' : '' }}">
-                                                
-                                                <span class="w-1.5 h-1.5 rounded-full 
-                                                    {{ $record->status === 'present' ? 'bg-green-500' : '' }}
-                                                    {{ $record->status === 'late' ? 'bg-yellow-500' : '' }}
-                                                    {{ $record->status === 'absent' ? 'bg-red-500' : '' }}"></span>
                                                 {{ $record->status }}
                                             </span>
-
-                                            {{-- Time --}}
-                                            <span class="text-xs font-mono font-medium text-gray-400 bg-gray-100 px-2 py-1 rounded-lg flex items-center gap-1">
+                                            
+                                            {{-- Time Badge --}}
+                                            <span class="inline-flex items-center gap-1 text-[10px] font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
                                                 <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                                 {{ $record->created_at->format('h:i:s A') }}
                                             </span>
@@ -117,26 +152,28 @@
                             @endforeach
                         @else
                             {{-- Empty State --}}
-                            <div class="flex flex-col items-center justify-center h-full text-center opacity-60">
-                                <div class="bg-gray-100 p-6 rounded-full mb-4 animate-bounce">
-                                    <svg class="w-16 h-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4" /></svg>
+                            <div class="flex flex-col items-center justify-center h-full text-center py-10">
+                                <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4 animate-pulse">
+                                    <svg class="w-10 h-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4" />
+                                    </svg>
                                 </div>
-                                <h4 class="text-xl font-bold text-gray-600">{{ __('មិនទាន់មានសិស្សស្កែន') }}</h4>
-                                <p class="text-gray-400 max-w-xs mx-auto mt-2">{{ __('សូមឱ្យសិស្សបើក App ហើយស្កែន QR Code ដែលបង្ហាញនៅខាងឆ្វេង។') }}</p>
+                                <h4 class="text-lg font-bold text-slate-600">{{ __('មិនទាន់មានសិស្សស្កែន') }}</h4>
+                                <p class="text-slate-400 text-sm max-w-[200px] mx-auto mt-2">{{ __('សិស្សអាចចាប់ផ្តើមស្កែនតាមរយៈ QR Code ខាងលើ។') }}</p>
                             </div>
                         @endif
                     </div>
 
                     {{-- Footer / Action Bar --}}
-                    <div class="p-6 border-t border-gray-100 bg-white flex justify-end gap-4 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] relative z-20">
-                        <button wire:click="close" class="px-6 py-3 rounded-xl font-bold text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all">
+                    <div class="p-4 lg:p-6 border-t border-slate-200 bg-white flex flex-col sm:flex-row justify-end gap-3 z-20 pb-8 lg:pb-6">
+                        <button wire:click="close" class="w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">
                             {{ __('បិទផ្ទាំង') }}
                         </button>
 
                         <button wire:click="$set('showConfirmation', true)"
-                                class="group relative px-8 py-3 rounded-xl font-bold text-white bg-red-600 overflow-hidden shadow-lg shadow-red-200 transition-all hover:scale-105 active:scale-95">
+                                class="w-full sm:w-auto group relative px-8 py-3 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all active:scale-95 overflow-hidden">
                             <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
-                            <span class="flex items-center gap-2 relative z-10">
+                            <span class="flex items-center justify-center gap-2 relative z-10">
                                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
                                 {{ __('បញ្ចប់ និងរក្សាទុក') }}
                             </span>
@@ -146,39 +183,35 @@
             </div>
         </div>
 
-        {{-- 🔥 3. CUSTOM CONFIRMATION MODAL (ផ្ទាំងបញ្ជាក់ថ្មី) 🔥 --}}
+        {{-- CONFIRMATION MODAL --}}
         @if($showConfirmation)
-        <div class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-all animate-fade-in">
-            <div class="bg-white p-8 rounded-[2rem] shadow-2xl max-w-md w-full text-center relative transform scale-100 animate-bounce-in">
+        <div class="fixed inset-0 z-[70] flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" wire:click="$set('showConfirmation', false)"></div>
+            <div class="bg-white p-6 lg:p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center relative z-10 transform transition-all scale-100">
                 
-                {{-- Warning Icon --}}
-                <div class="mx-auto w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6 text-red-600 shadow-sm">
-                    <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-5 text-red-600 ring-4 ring-red-50">
+                    <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                 </div>
-
-                <h3 class="text-2xl font-black text-gray-800 mb-2">{{ __('តើអ្នកប្រាកដទេ?') }}</h3>
-                <p class="text-gray-500 mb-8 leading-relaxed">
-                    {{ __('ការចុច "បញ្ចប់" នឹងបិទបញ្ជីវត្តមានភ្លាមៗ។ សិស្សណាដែលមិនទាន់បានស្កែន នឹងត្រូវកំណត់ថា') }} 
-                    <span class="font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded">{{ __('"អវត្តមាន"') }}</span> 
+                
+                <h3 class="text-xl font-black text-slate-800 mb-2">{{ __('តើអ្នកប្រាកដទេ?') }}</h3>
+                <p class="text-slate-500 text-sm mb-6 leading-relaxed">
+                    {{ __('ការបញ្ចប់នឹងកំណត់សិស្សដែលមិនទាន់ស្កែនជា') }} 
+                    <span class="font-bold text-red-600">{{ __('"អវត្តមាន"') }}</span> 
                     {{ __('ដោយស្វ័យប្រវត្តិ។') }}
                 </p>
-
+                
                 <div class="flex gap-3">
-                    {{-- Cancel Button --}}
                     <button wire:click="$set('showConfirmation', false)" 
-                            class="flex-1 py-3.5 rounded-2xl font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all">
+                            class="flex-1 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">
                         {{ __('បោះបង់') }}
                     </button>
-
-                    {{-- Confirm Button --}}
                     <button wire:click="closeAttendance" 
-                            class="flex-1 py-3.5 rounded-2xl font-bold text-white bg-red-600 hover:bg-red-700 shadow-lg shadow-red-200 transition-all transform hover:-translate-y-1">
+                            class="flex-1 py-3 rounded-xl font-bold text-white bg-red-600 hover:bg-red-700 shadow-lg shadow-red-200 transition-colors">
                         {{ __('យល់ព្រម') }}
                     </button>
                 </div>
-
             </div>
         </div>
         @endif

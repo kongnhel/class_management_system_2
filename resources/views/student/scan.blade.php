@@ -89,7 +89,6 @@
         </div>
     </div>
 
-    {{-- Script --}}
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script>
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -99,32 +98,28 @@
         const iconContainer = document.getElementById('status-icon-container');
         const modalBtn = document.getElementById('modal-btn');
         
-        let isProcessing = false; // ការពារស្កែនស្ទួន
+        let isProcessing = false;
         let html5QrcodeScanner = null;
 
-        // Check CSRF
-        if (!csrfToken) alert("System Error: CSRF Token missing.");
+        // --- 1. បន្ថែម Function សម្រាប់ចាប់ Error (ពេល Scan មិនចេញ) ---
+        function onScanFailure(error) {
+            // កុំបង្ហាញ Alert រំខានពេលកំពុង Scan កាមេរ៉ា
+            // ប៉ុន្តែយើងអាចមើលក្នុង Console បានថាហេតុអ្វីវាអានរូបភាពមិនចេញ
+            console.warn(`Code scan error = ${error}`);
+        }
 
         function onScanSuccess(decodedText, decodedResult) {
-            if (isProcessing) return; // បើកំពុងដំណើរការ សូមកុំធ្វើអីទៀត
+            if (isProcessing) return;
             isProcessing = true;
 
-            // 1. Pause Camera (Safe Mode)
+            // Pause Camera
             try {
-                if (html5QrcodeScanner.getState() === Html5QrcodeScannerState.SCANNING) {
-                    html5QrcodeScanner.pause();
-                }
-            } catch (e) {
-                console.warn("Pause failed, ignoring UI error:", e);
-            }
+                html5QrcodeScanner.clear(); // ប្រើ clear() ជំនួស pause() ដើម្បីបិទទាំងស្រុងពេលជោគជ័យ
+            } catch (e) { console.log(e); }
             
-            // 2. Vibrate
             if (navigator.vibrate) navigator.vibrate(200);
-
-            // 3. Show Loading
             showModal('processing');
 
-            // 4. Send Data
             fetch('{{ route("student.process-scan") }}', {
                 method: 'POST',
                 headers: {
@@ -135,13 +130,8 @@
                 body: JSON.stringify({ token: decodedText })
             })
             .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson ? await response.json() : null;
-
-                if (!response.ok) {
-                    const errorMsg = (data && data.message) || response.statusText;
-                    throw new Error(errorMsg);
-                }
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || response.statusText);
                 return data;
             })
             .then(data => {
@@ -161,7 +151,6 @@
             overlay.classList.add('flex');
 
             if (type === 'processing') {
-                // Spinner Icon
                 iconContainer.className = "mx-auto w-24 h-24 rounded-full flex items-center justify-center mb-6 bg-blue-50 text-blue-600 animate-spin-slow";
                 iconContainer.innerHTML = `<svg class="w-10 h-10" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
                 modalTitle.innerText = "Processing...";
@@ -169,25 +158,22 @@
                 modalBtn.classList.add('hidden');
             } 
             else if (type === 'success') {
-                // Checkmark Icon
                 iconContainer.className = "mx-auto w-24 h-24 rounded-full flex items-center justify-center mb-6 bg-green-100 text-green-600";
                 iconContainer.innerHTML = `<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>`;
                 modalTitle.innerText = "Awesome!";
-                modalTitle.className = "text-2xl font-black text-gray-800 mb-2";
                 modalMsg.innerText = message;
                 modalBtn.className = "w-full py-4 rounded-2xl font-bold text-white bg-green-500 hover:bg-green-600 transition-all shadow-lg shadow-green-200 block";
                 modalBtn.innerText = "Done";
+                modalBtn.classList.remove('hidden');
             } 
             else if (type === 'error') {
-                // Error Icon
-                if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
                 iconContainer.className = "mx-auto w-24 h-24 rounded-full flex items-center justify-center mb-6 bg-red-100 text-red-500";
                 iconContainer.innerHTML = `<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>`;
                 modalTitle.innerText = "Oops!";
-                modalTitle.className = "text-2xl font-black text-gray-800 mb-2";
                 modalMsg.innerText = message;
                 modalBtn.className = "w-full py-4 rounded-2xl font-bold text-white bg-red-500 hover:bg-red-600 transition-all shadow-lg shadow-red-200 block";
                 modalBtn.innerText = "Try Again";
+                modalBtn.classList.remove('hidden');
             }
         }
 
@@ -195,30 +181,30 @@
             overlay.classList.add('hidden');
             overlay.classList.remove('flex');
             isProcessing = false;
-            
-            try {
-                html5QrcodeScanner.resume();
-            } catch(e) {
-                // បើ Resume មិនបាន (ឧ. វាអត់បាន Pause) យើងគ្រាន់តែ Re-render ឬទុកចោល
-                console.log("Resume skipped/failed", e);
-            }
+            // Reload page ដើម្បី reset scanner ទាំងស្រុង (វិធីសុវត្ថិភាពបំផុតសម្រាប់ library នេះ)
+            window.location.reload();
         }
 
-        // Initialize Scanner
+        // --- Initialize Scanner ---
         html5QrcodeScanner = new Html5QrcodeScanner(
             "reader", 
             { 
                 fps: 10, 
                 qrbox: {width: 250, height: 250},
                 aspectRatio: 1.0,
-                showTorchButtonIfSupported: true,
+                // បើក Experimental Features ដើម្បីឱ្យវាព្យាយាមចាប់ QR ពិបាកៗ
+                experimentalFeatures: {
+                    useBarCodeDetectorIfSupported: true
+                },
                 rememberLastUsedCamera: true
             },
             false
         );
-        html5QrcodeScanner.render(onScanSuccess);
+        
+        // 👉 ដាក់ onScanFailure នៅទីនេះ
+        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
 
-        // Add Animations
+        // CSS Animations
         const styleSheet = document.createElement("style");
         styleSheet.innerText = `
             @keyframes scan { 0% { top: 0; } 50% { top: 100%; } 100% { top: 0; } }

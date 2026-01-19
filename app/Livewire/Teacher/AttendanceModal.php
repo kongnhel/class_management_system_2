@@ -30,22 +30,26 @@ class AttendanceModal extends Component
         $this->courseId = null;
     }
 
-    public function generateToken()
+public function generateToken()
     {
         if ($this->isOpen && $this->courseId) {
-            // លុប Token ចាស់ៗចោល ដើម្បីកុំឱ្យ Database ពេញ
+            
+            // ១. លុប Token ចាស់ៗចោល (ល្អហើយ)
             AttendanceQrToken::where('course_offering_id', $this->courseId)->delete();
 
+            // ២. បង្កើត Token ថ្មី
             $token = Str::random(40);
             
             AttendanceQrToken::create([
                 'course_offering_id' => $this->courseId,
                 'token_code' => $token,
-                'expires_at' => now()->addSeconds(15), // R មានសុពលភាព 15 វិនាទី
+                'expires_at' => now()->addSeconds(15), // ✅ ១៥ វិនាទី
             ]);
 
-            // បង្កើត QR
-            $this->qrCodeImage = (string) QrCode::size(300)->generate($token);
+            // ៣. បង្កើតរូបភាព QR
+            $this->qrCodeImage = (string) QrCode::size(300)
+                                    ->margin(2)
+                                    ->generate($token);
         }
     }
 
@@ -94,19 +98,74 @@ class AttendanceModal extends Component
     }
 
 public function render()
-{
-    $attendances = [];
+    {
+        $courseName = '...'; // ឈ្មោះលំនាំដើម
 
-    if ($this->isOpen && $this->courseId) {
-        $attendances = AttendanceRecord::where('course_offering_id', $this->courseId)
-                        ->where('date', now()->toDateString()) // ✅ កែមកប្រើ 'date' វិញ
-                        ->with('student')
-                        ->orderBy('created_at', 'desc')
-                        ->get();
+    if ($this->courseId) {
+        $courseOffering = \App\Models\CourseOffering::with('course')->find($this->courseId);
+        // ត្រូវប្រាកដថា CourseOffering មាន relation ទៅ Course
+        $courseName = $courseOffering ? ($courseOffering->course->title_en ?? 'N/A') : 'N/A';
+        // បើចង់បានឈ្មោះភាសាខ្មែរ៖ $courseOffering->course->name_km ?? ...
     }
+        // 🔥 ចំណុចសំខាន់នៅត្រង់នេះ! 🔥
+        // យើងត្រូវឆែកមើលមុននឹងបង្កើតថ្មី
+        if ($this->isOpen && $this->courseId) {
+            
+            $latestToken = AttendanceQrToken::where('course_offering_id', $this->courseId)
+                            ->latest()
+                            ->first();
 
-    return view('professor.attendance.attendance-modal', [  
-        'attendances' => $attendances
-    ]);
+            // លក្ខខណ្ឌ៖ បើ "អត់ទាន់មាន Token" ឬ "Token ចាស់ហួសម៉ោង" => ចាំបង្កើតថ្មី
+            if (!$latestToken || now()->greaterThan($latestToken->expires_at)) {
+                $this->generateToken(); 
+            } 
+            // បើមាន Token ហើយមិនទាន់ផុតកំណត់ តែរូបភាពបាត់ (Re-render) => បង្កើតរូបភាពឡើងវិញ
+            elseif (!$this->qrCodeImage) {
+                $this->qrCodeImage = (string) QrCode::size(300)
+                                        ->margin(2)
+                                        ->generate($latestToken->token_code);
+            }
+        }
+
+        // ទាញយកបញ្ជីសិស្ស
+        $attendances = [];
+        if ($this->isOpen && $this->courseId) {
+            $attendances = AttendanceRecord::where('course_offering_id', $this->courseId)
+                            ->where('date', now()->toDateString())
+                            ->with('student')
+                            ->orderBy('created_at', 'desc')
+                            ->get();
+        }
+
+        return view('professor.attendance.attendance-modal', [
+            'attendances' => $attendances,
+            'courseName' => $courseName,
+        ]);
+    }
+public function checkAndGenerateToken()
+{
+    // រកមើល Token ចុងក្រោយ
+    $latestToken = AttendanceQrToken::where('course_offering_id', $this->courseId)
+                    ->latest()
+                    ->first();
+
+    // លក្ខខណ្ឌ៖ បើអត់ទាន់មាន ឬ ផុតកំណត់ (ហួសម៉ោង) => បង្កើតថ្មី
+    if (!$latestToken || now()->greaterThan($latestToken->expires_at)) {
+        
+        $newToken = \Illuminate\Support\Str::random(40);
+        
+        AttendanceQrToken::create([
+            'course_offering_id' => $this->courseId,
+            'token_code' => $newToken,
+            'expires_at' => now()->addSeconds(15), // ✅ កំណត់អាយុ ១៥ វិនាទី
+        ]);
+
+        // បង្កើតរូបភាព QR ថ្មី
+        $this->qrCodeImage = QrCode::size(300)->generate($newToken);
+    
+    } elseif (!$this->qrCodeImage) {
+        // បើ Token នៅមានសុពលភាព តែរូបភាពបាត់ => បង្កើតរូបភាពឡើងវិញ
+        $this->qrCodeImage = QrCode::size(300)->generate($latestToken->token_code);
+    }
 }
 }
