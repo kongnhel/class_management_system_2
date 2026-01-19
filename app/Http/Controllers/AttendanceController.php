@@ -48,6 +48,7 @@ class AttendanceController extends Controller
         // ៥. កត់ត្រាវត្តមាន
         AttendanceRecord::create([
             'student_user_id' => $user->id,
+            'user_id'         => $user->id,
             'course_offering_id' => $qrData->course_offering_id,
             'date' => now()->toDateString(),
             'status' => 'present',
