@@ -286,13 +286,16 @@ if ($request->hasFile('profile_picture')) {
             'date_of_birth' => 'nullable|date',
             'phone_number' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:255',
-            'profile_picture' => 'nullable|image|max:2048', 
+            // 'profile_picture' => 'nullable|image|max:2048', 
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'generation' => 'nullable|string|max:255',
         ];
-        $messages = [
-            'profile_picture.max' => 'រូបភាពមិនអាចធំជាង ២MB ឡើយ!',
-            'profile_picture.image' => 'ឯកសារត្រូវតែជាប្រភេទរូបភាព!',
-        ];
+$messages = [
+        'profile_picture.max' => 'រូបភាពមិនអាចធំជាង ២MB ឡើយ!',
+        'profile_picture.image' => 'ឯកសារត្រូវតែជាប្រភេទរូបភាព!',
+        'profile_picture.mimes' => 'រូបភាពត្រូវតែជាប្រភេទ: jpeg, png, jpg!',
+    ];
+
 
         if ($request->role === 'student') {
             $rules['student_id_code'] = ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)];
@@ -305,7 +308,7 @@ if ($request->hasFile('profile_picture')) {
             }
         }
         
-        $request->validate($rules);
+        $request->validate($rules,$messages);
 
         // ១. Update User Core Data
         $user->name = $request->name;
