@@ -438,6 +438,12 @@ if ($request->hasFile('profile_picture')) {
      */
     public function deleteUser(User $user)
 {
+    $hasOfferings = \App\Models\CourseOffering::where('lecturer_user_id', $user->id)->exists();
+    $hasEnrollments = \App\Models\StudentCourseEnrollment::where('student_user_id', $user->id)->exists();
+    if ($hasOfferings || $hasEnrollments) {
+        return redirect()->route('admin.manage-users')
+            ->with('error', 'មិនអាចលុបអ្នកប្រើប្រាស់នេះបានទេ ពីព្រោះមានទំនាក់ទំនងជាមួយកំណត់ត្រាផ្សេងទៀត។( កំពុងមានថ្នាក់រៀនសម្រាប់បង្រៀន​ )');
+    }
     // Load profile ទាំងពីរប្រភេទដើម្បីធានាថាមានទិន្នន័យសម្រាប់លុប
     $user->load('profile', 'studentProfile');
 
