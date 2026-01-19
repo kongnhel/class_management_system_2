@@ -12,7 +12,7 @@
                         <p class="mt-2 text-lg text-gray-500">{{ __('បញ្ជីវគ្គសិក្សាទាំងអស់ដែលអ្នកកំពុងបង្រៀន') }}</p>
                     </div>
                 </div>
-
+{{-- room --}}
                 {{-- Flash Messages --}}
                 <div class="space-y-4 mb-8">
                     @if (session('success'))

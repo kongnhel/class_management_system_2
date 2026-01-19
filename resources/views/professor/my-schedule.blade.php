@@ -10,7 +10,7 @@
                         {{ __('កាលវិភាគបង្រៀនប្រចាំឆមាសរបស់អ្នក') }}
                     </p>
                 </div>
-                
+              {{-- room   --}}
                 <div class="no-print">
                     <button onclick="window.print()" 
                         class="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 text-white font-bold text-sm sm:text-base rounded-xl shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2">

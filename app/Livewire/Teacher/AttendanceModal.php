@@ -85,9 +85,11 @@ public function generateToken()
                 $absentCount++;
             }
         }
-
+        
+        AttendanceQrToken::where('course_offering_id', $this->courseId)->delete();
         // ៤. បិទ Modal ហើយជូនដំណឹង
         $this->showConfirmation = false;
+        
         $this->isOpen = false;
         
         // បងអាចប្រើ Session flash ឬ Dispatch event ដើម្បីប្រាប់ថាជោគជ័យ

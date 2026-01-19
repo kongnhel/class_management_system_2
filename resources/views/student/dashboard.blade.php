@@ -3,7 +3,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             
             {{-- Header Section --}}
-            <div class="mb-10 flex flex-col lg:flex-row items-center justify-between gap-6">
+            <div class="mb-8 flex flex-col lg:flex-row items-center justify-between gap-6">
                 <div class="text-center lg:text-left">
                     <h3 class="text-3xl sm:text-4xl font-black text-gray-900 leading-tight">
                         ជំរាបសួរ និស្សិត <span class="text-indigo-600">{{ $user->name }}</span>! 👋
@@ -32,15 +32,47 @@
                 </div>
             </div>
 
-            {{-- ១. ផ្នែកស្ថិតិសង្ខេប (Quick Stats Cards) --}}
-            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6 mb-12">
+            {{-- ១. ស្ថិតិវត្តមាន (Attendance Summary) - ថ្មី --}}
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div class="bg-white p-4 rounded-2xl border border-green-100 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center text-xl"><i class="fas fa-user-check"></i></div>
+                    <div>
+                        <p class="text-xs text-gray-400 font-bold uppercase">វត្តមាន</p>
+                        <h4 class="text-2xl font-black text-gray-800">{{ $totalPresent ?? 0 }}</h4>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-red-100 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-red-50 text-red-600 flex items-center justify-center text-xl"><i class="fas fa-user-times"></i></div>
+                    <div>
+                        <p class="text-xs text-gray-400 font-bold uppercase">អវត្តមាន</p>
+                        <h4 class="text-2xl font-black text-gray-800">{{ $totalAbsent ?? 0 }}</h4>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-blue-100 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl"><i class="fas fa-file-contract"></i></div>
+                    <div>
+                        <p class="text-xs text-gray-400 font-bold uppercase">ច្បាប់</p>
+                        <h4 class="text-2xl font-black text-gray-800">{{ $totalPermission ?? 0 }}</h4>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-yellow-100 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center text-xl"><i class="fas fa-clock"></i></div>
+                    <div>
+                        <p class="text-xs text-gray-400 font-bold uppercase">យឺត</p>
+                        <h4 class="text-2xl font-black text-gray-800">{{ $totalLate ?? 0 }}</h4>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ២. ផ្នែកស្ថិតិទូទៅ (General Stats) --}}
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-12">
                 @php
                     $stats = [
                         ['label' => 'កម្រងសំណួរ', 'count' => $upcomingQuizzes->count(), 'icon' => 'fa-stopwatch', 'color' => 'indigo'],
-                        ['label' => 'កិច្ចការស្រាវជ្រាវ', 'count' => $upcomingAssignments->count(), 'icon' => 'fa-file-signature', 'color' => 'emerald'],
+                        ['label' => 'កិច្ចការ', 'count' => $upcomingAssignments->count(), 'icon' => 'fa-file-signature', 'color' => 'emerald'],
                         ['label' => 'ការប្រឡង', 'count' => $upcomingExams->count(), 'icon' => 'fa-graduation-cap', 'color' => 'rose'],
-                        ['label' => 'ម៉ោងសិក្សាថ្ងៃនេះ', 'count' => $upcomingSchedules->count(), 'icon' => 'fa-book-open', 'color' => 'purple'],
-                        ['label' => 'មុខវិជ្ជាសរុប', 'count' => $enrolledCourses->count(), 'icon' => 'fa-layer-group', 'color' => 'blue'],
+                        ['label' => 'ម៉ោងសិក្សា', 'count' => $upcomingSchedules->count(), 'icon' => 'fa-book-open', 'color' => 'purple'],
+                        ['label' => 'មុខវិជ្ជា', 'count' => $enrolledCourses->count(), 'icon' => 'fa-layer-group', 'color' => 'blue'],
                     ];
                 @endphp
 
@@ -60,7 +92,7 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 
-                {{-- ២. កាលវិភាគសិក្សាលម្អិត & មុខវិជ្ជា (Left Side) --}}
+                {{-- ៣. ផ្នែកខាងឆ្វេង (Schedule & Courses) --}}
                 <div class="lg:col-span-2 space-y-12">
                     
                     {{-- កាលវិភាគថ្ងៃនេះ --}}
@@ -80,7 +112,7 @@
                                         </div>
                                         <div>
                                             <h5 class="font-black text-gray-800 group-hover:text-purple-600 transition-colors">
-                                                {{ $schedule->courseOffering->course->name_km }}
+                                                {{ $schedule->courseOffering->course->name_km ?? $schedule->courseOffering->course->title_en }}
                                             </h5>
                                             <div class="flex flex-wrap gap-x-4 gap-y-1 mt-1">
                                                 <span class="text-xs text-gray-500 flex items-center gap-1">
@@ -104,68 +136,26 @@
                         </div>
                     </section>
                     
-                    {{-- ប៊ូតុងស្កែនវត្តមានថ្មី --}}
-<a href="{{ route('student.scan') }}" 
-   class="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold shadow-lg shadow-blue-200 hover:shadow-blue-300 transform hover:-translate-y-0.5 transition-all">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-    </svg>
-    <span>{{ __('ស្កែនវត្តមាន') }}</span>
-</a>
+                    {{-- 🔥 ប៊ូតុងស្កែនថ្មី (Premium Button) 🔥 --}}
+                    <div class="flex justify-center md:justify-start">
+                        <a href="{{ route('student.scan') }}" 
+                           class="group relative flex items-center gap-2 bg-gradient-to-br from-blue-600 to-blue-700 text-white px-8 py-4 rounded-2xl font-bold shadow-lg shadow-blue-200/50 hover:shadow-blue-300/50 hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all duration-300 overflow-hidden w-full md:w-auto justify-center">
 
-                    {{-- កម្មវិធីសិក្សារបស់ខ្ញុំ --}}
-                    <section>
-                        <div class="flex items-center gap-3 mb-6">
-                            <div class="h-8 w-1.5 bg-emerald-600 rounded-full"></div>
-                            <h4 class="text-2xl font-black text-gray-800">{{ __('កម្មវិធីសិក្សា និងការណែនាំ') }}</h4>
-                        </div>
+                            {{-- Shimmer Effect --}}
+                            <div class="absolute inset-0 -translate-x-full group-hover:translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent z-0 transition-transform duration-1000"></div>
 
-                        @if ($studentProgram)
-                            <div class="bg-gradient-to-r from-emerald-600 to-teal-500 rounded-[2.5rem] p-8 text-white mb-8 shadow-xl shadow-emerald-100 flex flex-col md:flex-row justify-between items-center gap-6">
-                                <div>
-                                    <p class="text-emerald-100 text-xs font-bold uppercase tracking-[0.2em] mb-2">{{ __('កម្មវិធីសិក្សាបច្ចុប្បន្ន') }}</p>
-                                    <h5 class="text-2xl font-black">{{ $studentProgram->name_km }}</h5>
-                                </div>
-                                <div class="bg-white/20 px-6 py-3 rounded-2xl backdrop-blur-md border border-white/30 text-center">
-                                    <p class="text-xs opacity-90">ជំនាន់</p>
-                                    <p class="text-xl font-black">{{ $user->generation }}</p>
-                                </div>
-                            </div>
+                            {{-- Icon --}}
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 relative z-10 group-hover:rotate-12 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                            </svg>
 
-                            @if ($availableCoursesInProgram->isNotEmpty())
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    @foreach ($availableCoursesInProgram as $courseOffering)
-                                        <div class="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
-                                            <div class="mb-6">
-                                                <h6 class="font-black text-gray-800 mb-2 text-lg leading-tight">{{ $courseOffering->course->title_km ?? $courseOffering->course->title_en }}</h6>
-                                                <div class="flex items-center gap-2">
-                                                    <span class="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-1 rounded-md">{{ $courseOffering->course->code }}</span>
-                                                    <span class="text-xs text-gray-400">|</span>
-                                                    <span class="text-xs text-gray-500 italic">{{ $courseOffering->lecturer->name }}</span>
-                                                </div>
-                                            </div>
-                                            <form action="{{ route('student.enroll_self') }}" method="POST">
-                                                @csrf
-                                                <input type="hidden" name="course_offering_id" value="{{ $courseOffering->id }}">
-                                                <button class="w-full bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 group">
-                                                    <i class="fas fa-plus-circle transition-transform group-hover:rotate-90"></i> {{ __('ចុះឈ្មោះចូលរៀន') }}
-                                                </button>
-                                            </form>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            @endif
-                        @else
-                            <div class="bg-white p-12 rounded-[2.5rem] border border-dashed border-gray-300 text-center">
-                                <div class="w-16 h-16 bg-gray-50 text-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <i class="fas fa-graduation-cap text-3xl"></i>
-                                </div>
-                                <p class="text-gray-500 font-bold">{{ __('មិនទាន់មានកម្មវិធីសិក្សា? សូមទាក់ទងរដ្ឋបាល។') }}</p>
-                            </div>
-                        @endif
-                    </section>
+                            {{-- Text --}}
+                            <span class="relative z-10 tracking-wide text-lg">{{ __('ស្កែនវត្តមានឥឡូវនេះ') }}</span>
+                        </a>
+                    </div>
 
-                    {{-- មុខវិជ្ជាដែលបានចុះឈ្មោះ --}}
+
+                    {{-- មុខវិជ្ជាដែលកំពុងសិក្សា (Enrolled Courses) --}}
                     <section>
                         <div class="flex items-center gap-3 mb-6">
                             <div class="h-8 w-1.5 bg-blue-600 rounded-full"></div>
@@ -175,47 +165,104 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             @foreach($enrolledCourses as $course)
                                 @php
-                                    $enrollment = $course->studentCourseEnrollments->first();
-                                    $isLeader = $enrollment ? $enrollment->is_class_leader : false;
+                                    // រកមើលថាសិស្សជាប្រធានថ្នាក់ឬអត់
+                                    // ដោយសារយើង load relation 'studentCourseEnrollments' ដែល filter តែសិស្សម្នាក់នេះ
+                                    // ដូច្នេះយកធាតុទី 1 មកឆែក
+                                    $myEnrollment = $course->studentCourseEnrollments->first(); 
+                                    $isLeader = $myEnrollment ? $myEnrollment->is_class_leader : false;
                                 @endphp
-                                <div class="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm hover:border-blue-200 transition-all relative group">
-                                    <div class="flex justify-between items-start mb-6">
-                                        <div class="max-w-[80%]">
-                                            <h3 class="font-black text-gray-800 leading-tight text-lg">
-                                                {{ $enrollment->courseOffering->course->title_en }}
-                                            </h3>
-                                            <p class="text-[10px] text-blue-500 uppercase font-black tracking-widest mt-1">{{ $enrollment->courseOffering->academic_year }} • ឆមាស {{ $enrollment->courseOffering->semester }}</p>
-                                        </div>
-                                        @if($isLeader)
-                                            <div class="bg-amber-100 text-amber-600 p-2 rounded-xl" title="Class Leader">
-                                                <i class="fas fa-crown"></i>
-                                            </div>
+
+                                <div class="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm hover:border-blue-200 transition-all relative group overflow-hidden">
+                                    
+                                    {{-- 🔥 STATUS BADGE (បង្ហាញនៅជ្រុង) 🔥 --}}
+                                    <div class="absolute top-6 right-6 z-10">
+                                        @if($course->today_status == 'present')
+                                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200 flex items-center gap-1 shadow-sm">
+                                                <i class="fas fa-check-circle"></i> {{ __('វត្តមាន') }}
+                                            </span>
+                                        @elseif($course->today_status == 'absent')
+                                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm">
+                                                {{ __('អវត្តមាន') }}
+                                            </span>
+                                        @elseif($course->today_status == 'late')
+                                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 border border-yellow-200 shadow-sm">
+                                                {{ __('យឺត') }}
+                                            </span>
+                                        @else
+                                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-gray-50 text-gray-400 border border-gray-100">
+                                                {{ __('មិនទាន់កត់ត្រា') }}
+                                            </span>
                                         @endif
                                     </div>
-                                    
-                                    <div class="flex items-center gap-3 mb-8">
-                                        <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-400">
-                                            <i class="fas fa-user-tie"></i>
+
+                                    <div class="flex flex-col justify-between h-full">
+                                        <div class="mb-6 max-w-[70%]">
+                                            <h3 class="font-black text-gray-800 leading-tight text-lg mb-1">
+                                                {{ $course->course->title_en ?? $course->course->name }}
+                                            </h3>
+                                            <p class="text-[10px] text-blue-500 uppercase font-black tracking-widest">
+                                                {{ $course->academic_year }} • ឆមាស {{ $course->semester }}
+                                            </p>
                                         </div>
-                                        <div>
-                                            <p class="text-[10px] text-gray-400 font-bold uppercase">{{ __('សាស្ត្រាចារ្យ') }}</p>
-                                            <p class="text-sm font-bold text-gray-700">{{ $enrollment->courseOffering->lecturer->name }}</p>
+                                        
+                                        <div class="flex items-center gap-3 mb-6">
+                                            <div class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 border border-gray-100">
+                                                <i class="fas fa-user-tie"></i>
+                                            </div>
+                                            <div>
+                                                <p class="text-[10px] text-gray-400 font-bold uppercase">{{ __('សាស្ត្រាចារ្យ') }}</p>
+                                                <p class="text-sm font-bold text-gray-700">{{ $course->lecturer->name }}</p>
+                                            </div>
+                                        </div>
+
+                                        {{-- ប៊ូតុងចូលស្កែន ឬ មើលវត្តមាន --}}
+                                        <div class="flex flex-col gap-2">
+                                            @if($course->today_status == 'present')
+                                                <button disabled class="w-full py-3 rounded-xl font-bold bg-green-50 text-green-600 cursor-default flex items-center justify-center gap-2">
+                                                    <i class="fas fa-check"></i> {{ __('បានស្កែនរួចរាល់') }}
+                                                </button>
+                                            @else
+                                                <a href="{{ route('student.scan') }}" class="w-full py-3 rounded-xl font-bold bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all flex items-center justify-center gap-2">
+                                                    <i class="fas fa-qrcode"></i> {{ __('ស្កែនវត្តមាន') }}
+                                                </a>
+                                            @endif
+
+                                            @if($isLeader)
+                                                <a href="{{ route('student.leader.attendance', $course->id) }}" 
+                                                   class="w-full bg-slate-800 text-white px-4 py-3 rounded-xl text-xs font-bold hover:bg-slate-700 transition-all flex items-center justify-center gap-2">
+                                                    <i class="fas fa-clipboard-check"></i> {{ __('គ្រប់គ្រងវត្តមាន (ប្រធានថ្នាក់)') }}
+                                                </a>
+                                            @endif
                                         </div>
                                     </div>
-
-                                    @if($isLeader)
-                                        <a href="{{ route('student.leader.attendance', $course->id) }}" 
-                                           class="inline-flex items-center justify-center gap-2 w-full bg-slate-900 text-white px-4 py-3 rounded-xl text-xs font-bold hover:bg-blue-600 transition-all shadow-lg shadow-slate-100">
-                                            <i class="fas fa-clipboard-check"></i> {{ __('គ្រប់គ្រងវត្តមាន') }}
-                                        </a>
-                                    @endif
                                 </div>
                             @endforeach
                         </div>
                     </section>
+
+                    {{-- កម្មវិធីសិក្សា (Curriculum) --}}
+                    <section>
+                         <div class="flex items-center gap-3 mb-6">
+                            <div class="h-8 w-1.5 bg-emerald-600 rounded-full"></div>
+                            <h4 class="text-2xl font-black text-gray-800">{{ __('កម្មវិធីសិក្សា') }}</h4>
+                        </div>
+                         @if ($studentProgram)
+                            <div class="bg-gradient-to-r from-emerald-600 to-teal-500 rounded-[2.5rem] p-8 text-white shadow-xl shadow-emerald-100 flex flex-col md:flex-row justify-between items-center gap-6">
+                                <div>
+                                    <p class="text-emerald-100 text-xs font-bold uppercase tracking-[0.2em] mb-2">{{ __('កម្មវិធីសិក្សាបច្ចុប្បន្ន') }}</p>
+                                    <h5 class="text-2xl font-black">{{ $studentProgram->name_km }}</h5>
+                                </div>
+                                <div class="bg-white/20 px-6 py-3 rounded-2xl backdrop-blur-md border border-white/30 text-center">
+                                    <p class="text-xs opacity-90">ជំនាន់</p>
+                                    <p class="text-xl font-black">{{ $user->generation }}</p>
+                                </div>
+                            </div>
+                        @endif
+                    </section>
+
                 </div>
 
-                {{-- ៣. សេចក្តីប្រកាស & ការជូនដំណឹង (Right Side) --}}
+                {{-- ៤. ផ្នែកខាងស្តាំ (Feed & Notifications) --}}
                 <div class="space-y-6">
                     <div class="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm sticky top-8">
                         <div class="flex items-center justify-between mb-8">
@@ -226,63 +273,62 @@
                             <span class="bg-blue-50 text-blue-600 text-[10px] font-black px-2 py-1 rounded-lg">LIVE</span>
                         </div>
 
-<div class="space-y-4">
-    @forelse ($combinedFeed as $item)
-        <div id="{{ $item->type }}-{{ $item->id }}" 
-             class="group relative p-5 rounded-[2rem] border transition-all duration-300 {{ $item->is_read ? 'bg-gray-50/50 border-gray-100 opacity-75' : 'bg-white border-blue-100 shadow-md shadow-blue-50/50' }}">
-            
-            <div class="flex gap-5">
-                {{-- Icon --}}
-                <div class="flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center {{ $item->type === 'announcement' ? 'bg-emerald-100 text-emerald-600' : 'bg-indigo-100 text-indigo-600' }}">
-                    <i class="fas {{ $item->type === 'announcement' ? 'fa-bullhorn' : 'fa-bell' }} text-lg"></i>
-                </div>
+                        <div class="space-y-4">
+                            @forelse ($combinedFeed as $item)
+                                <div id="{{ $item->type }}-{{ $item->id }}" 
+                                     class="group relative p-5 rounded-[2rem] border transition-all duration-300 {{ $item->is_read ? 'bg-gray-50/50 border-gray-100 opacity-75' : 'bg-white border-blue-100 shadow-md shadow-blue-50/50' }}">
+                                    
+                                    <div class="flex gap-5">
+                                        {{-- Icon --}}
+                                        <div class="flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center {{ $item->type === 'announcement' ? 'bg-emerald-100 text-emerald-600' : 'bg-indigo-100 text-indigo-600' }}">
+                                            <i class="fas {{ $item->type === 'announcement' ? 'fa-bullhorn' : 'fa-bell' }} text-lg"></i>
+                                        </div>
 
-                <div class="flex-grow min-w-0">
-                    <div class="flex flex-col mb-2">
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md {{ $item->type === 'announcement' ? 'bg-emerald-50 text-emerald-700' : 'bg-indigo-50 text-indigo-700' }}">
-                                {{ $item->type === 'announcement' ? __('សេចក្តីជូនដំណឹង') : __('ការជូនដំណឹង') }}
-                            </span>
-                            <span class="text-[10px] text-gray-400 font-bold">• {{ $item->created_at->diffForHumans() }}</span>
+                                        <div class="flex-grow min-w-0">
+                                            <div class="flex flex-col mb-2">
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md {{ $item->type === 'announcement' ? 'bg-emerald-50 text-emerald-700' : 'bg-indigo-50 text-indigo-700' }}">
+                                                        {{ $item->type === 'announcement' ? __('សេចក្តីជូនដំណឹង') : __('ការជូនដំណឹង') }}
+                                                    </span>
+                                                    <span class="text-[10px] text-gray-400 font-bold">• {{ $item->created_at->diffForHumans() }}</span>
+                                                </div>
+                                                <h5 class="text-sm font-black text-gray-800 leading-snug">{{ $item->title }}</h5>
+                                            </div>
+
+                                            <p class="text-[12px] text-gray-500 line-clamp-2 leading-relaxed mb-3">{{ $item->content }}</p>
+
+                                            <div class="flex items-center justify-between pt-3 border-t border-gray-50">
+                                                <div class="flex items-center gap-2">
+                                                    <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center">
+                                                        <i class="fas fa-user-tie text-[10px] text-slate-400"></i>
+                                                    </div>
+                                                    <span class="text-[11px] font-extrabold text-slate-600">{{ $item->sender_name }}</span>
+                                                </div>
+
+                                                @if(!$item->is_read)
+                                                    <button onclick="markAsRead('{{ $item->type }}', '{{ $item->id }}')" 
+                                                            class="px-3 py-1 rounded-xl bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-wider hover:bg-blue-600 hover:text-white transition-all">
+                                                        {{ __('អានរួច') }}
+                                                    </button>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="text-center py-6 text-gray-500">
+                                    <svg class="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                    <p>{{ __('មិនមានសេចក្តីប្រកាសថ្មីនៅឡើយទេ។') }}</p>
+                                </div>
+                            @endforelse
                         </div>
-                        <h5 class="text-sm font-black text-gray-800 leading-snug">{{ $item->title }}</h5>
-                    </div>
-
-                    <p class="text-[12px] text-gray-500 line-clamp-2 leading-relaxed mb-3">{{ $item->content }}</p>
-
-                    <div class="flex items-center justify-between pt-3 border-t border-gray-50">
-                        <div class="flex items-center gap-2">
-                            <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center">
-                                <i class="fas fa-user-tie text-[10px] text-slate-400"></i>
-                            </div>
-                            {{-- បង្ហាញឈ្មោះអ្នកបង្ហោះ (គ្រូ ឬ Admin) --}}
-                            <span class="text-[11px] font-extrabold text-slate-600">{{ $item->sender_name }}</span>
-                        </div>
-
-                        @if(!$item->is_read)
-                            <button onclick="markAsRead('{{ $item->type }}', '{{ $item->id }}')" 
-                                    class="px-3 py-1 rounded-xl bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-wider hover:bg-blue-600 hover:text-white transition-all">
-                                {{ __('អានរួច') }}
-                            </button>
-                        @endif
-                    </div>
-                </div>
-            </div>
-        </div>
-    @empty
-                    <div class="text-center py-6 text-gray-500">
-                <svg class="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                <p>{{ __('មិនមានសេចក្តីប្រកាសថ្មីនៅឡើយទេ។') }}</p>
-            </div>
-    @endforelse
-</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Telegram Modal --}}
+    {{-- Telegram Modal (Keep existing) --}}
     <div id="telegramEntryModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-[9999] p-4">
         <div class="bg-white rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl transform transition-all border border-slate-100">
             <div class="flex justify-between items-center mb-8">
@@ -343,50 +389,42 @@
         </div>
     </div>
 
-<script>
-    function markAsRead(itemType, itemId) {
-        const url = (itemType === 'notification')
-            ? `{{ route('student.notifications.read', ['id' => 'TEMP_ID']) }}`.replace('TEMP_ID', itemId)
-            : `{{ route('student.announcements.read', ['id' => 'TEMP_ID']) }}`.replace('TEMP_ID', itemId);
+    <script>
+        function markAsRead(itemType, itemId) {
+            const url = (itemType === 'notification')
+                ? `{{ route('student.notifications.read', ['id' => 'TEMP_ID']) }}`.replace('TEMP_ID', itemId)
+                : `{{ route('student.announcements.read', ['id' => 'TEMP_ID']) }}`.replace('TEMP_ID', itemId);
 
-        fetch(url, {
-            method: 'PATCH',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ id: itemId })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const itemElement = document.getElementById(`${itemType}-${itemId}`);
-                if (itemElement) {
-                    const actionArea = itemElement.querySelector('button');
-                    if(actionArea) {
-                        const newSpan = document.createElement('span');
-                        newSpan.className = "text-[10px] text-green-600 font-black py-1 px-2 rounded-lg bg-green-50 border border-green-100";
-                        newSpan.innerHTML = `{{ __('បានអាន') }}`;
-                        actionArea.replaceWith(newSpan);
+            fetch(url, {
+                method: 'PATCH',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: itemId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const itemElement = document.getElementById(`${itemType}-${itemId}`);
+                    if (itemElement) {
+                        const actionArea = itemElement.querySelector('button');
+                        if(actionArea) {
+                            const newSpan = document.createElement('span');
+                            newSpan.className = "text-[10px] text-green-600 font-black py-1 px-2 rounded-lg bg-green-50 border border-green-100";
+                            newSpan.innerHTML = `{{ __('បានអាន') }}`;
+                            actionArea.replaceWith(newSpan);
+                        }
+                        itemElement.classList.add('opacity-60');
                     }
-                    itemElement.classList.add('opacity-60');
+                } else {
+                    alert('មានបញ្ហាក្នុងការសម្គាល់ជាបានអានហើយ។');
                 }
-            } else {
-                alert('មានបញ្ហាក្នុងការសម្គាល់ជាបានអានហើយ។');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('មានបញ្ហាក្នុងការភ្ជាប់ទៅម៉ាស៊ីនបម្រើ។');
-        });
-    }
-
-    function openTelegramModal() {
-        document.getElementById('telegramEntryModal').classList.remove('hidden');
-    }
-    
-    function closeTelegramModal() {
-        document.getElementById('telegramEntryModal').classList.add('hidden');
-    }
-</script>
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('មានបញ្ហាក្នុងការភ្ជាប់ទៅម៉ាស៊ីនបម្រើ។');
+            });
+        }
+    </script>
 </x-app-layout>

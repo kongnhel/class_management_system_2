@@ -24,37 +24,70 @@
                     @endif
                     {{-- ផ្នែកបង្ហាញមុខវិជ្ជាដែលកំពុងបង្រៀន --}}
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-    {{-- ចំណាំ៖ ប្រើ $courseOfferings ព្រោះ Controller បងផ្ញើឈ្មោះនេះមក --}}
-    {{-- @foreach($courseOfferings as $offering)  --}}
-    @foreach($courseOfferings as $offering)  {{-- ប្រើ $courseOfferings តាម Controller --}}
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all">
+    
+    @foreach($courseOfferings as $offering) 
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all flex flex-col justify-between h-full">
+            
+            {{-- ផ្នែកខាងលើ៖ ឈ្មោះ និង Status --}}
             <div class="flex justify-between items-start mb-4">
                 <div>
-                    <h3 class="font-bold text-lg text-gray-800">
-                        {{ $offering->course->title_en ?? 'N/A' }}
+                    <h3 class="font-bold text-lg text-gray-800 line-clamp-1" title="{{ $offering->course->name }}">
+                        {{ $offering->course->name ?? $offering->course->title_en ?? 'N/A' }}
                     </h3>
-                    <p class="text-sm text-gray-500">
-                        {{ __('ជំនាន់') }}: {{ $offering->generation }} | {{ __('បន្ទប់') }}: {{ $offering->room_number }}
+                    <p class="text-sm text-gray-500 mt-1">
+                        {{ __('ជំនាន់') }}: <span class="font-medium text-gray-700">{{ $offering->generation }}</span> 
+                        <span class="mx-1">|</span> 
+                        {{-- {{ __('បន្ទប់') }}: <span class="font-medium text-gray-700">{{ $offering->room->room_number ?? $offering->room->room_number ?? 'N/A' }}</span> --}}
                     </p>
                 </div>
-                <span class="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-bold rounded-full">
-                    {{ $offering->day_of_week ?? 'Active' }}
-                </span>
+
+                {{-- 🔥 LOGIC ប្តូរ STATUS BADGE 🔥 --}}
+                @if($offering->is_completed_today)
+                    {{-- 🟢 បើស្រង់រួច (Completed) --}}
+                    <span class="shrink-0 inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200 shadow-sm">
+                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        {{ __('រួចរាល់') }}
+                    </span>
+                @else
+                    {{-- 🔵 បើមិនទាន់ស្រង់ (Active) --}}
+                    <span class="shrink-0 inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-600 border border-blue-100">
+                        <span class="relative flex h-2 w-2">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                        </span>
+                        {{ __('Active') }}
+                    </span>
+                @endif
             </div>
             
             {{-- ប៊ូតុងបើក QR Code Modal --}}
             <button onclick="Livewire.dispatch('openAttendanceModal', { courseOfferingId: {{ $offering->id }} })"
-                    class="w-full mt-2 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-200">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                </svg>
-                {{ __('ចាប់ផ្ដើមស្រង់វត្តមាន') }}
+                    class="w-full mt-auto py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform active:scale-95
+                    {{ $offering->is_completed_today 
+                        ? 'bg-white border-2 border-green-500 text-green-600 hover:bg-green-50' /* បើស្រង់រួច ចេញប៊ូតុងស */
+                        : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-blue-200' /* បើមិនទាន់ស្រង់ ចេញប៊ូតុងខៀវ */
+                    }}">
+                
+                @if($offering->is_completed_today)
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    {{ __('មើលវត្តមាន') }}
+                @else
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                    </svg>
+                    {{ __('ចាប់ផ្ដើមស្រង់') }}
+                @endif
             </button>
         </div>
     @endforeach
 </div>
 
-{{-- ដាក់ Livewire Modal នៅខាងក្រោមគេបង្អស់ (ក្រៅ Loop) --}}
+{{-- ដាក់ Livewire Modal នៅខាងក្រោមគេបង្អស់ --}}
 @livewire('teacher.attendance-modal')
 
                     <div id="telegramEntryModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-start justify-center z-[9999] p-4">
@@ -234,7 +267,7 @@
                                     <span class="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-lg">
                                         {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}
                                     </span>
-                                    <span class="text-gray-400 text-xs"><i class="fas fa-door-open mr-1"></i> {{ $schedule->room->name ?? 'Online' }}</span>
+                                    <span class="text-gray-400 text-xs"><i class="fas fa-door-open mr-1"></i> {{ $schedule->room->room_number ?? 'Online' }}</span>
                                 </div>
                                 <h5 class="font-extrabold text-lg text-gray-800 mb-1">{{ $schedule->courseOffering->course->title_km ?? $schedule->courseOffering->course->title_en }}</h5>
                                 <p class="text-xs text-gray-400">បន្ទប់រៀន: {{ $schedule->room->room_number ?? 'N/A' }}</p>

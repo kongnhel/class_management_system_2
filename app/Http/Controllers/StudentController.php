@@ -32,20 +32,196 @@ use Illuminate\Support\Facades\DB; // Make sure DB facade is imported for transa
 
 class StudentController extends Controller
 {
+// public function dashboard()
+// {
+//     $user = Auth::user();
+//     $studentId = $user->id;
+//     $todayName = now()->format('l');
+//     $todayDate = now()->toDateString();
+
+
+
+//     // 1. ទាញយកមុខវិជ្ជាដែលនិស្សិតបានចុះឈ្មោះរួច (Enrolled Courses)
+//     $enrolledCourses = CourseOffering::whereHas('students', function($query) use ($studentId) {
+//         $query->where('student_user_id', $studentId);
+//     })->with(['course', 'lecturer', 'studentCourseEnrollments' => function($query) use ($studentId) {
+//         $query->where('student_user_id', $studentId);
+//     }])
+//     ->withCount('studentCourseEnrollments') 
+//     ->get();
+
+//     // 2. ទាញយកទិន្នន័យ Enrollment លម្អិត (សម្រាប់ Progress ឬ Status)
+//     $enrollments = StudentCourseEnrollment::where('student_user_id', $user->id)
+//                     ->with('courseOffering.course', 'courseOffering.lecturer')
+//                     ->get();
+
+//     // 3. ទាញយកកិច្ចការ ការប្រឡង និង QUIZ ដែលជិតមកដល់
+//     $upcomingAssignments = Assignment::whereHas('courseOffering.studentCourseEnrollments', function ($query) use ($user) {
+//             $query->where('student_user_id', $user->id);
+//         })
+//         ->whereDate('due_date', '>=', now()->toDateString()) 
+//         ->orderBy('due_date', 'asc')
+//         ->take(5) // បន្ថែម Take 5 ដូចមុន
+//         ->get();
+
+//     $upcomingExams = Exam::whereHas('courseOffering.studentCourseEnrollments', function ($query) use ($user) {
+//             $query->where('student_user_id', $user->id);
+//         })
+//         ->whereDate('exam_date', '>=', now()->toDateString()) 
+//         ->orderBy('exam_date', 'asc')
+//         ->take(5)
+//         ->get();
+
+//     $upcomingQuizzes = \App\Models\Quiz::whereHas('courseOffering.studentCourseEnrollments', function ($query) use ($user) {
+//             $query->where('student_user_id', $user->id);
+//         })
+//         ->whereDate('quiz_date', '>=', now()->toDateString()) 
+//         ->orderBy('quiz_date', 'asc')
+//         ->take(5)
+//         ->get();
+
+//     // Schedule ថ្ងៃនេះ (ទាញយក Room និង Lecturer មកជាមួយ)
+//     $upcomingSchedules = Schedule::whereHas('courseOffering.studentCourseEnrollments', function ($query) use ($studentId) {
+//             $query->where('student_user_id', $studentId);
+//         })
+//         ->with(['room', 'courseOffering.course', 'courseOffering.lecturer'])
+//         ->where('day_of_week', $todayName)
+//         ->orderBy('start_time', 'asc')
+//         ->get();
+
+//     // 4. ព័ត៌មានអំពីកម្មវិធីសិក្សា និង មុខវិជ្ជាដែលអាចចុះឈ្មោះបាន
+//     $studentProgram = null;
+//     $studentProgramEnrollment = \App\Models\StudentProgramEnrollment::where('student_user_id', $user->id)
+//         ->where('status', 'active')
+//         ->with('program')
+//         ->first();
+
+//     if ($studentProgramEnrollment) {
+//         $studentProgram = $studentProgramEnrollment->program;
+//     }
+
+//     $availableCoursesInProgram = collect([]);
+//     if ($studentProgram) {
+//         $enrolledCourseOfferingIds = StudentCourseEnrollment::where('student_user_id', $user->id)
+//             ->pluck('course_offering_id');
+
+//         $studentGeneration = $user->generation;
+        
+//         $availableCoursesInProgram = CourseOffering::with(['course', 'lecturer'])
+//             ->withCount('studentCourseEnrollments')
+//             ->whereHas('course', function ($query) use ($studentProgram) {
+//                 $query->where('program_id', $studentProgram->id);
+//             })
+//             ->whereNotIn('id', $enrolledCourseOfferingIds)
+//             ->where('end_date', '>=', now())
+//             ->where('generation', $studentGeneration)
+//             ->get();
+//     }
+
+//     // 5. Statistics
+//     $completedCoursesCount = StudentCourseEnrollment::where('student_user_id', $user->id)
+//         ->where('status', 'completed')
+//         ->count();
+
+//     $totalCoursesInProgram = $studentProgram ? $studentProgram->courses->count() : 0;
+
+//     // 6. Announcements & Notifications (Feed) - រួមបញ្ចូល Logic បកប្រែភាសា និង is_read
+// $allAnnouncements = Announcement::where('target_role', 'all')
+//     ->orWhere('target_role', 'student')
+//     ->with(['poster', 'reads' => function($query) use ($user) {
+//         $query->where('user_id', $user->id);
+//     }])
+//     ->orderBy('created_at', 'desc')
+//     ->get()
+//     ->map(function ($announcement) {
+//         $announcement->type = 'announcement';
+//         $announcement->title = $announcement->title_km ?? $announcement->title_en;
+//         $announcement->content = $announcement->content_km ?? $announcement->content_en;
+//         $announcement->is_read = $announcement->reads->isNotEmpty();
+        
+//         // ទាញយកឈ្មោះអ្នកបង្ហោះចេញពី Relationship 'poster'
+//         $announcement->sender_name = $announcement->poster->name ?? __('រដ្ឋបាលសាលា');
+//         return $announcement;
+//     });
+
+//     // $allNotifications = $user->notifications->map(function ($notification) {
+//     //     $notification->type = 'notification';
+//     //     $notification->title = $notification->data['title'] ?? 'ការជូនដំណឹងថ្មី';
+//     //     $notification->content = $notification->data['message'] ?? 'អ្នកមានការជូនដំណឹងថ្មី។';
+//     //     $notification->is_read = $notification->read_at !== null;
+//     //     return $notification;
+//     // });
+//     $allNotifications = $user->notifications->map(function ($notification) {
+//     $notification->type = 'notification';
+    
+//     // ទាញយកទិន្នន័យពី JSON field 'data'
+//     $data = $notification->data; 
+    
+//     $notification->title = $data['title'] ?? 'ការជូនដំណឹងថ្មី';
+//     $notification->content = $data['message'] ?? 'អ្នកមានការជូនដំណឹងថ្មី។';
+    
+//     // --- ចំណុចសំខាន់៖ បន្ថែមឈ្មោះគ្រូបង្រៀន ---
+//     $notification->sender_name = $data['from_user_name'] ?? 'ប្រព័ន្ធ';
+    
+//     $notification->is_read = $notification->read_at !== null;
+//     return $notification;
+// });
+
+//     $combinedFeed = $allAnnouncements->merge($allNotifications)->sortByDesc('created_at');
+
+//     // 7. បញ្ជូនទិន្នន័យទៅ View
+//     return view('student.dashboard', compact(
+//         'user',
+//         'enrolledCourses',
+//         'enrollments',
+//         'upcomingAssignments',
+//         'upcomingExams',
+//         'upcomingQuizzes',
+//         'upcomingSchedules',
+//         'studentProgram',
+//         'availableCoursesInProgram',
+//         'completedCoursesCount',
+//         'totalCoursesInProgram',
+//         'combinedFeed',
+//         'todayName'
+//     ));
+// }
+
 public function dashboard()
 {
     $user = Auth::user();
     $studentId = $user->id;
     $todayName = now()->format('l');
+    $todayDate = now()->toDateString();
 
-    // 1. ទាញយកមុខវិជ្ជាដែលនិស្សិតបានចុះឈ្មោះរួច (Enrolled Courses)
+    // --- 0. ស្ថិតិវត្តមាន (Attendance Stats) ---
+    // (សម្រាប់បង្ហាញលើកាតខាងលើ៖ វត្តមាន, អវត្តមាន, ច្បាប់)
+    $totalPresent = \App\Models\AttendanceRecord::where('student_user_id', $studentId)->where('status', 'present')->count();
+    $totalAbsent = \App\Models\AttendanceRecord::where('student_user_id', $studentId)->where('status', 'absent')->count();
+    $totalPermission = \App\Models\AttendanceRecord::where('student_user_id', $studentId)->where('status', 'permission')->count();
+    $totalLate = \App\Models\AttendanceRecord::where('student_user_id', $studentId)->where('status', 'late')->count();
+
+
+    // --- 1. ទាញយកមុខវិជ្ជា + ឆែកស្ថានភាពវត្តមានថ្ងៃនេះ (UPDATED) ---
     $enrolledCourses = CourseOffering::whereHas('students', function($query) use ($studentId) {
         $query->where('student_user_id', $studentId);
     })->with(['course', 'lecturer', 'studentCourseEnrollments' => function($query) use ($studentId) {
         $query->where('student_user_id', $studentId);
     }])
     ->withCount('studentCourseEnrollments') 
-    ->get();
+    ->get()
+    // 👉 កែសម្រួល៖ ឆែកមើលថាថ្ងៃនេះបានស្កែនឬនៅ? ដើម្បីបង្ហាញ Badge
+    ->map(function ($offering) use ($studentId, $todayDate) {
+        $record = \App\Models\AttendanceRecord::where('student_user_id', $studentId)
+                    ->where('course_offering_id', $offering->id)
+                    ->where('date', $todayDate)
+                    ->first();
+
+        // ដាក់ status (present, absent, etc.) ចូលក្នុង object
+        $offering->today_status = $record ? $record->status : null;
+        return $offering;
+    });
+
 
     // 2. ទាញយកទិន្នន័យ Enrollment លម្អិត (សម្រាប់ Progress ឬ Status)
     $enrollments = StudentCourseEnrollment::where('student_user_id', $user->id)
@@ -56,15 +232,15 @@ public function dashboard()
     $upcomingAssignments = Assignment::whereHas('courseOffering.studentCourseEnrollments', function ($query) use ($user) {
             $query->where('student_user_id', $user->id);
         })
-        ->whereDate('due_date', '>=', now()->toDateString()) 
+        ->whereDate('due_date', '>=', $todayDate) 
         ->orderBy('due_date', 'asc')
-        ->take(5) // បន្ថែម Take 5 ដូចមុន
+        ->take(5)
         ->get();
 
     $upcomingExams = Exam::whereHas('courseOffering.studentCourseEnrollments', function ($query) use ($user) {
             $query->where('student_user_id', $user->id);
         })
-        ->whereDate('exam_date', '>=', now()->toDateString()) 
+        ->whereDate('exam_date', '>=', $todayDate) 
         ->orderBy('exam_date', 'asc')
         ->take(5)
         ->get();
@@ -72,7 +248,7 @@ public function dashboard()
     $upcomingQuizzes = \App\Models\Quiz::whereHas('courseOffering.studentCourseEnrollments', function ($query) use ($user) {
             $query->where('student_user_id', $user->id);
         })
-        ->whereDate('quiz_date', '>=', now()->toDateString()) 
+        ->whereDate('quiz_date', '>=', $todayDate) 
         ->orderBy('quiz_date', 'asc')
         ->take(5)
         ->get();
@@ -122,53 +298,45 @@ public function dashboard()
 
     $totalCoursesInProgram = $studentProgram ? $studentProgram->courses->count() : 0;
 
-    // 6. Announcements & Notifications (Feed) - រួមបញ្ចូល Logic បកប្រែភាសា និង is_read
-$allAnnouncements = Announcement::where('target_role', 'all')
-    ->orWhere('target_role', 'student')
-    ->with(['poster', 'reads' => function($query) use ($user) {
-        $query->where('user_id', $user->id);
-    }])
-    ->orderBy('created_at', 'desc')
-    ->get()
-    ->map(function ($announcement) {
-        $announcement->type = 'announcement';
-        $announcement->title = $announcement->title_km ?? $announcement->title_en;
-        $announcement->content = $announcement->content_km ?? $announcement->content_en;
-        $announcement->is_read = $announcement->reads->isNotEmpty();
-        
-        // ទាញយកឈ្មោះអ្នកបង្ហោះចេញពី Relationship 'poster'
-        $announcement->sender_name = $announcement->poster->name ?? __('រដ្ឋបាលសាលា');
-        return $announcement;
-    });
+    // 6. Announcements & Notifications (Feed)
+    $allAnnouncements = Announcement::where('target_role', 'all')
+        ->orWhere('target_role', 'student')
+        ->with(['poster', 'reads' => function($query) use ($user) {
+            $query->where('user_id', $user->id);
+        }])
+        ->orderBy('created_at', 'desc')
+        ->get()
+        ->map(function ($announcement) {
+            $announcement->type = 'announcement';
+            $announcement->title = $announcement->title_km ?? $announcement->title_en;
+            $announcement->content = $announcement->content_km ?? $announcement->content_en;
+            $announcement->is_read = $announcement->reads->isNotEmpty();
+            $announcement->sender_name = $announcement->poster->name ?? __('រដ្ឋបាលសាលា');
+            return $announcement;
+        });
 
-    // $allNotifications = $user->notifications->map(function ($notification) {
-    //     $notification->type = 'notification';
-    //     $notification->title = $notification->data['title'] ?? 'ការជូនដំណឹងថ្មី';
-    //     $notification->content = $notification->data['message'] ?? 'អ្នកមានការជូនដំណឹងថ្មី។';
-    //     $notification->is_read = $notification->read_at !== null;
-    //     return $notification;
-    // });
     $allNotifications = $user->notifications->map(function ($notification) {
-    $notification->type = 'notification';
-    
-    // ទាញយកទិន្នន័យពី JSON field 'data'
-    $data = $notification->data; 
-    
-    $notification->title = $data['title'] ?? 'ការជូនដំណឹងថ្មី';
-    $notification->content = $data['message'] ?? 'អ្នកមានការជូនដំណឹងថ្មី។';
-    
-    // --- ចំណុចសំខាន់៖ បន្ថែមឈ្មោះគ្រូបង្រៀន ---
-    $notification->sender_name = $data['from_user_name'] ?? 'ប្រព័ន្ធ';
-    
-    $notification->is_read = $notification->read_at !== null;
-    return $notification;
-});
+        $notification->type = 'notification';
+        $data = $notification->data; 
+        
+        $notification->title = $data['title'] ?? 'ការជូនដំណឹងថ្មី';
+        $notification->content = $data['message'] ?? 'អ្នកមានការជូនដំណឹងថ្មី។';
+        $notification->sender_name = $data['from_user_name'] ?? 'ប្រព័ន្ធ';
+        $notification->is_read = $notification->read_at !== null;
+        return $notification;
+    });
 
     $combinedFeed = $allAnnouncements->merge($allNotifications)->sortByDesc('created_at');
 
     // 7. បញ្ជូនទិន្នន័យទៅ View
     return view('student.dashboard', compact(
         'user',
+        // Attendance Stats
+        'totalPresent',
+        'totalAbsent',
+        'totalPermission',
+        'totalLate',
+        // Courses with Status
         'enrolledCourses',
         'enrollments',
         'upcomingAssignments',
@@ -183,10 +351,6 @@ $allAnnouncements = Announcement::where('target_role', 'all')
         'todayName'
     ));
 }
-
-// profile
-
-// course_title_km
     /**
      * បង្ហាញផ្ទាំងគ្រប់គ្រងសម្រាប់សិស្ស។
      * Display the dashboard for the student.
