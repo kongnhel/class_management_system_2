@@ -14,7 +14,7 @@
         </style>
 
         {{-- 1. ផ្ទៃខាងក្រោយ (Main Backdrop) --}}
-        <div class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/80 backdrop-blur-md transition-opacity duration-300">
+        <div class="fixed inset-0 z-[60] flex justify-center bg-slate-900/80 backdrop-blur-md transition-opacity duration-300">
             
             {{-- 2. ប្រអប់ Modal ធំ (Main Container) --}}
             <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-6xl mx-4 flex flex-col md:flex-row h-[85vh] overflow-hidden relative border border-white/20"
