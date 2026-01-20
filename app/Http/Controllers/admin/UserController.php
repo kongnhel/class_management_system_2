@@ -448,35 +448,71 @@ $messages = [
     /**
      * Remove the specified user from storage.
      */
-    public function deleteUser(User $user)
-{
-    $hasOfferings = \App\Models\CourseOffering::where('lecturer_user_id', $user->id)->exists();
-    $hasEnrollments = \App\Models\StudentCourseEnrollment::where('student_user_id', $user->id)->exists();
-    if ($hasOfferings || $hasEnrollments) {
-        return redirect()->route('admin.manage-users')
-            ->with('error', 'មិនអាចលុបអ្នកប្រើប្រាស់នេះបានទេ ពីព្រោះមានទំនាក់ទំនងជាមួយកំណត់ត្រាផ្សេងទៀត។( កំពុងមានថ្នាក់រៀនសម្រាប់បង្រៀន​ )');
-    }
-    // Load profile ទាំងពីរប្រភេទដើម្បីធានាថាមានទិន្នន័យសម្រាប់លុប
-    $user->load('profile', 'studentProfile');
+//     public function deleteUser(User $user)
+// {
+//     $hasOfferings = \App\Models\CourseOffering::where('lecturer_user_id', $user->id)->exists();
+//     $hasEnrollments = \App\Models\StudentCourseEnrollment::where('student_user_id', $user->id)->exists();
+//     if ($hasOfferings || $hasEnrollments) {
+//         return redirect()->route('admin.manage-users')
+//             ->with('error', 'មិនអាចលុបអ្នកប្រើប្រាស់នេះបានទេ ពីព្រោះមានទំនាក់ទំនងជាមួយកំណត់ត្រាផ្សេងទៀត។( កំពុងមានថ្នាក់រៀនសម្រាប់បង្រៀន​ )');
+//     }
+//     // Load profile ទាំងពីរប្រភេទដើម្បីធានាថាមានទិន្នន័យសម្រាប់លុប
+//     $user->load('profile', 'studentProfile');
 
-    // ១. លុប Staff Profile ប្រសិនបើមាន (Admin ឬ Professor)
-    if ($user->profile) {
-        // ចំណាំ៖ ImgBB មិនអនុញ្ញាតឱ្យលុបរូបភាពតាម API កម្រិតឥតគិតថ្លៃទេ 
-        // ដូច្នេះយើងគ្រាន់តែលុបទិន្នន័យ Profile ចេញពី Database ជាការស្រេច
-        $user->profile->delete();
-    }
+//     // ១. លុប Staff Profile ប្រសិនបើមាន (Admin ឬ Professor)
+//     if ($user->profile) {
+//         // ចំណាំ៖ ImgBB មិនអនុញ្ញាតឱ្យលុបរូបភាពតាម API កម្រិតឥតគិតថ្លៃទេ 
+//         // ដូច្នេះយើងគ្រាន់តែលុបទិន្នន័យ Profile ចេញពី Database ជាការស្រេច
+//         $user->profile->delete();
+//     }
 
-    // ២. លុប Student Profile ប្រសិនបើមាន
-    if ($user->studentProfile) {
-        $user->studentProfile->delete();
-    }
+//     // ២. លុប Student Profile ប្រសិនបើមាន
+//     if ($user->studentProfile) {
+//         $user->studentProfile->delete();
+//     }
 
-    // ៣. ជាចុងក្រោយ លុបគណនីអ្នកប្រើប្រាស់ (User Account)
-    $user->delete();
+//     // ៣. ជាចុងក្រោយ លុបគណនីអ្នកប្រើប្រាស់ (User Account)
+//     $user->delete();
 
-    return redirect()->route('admin.manage-users')
-        ->with('success', 'អ្នកប្រើប្រាស់ត្រូវបានលុបចេញពីប្រព័ន្ធដោយជោគជ័យ។');
-}
+//     return redirect()->route('admin.manage-users')
+//         ->with('success', 'អ្នកប្រើប្រាស់ត្រូវបានលុបចេញពីប្រព័ន្ធដោយជោគជ័យ។');
+// }
 
     
+// }
+
+public function deleteUser(User $user)
+{
+    try {
+        \DB::transaction(function () use ($user) {
+            // 1. Remove Course Offerings where this user is the lecturer
+            // Note: You might want to reassign these instead of deleting them.
+            \App\Models\CourseOffering::where('lecturer_user_id', $user->id)->delete();
+
+            // 2. Remove Student Enrollments
+            \App\Models\StudentCourseEnrollment::where('student_user_id', $user->id)->delete();
+
+            // 3. Load and delete profiles
+            $user->load(['profile', 'studentProfile']);
+
+            if ($user->profile) {
+                $user->profile->delete();
+            }
+
+            if ($user->studentProfile) {
+                $user->studentProfile->delete();
+            }
+
+            // 4. Finally, delete the User account
+            $user->delete();
+        });
+
+        return redirect()->route('admin.manage-users')
+            ->with('success', 'អ្នកប្រើប្រាស់ និងទិន្នន័យពាក់ព័ន្ធត្រូវបានលុបដោយជោគជ័យ។');
+
+    } catch (\Exception $e) {
+        return redirect()->route('admin.manage-users')
+            ->with('error', 'មានបញ្ហាបច្ចេកទេស៖ ' . $e->getMessage());
+    }
+}
 }
