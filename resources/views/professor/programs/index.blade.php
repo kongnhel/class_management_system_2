@@ -7,6 +7,7 @@
     </x-slot>
 
     <div class="py-12 bg-gray-100 min-h-screen">
+        
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-2xl sm:rounded-3xl p-8 lg:p-12 border border-gray-200 transition-all duration-300 transform hover:shadow-3xl">
 

@@ -14,7 +14,13 @@
                     <h3 class="text-xl md:text-3xl font-extrabold text-green-700">{{ __('កែប្រែព័ត៌មានផ្ទាល់ខ្លួន') }}</h3>
                     <p class="text-xs md:text-sm text-gray-500 mt-1 italic">{{ __('សូមបំពេញព័ត៌មានខាងក្រោមឱ្យបានត្រឹមត្រូវ') }}</p>
                 </div>
-
+            {{-- Alerts --}}
+         @if (session('success'))
+                    <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-3 md:p-5 rounded-xl mb-6 shadow-sm flex items-center animate-bounce" role="alert">
+                        <i class="fas fa-check-circle mr-3 text-green-500 text-xl"></i>
+                        <span class="font-bold text-sm md:text-lg">{{ session('success') }}</span>
+                    </div>
+                @endif
                 {{-- Display Global Errors --}}
                 @if ($errors->any())
                     <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-xl shadow-sm">

@@ -20,30 +20,81 @@
                     </div>
                 </div>
 
-    
-   {{-- Success/Error Messages (Existing) --}}
-                @if (session('success'))
-                    <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded-xl mx-6 mt-6 mb-0" role="alert">
-                        <div class="flex items-center">
-                            <svg class="h-6 w-6 text-green-500 mr-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                            </svg>
-                            <p class="font-semibold">{{ __('ជោគជ័យ!') }}</p>
-                            <p class="ml-auto">{{ session('success') }}</p>
-                        </div>
+{{-- Modern Floating Toast --}}
+@if (session('success') || session('error'))
+<div 
+    x-data="{ 
+        show: false, 
+        progress: 100,
+        startTimer() {
+            this.show = true;
+            let interval = setInterval(() => {
+                this.progress -= 1;
+                if (this.progress <= 0) {
+                    this.show = false;
+                    clearInterval(interval);
+                }
+            }, 50); // 5 seconds total (50ms * 100)
+        }
+    }" 
+    x-init="startTimer()"
+    x-show="show" 
+    x-transition:enter="transition ease-out duration-500"
+    x-transition:enter-start="translate-y-12 opacity-0 sm:translate-y-0 sm:translate-x-12"
+    x-transition:enter-end="translate-y-0 opacity-100 sm:translate-x-0"
+    x-transition:leave="transition ease-in duration-300"
+    x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0"
+    class="fixed top-6 right-6 z-[9999] w-full max-w-sm"
+>
+    <div class="relative overflow-hidden bg-white/80 backdrop-blur-xl border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-2xl p-4 ring-1 ring-black/5">
+        <div class="flex items-start gap-4">
+            
+            {{-- Modern Icon Logic --}}
+            <div class="flex-shrink-0">
+                @if(session('success'))
+                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-500/10 text-green-600">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                @else
+                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-red-600">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
                     </div>
                 @endif
-                @if (session('error'))
-                    <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-xl mx-6 mt-6 mb-0" role="alert">
-                        <div class="flex items-center">
-                            <svg class="h-6 w-6 text-red-500 mr-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                            </svg>
-                            <p class="font-semibold">{{ __('បរាជ័យ!') }}</p>
-                            <p class="ml-auto">{{ session('error') }}</p>
-                        </div>
-                    </div>
-                @endif
+            </div>
+
+            {{-- Text Content --}}
+            <div class="flex-1 pt-0.5">
+                <p class="text-sm font-bold text-gray-900 leading-tight">
+                    {{ session('success') ? __('ជោគជ័យ!') : __('បរាជ័យ!') }}
+                </p>
+                <p class="mt-1 text-sm text-gray-600 leading-relaxed">
+                    {{ session('success') ?? session('error') }}
+                </p>
+            </div>
+
+            {{-- Manual Close --}}
+            <button @click="show = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        {{-- Progress Bar (The "Modern" Touch) --}}
+        <div class="absolute bottom-0 left-0 h-1 bg-gray-100 w-full">
+            <div 
+                class="h-full transition-all duration-75 ease-linear {{ session('success') ? 'bg-green-500' : 'bg-red-500' }}"
+                :style="`width: ${progress}%`"
+            ></div>
+        </div>
+    </div>
+</div>
+@endif
                 
          <div class="relative shadow-xl sm:rounded-2xl transition-all duration-300 border border-gray-100">
     

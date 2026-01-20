@@ -28,17 +28,13 @@
                 </a>
             </div>
 
-            {{-- Session Messages --}}
-            @if(session('success'))
-                <div class="mb-6 flex items-center p-3 md:p-4 text-emerald-800 bg-emerald-50 rounded-2xl border border-emerald-100 shadow-sm">
-                    <div class="p-1.5 bg-emerald-500 rounded-lg mr-3">
-                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
+            {{-- Alerts --}}
+         @if (session('success'))
+                    <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-3 md:p-5 rounded-xl mb-6 shadow-sm flex items-center animate-bounce" role="alert">
+                        <i class="fas fa-check-circle mr-3 text-green-500 text-xl"></i>
+                        <span class="font-bold text-sm md:text-lg">{{ session('success') }}</span>
                     </div>
-                    <span class="text-xs md:text-sm font-bold">{{ session('success') }}</span>
-                </div>
-            @endif
+                @endif
 
             <form action="{{ route('student.leader.attendance.store', $courseOffering->id) }}" method="POST">
                 @csrf

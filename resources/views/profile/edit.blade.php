@@ -9,6 +9,13 @@
 
     <div class="py-12 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
         <div class="max-w-5xl mx-auto px-6 lg:px-8 space-y-10">
+                        {{-- Alerts --}}
+         @if (session('success'))
+                    <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-3 md:p-5 rounded-xl mb-6 shadow-sm flex items-center animate-bounce" role="alert">
+                        <i class="fas fa-check-circle mr-3 text-green-500 text-xl"></i>
+                        <span class="font-bold text-sm md:text-lg">{{ session('success') }}</span>
+                    </div>
+                @endif
 
             {{-- ១. ផ្នែកប្តូររូបភាព Profile (PROFILE PICTURE CARD) --}}
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-10">

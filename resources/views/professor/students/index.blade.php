@@ -41,14 +41,12 @@
             </div>
 
             {{-- Alerts --}}
-            @if (session('success') || session('error'))
-                <div class="mb-5 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div class="{{ session('success') ? 'bg-emerald-500 shadow-emerald-100' : 'bg-red-500 shadow-red-100' }} text-white p-3.5 rounded-xl shadow-xl font-bold text-[11px] md:text-sm flex items-center gap-2.5">
-                        <i class="fas {{ session('success') ? 'fa-check-circle' : 'fa-exclamation-circle' }}"></i>
-                        {{ session('success') ?? session('error') }}
+         @if (session('success'))
+                    <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-3 md:p-5 rounded-xl mb-6 shadow-sm flex items-center animate-bounce" role="alert">
+                        <i class="fas fa-check-circle mr-3 text-green-500 text-xl"></i>
+                        <span class="font-bold text-sm md:text-lg">{{ session('success') }}</span>
                     </div>
-                </div>
-            @endif
+                @endif
 
             {{-- Quick Stats --}}
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 no-print">

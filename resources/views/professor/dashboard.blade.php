@@ -9,6 +9,13 @@
     <div class="bg-gray-50 min-h-screen font-['Battambang']">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             
+                        {{-- Alerts --}}
+         @if (session('success'))
+                    <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-3 md:p-5 rounded-xl mb-6 shadow-sm flex items-center animate-bounce" role="alert">
+                        <i class="fas fa-check-circle mr-3 text-green-500 text-xl"></i>
+                        <span class="font-bold text-sm md:text-lg">{{ session('success') }}</span>
+                    </div>
+                @endif
             {{-- Header Section (Telegram & Welcome) --}}
             <div class="mb-10">
                 <div class="bg-white overflow-hidden shadow-xl rounded-[2rem] p-8 border border-gray-100 flex flex-col lg:flex-row items-center justify-between gap-6 transition-transform duration-500 hover:scale-[1.005]">

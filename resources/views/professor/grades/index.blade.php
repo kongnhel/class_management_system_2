@@ -84,15 +84,11 @@
         <div class="max-w-[98%] mx-auto px-4 sm:px-6 lg:px-8">
             
             {{-- Alert Messages --}}
-            @if(session('success'))
-                <div class="mb-6 flex items-center p-4 text-emerald-800 bg-emerald-50 rounded-2xl border border-emerald-100 shadow-sm animate-fade-in-down">
-                    <div class="p-2 bg-emerald-500 rounded-lg mr-3 shadow-sm shadow-emerald-200">
-                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
+         @if (session('success'))
+                    <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-3 md:p-5 rounded-xl mb-6 shadow-sm flex items-center animate-bounce" role="alert">
+                        <i class="fas fa-check-circle mr-3 text-green-500 text-xl"></i>
+                        <span class="font-bold text-sm md:text-lg">{{ session('success') }}</span>
                     </div>
-                    <span class="text-sm font-bold">{{ session('success') }}</span>
-                </div>
             @elseif(session('error'))
                 <div class="mb-6 flex items-center p-4 text-rose-800 bg-rose-50 rounded-2xl border border-rose-100 shadow-sm animate-fade-in-down">
                     <div class="p-2 bg-rose-500 rounded-lg mr-3">
