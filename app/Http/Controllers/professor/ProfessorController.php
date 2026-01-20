@@ -238,38 +238,156 @@ class ProfessorController extends Controller
 //     ));
 // }
 
+// public function dashboard()
+// {
+//     $user = Auth::user();
+//     $todayName = now()->format('l'); // e.g., "Monday"
+//     $todayDate = now()->toDateString(); 
+
+//     $unreadNotificationsCount = $user->unreadNotifications()->count();
+
+//     // ១. ទាញយកព័ត៌មានសាស្ត្រាចារ្យ និងដេប៉ាតឺម៉ង់
+//     $professor = User::where('id', $user->id)
+//         ->with('department')
+//         ->first();
+
+//     // ២. ទាញយក Course Offerings & ឆែកស្ថានភាពវត្តមានថ្ងៃនេះ
+// // នៅក្នុង ProfessorDashboardController.php
+// // $courseOfferings = CourseOffering::where('lecturer_user_id', $user->id)
+// //     ->with(['course.program']) // ✅ បន្ថែមការ load program ពីក្នុង course
+// //     ->get()
+// //     ->map(function ($offering) use ($todayDate) {
+// //         $hasRecord = \App\Models\AttendanceRecord::where('course_offering_id', $offering->id)
+// //                         ->where('date', $todayDate)
+// //                         ->exists();
+// //         $offering->is_completed_today = $hasRecord;
+// //         return $offering;
+// //     });
+// $todayOfferingIds = \App\Models\Schedule::where('day_of_week', $todayName)
+//         ->pluck('course_offering_id');
+
+//     $courseOfferings = CourseOffering::where('lecturer_user_id', $user->id)
+//         ->whereIn('id', $todayOfferingIds) // ✅ Filter យកតែថ្ងៃនេះ
+//         ->with(['course.program', 'room']) // Load ជាមួយ Room និង Program
+//         ->get()
+//         ->map(function ($offering) use ($todayDate) {
+//             // ឆែកមើលថាបានស្រង់វត្តមានរួចឬនៅ?
+//             $hasRecord = \App\Models\AttendanceRecord::where('course_offering_id', $offering->id)
+//                             ->where('date', $todayDate)
+//                             ->exists();
+//             $offering->is_completed_today = $hasRecord;
+            
+//             // ទាញយកម៉ោងចាប់ផ្តើម និងបញ្ចប់មកបង្ហាញលើកាត
+//             $schedule = \App\Models\Schedule::where('course_offering_id', $offering->id)
+//                             ->where('day_of_week', now()->format('l'))
+//                             ->first();
+//             $offering->time_slot = $schedule ? 
+//                 $schedule->start_time->format('H:i') . ' - ' . $schedule->end_time->format('H:i') : 'N/A';
+            
+//             return $offering;
+//         });
+//     // ៣. រាប់ចំនួនសិស្សសរុប (Unique Students)
+//     $totalStudents = \App\Models\StudentCourseEnrollment::whereHas('courseOffering', function ($q) use ($user) {
+//         $q->where('lecturer_user_id', $user->id);
+//     })->distinct('student_user_id')->count('student_user_id');
+
+//     // ៤. ទាញយកកិច្ចការ ការប្រឡង និង Quiz
+//     $upcomingAssignments = Assignment::whereHas('courseOffering', function ($query) use ($user) {
+//             $query->where('lecturer_user_id', $user->id);
+//         })
+//         ->whereDate('due_date', '>=', $todayDate)
+//         ->orderBy('due_date')
+//         ->take(5)
+//         ->get();
+
+//     $upcomingExams = Exam::whereHas('courseOffering', function ($query) use ($user) {
+//             $query->where('lecturer_user_id', $user->id);
+//         })
+//         ->whereDate('exam_date', '>=', $todayDate)
+//         ->orderBy('exam_date')
+//         ->take(5)
+//         ->get();
+
+//     $upcomingQuizzes = Quiz::whereHas('courseOffering', function ($query) use ($user) {
+//             $query->where('lecturer_user_id', $user->id);
+//         })
+//         ->whereDate('quiz_date', '>=', $todayDate) 
+//         ->orderBy('quiz_date', 'asc')
+//         ->take(5)
+//         ->get();
+
+//     // ៥. សេចក្តីជូនដំណឹង
+//     $announcements = Announcement::where('target_role', 'all')
+//         ->orWhere('target_role', 'professor')
+//         ->orderBy('created_at', 'desc')
+//         ->take(5) 
+//         ->get();
+
+//     // ៦. កាលវិភាគថ្ងៃនេះ
+//     $todaySchedules = Schedule::whereHas('courseOffering', function ($query) use ($user) {
+//             $query->where('lecturer_user_id', $user->id);
+//         })
+//         ->where('day_of_week', $todayName)
+//         ->with(['courseOffering.course', 'room'])
+//         ->orderBy('start_time')
+//         ->get();
+
+//     return view('professor.dashboard', compact(
+//         'user',
+//         'professor',
+//         'courseOfferings',
+//         'totalStudents',
+//         'upcomingAssignments',
+//         'upcomingExams',
+//         'upcomingQuizzes',
+//         'announcements',
+//         'unreadNotificationsCount',
+//         'todaySchedules',
+//     ));
+// }
+
 public function dashboard()
 {
-    $user = Auth::user();
-    $today = now()->format('l'); // e.g., "Monday"
+    $user = \Illuminate\Support\Facades\Auth::user();
+    $todayName = now()->format('l'); // e.g., "Monday"
     $todayDate = now()->toDateString(); 
 
     $unreadNotificationsCount = $user->unreadNotifications()->count();
 
-    // ១. ទាញយកព័ត៌មានសាស្ត្រាចារ្យ និងដេប៉ាតឺម៉ង់
-    $professor = User::where('id', $user->id)
+    // 1. Get Professor Info with Department
+    $professor = \App\Models\User::where('id', $user->id)
         ->with('department')
         ->first();
 
-    // ២. ទាញយក Course Offerings & ឆែកស្ថានភាពវត្តមានថ្ងៃនេះ
-// នៅក្នុង ProfessorDashboardController.php
-$courseOfferings = CourseOffering::where('lecturer_user_id', $user->id)
-    ->with(['course.program']) // ✅ បន្ថែមការ load program ពីក្នុង course
-    ->get()
-    ->map(function ($offering) use ($todayDate) {
-        $hasRecord = \App\Models\AttendanceRecord::where('course_offering_id', $offering->id)
-                        ->where('date', $todayDate)
-                        ->exists();
-        $offering->is_completed_today = $hasRecord;
-        return $offering;
-    });
-    // ៣. រាប់ចំនួនសិស្សសរុប (Unique Students)
+    // 2. Get Today's SCHEDULES (Sessions) 
+    // Instead of looping through CourseOfferings directly, we loop through Schedule
+    // This allows showing multiple sessions of the same course correctly.
+    $todaySchedules = \App\Models\Schedule::whereHas('courseOffering', function ($query) use ($user) {
+            $query->where('lecturer_user_id', $user->id);
+        })
+        ->where('day_of_week', $todayName)
+        ->with(['courseOffering.course.program', 'room']) // Load relations
+        ->orderBy('start_time', 'asc')
+        ->get()
+        ->map(function ($schedule) use ($todayDate) {
+            // Check if attendance has been taken for this Course Offering TODAY
+            // Note: If you want to track attendance per SESSION, you need a 'schedule_id' or 'time_slot' column in AttendanceRecord.
+            // For now, we check by 'course_offering_id' and 'date'.
+            $hasRecord = \App\Models\AttendanceRecord::where('course_offering_id', $schedule->course_offering_id)
+                            ->where('date', $todayDate)
+                            ->exists();
+            
+            $schedule->is_completed_today = $hasRecord;
+            return $schedule;
+        });
+
+    // 3. Count Total Unique Students (for all courses taught by this professor)
     $totalStudents = \App\Models\StudentCourseEnrollment::whereHas('courseOffering', function ($q) use ($user) {
         $q->where('lecturer_user_id', $user->id);
     })->distinct('student_user_id')->count('student_user_id');
 
-    // ៤. ទាញយកកិច្ចការ ការប្រឡង និង Quiz
-    $upcomingAssignments = Assignment::whereHas('courseOffering', function ($query) use ($user) {
+    // 4. Upcoming Assignments
+    $upcomingAssignments = \App\Models\Assignment::whereHas('courseOffering', function ($query) use ($user) {
             $query->where('lecturer_user_id', $user->id);
         })
         ->whereDate('due_date', '>=', $todayDate)
@@ -277,7 +395,8 @@ $courseOfferings = CourseOffering::where('lecturer_user_id', $user->id)
         ->take(5)
         ->get();
 
-    $upcomingExams = Exam::whereHas('courseOffering', function ($query) use ($user) {
+    // 5. Upcoming Exams
+    $upcomingExams = \App\Models\Exam::whereHas('courseOffering', function ($query) use ($user) {
             $query->where('lecturer_user_id', $user->id);
         })
         ->whereDate('exam_date', '>=', $todayDate)
@@ -285,7 +404,8 @@ $courseOfferings = CourseOffering::where('lecturer_user_id', $user->id)
         ->take(5)
         ->get();
 
-    $upcomingQuizzes = Quiz::whereHas('courseOffering', function ($query) use ($user) {
+    // 6. Upcoming Quizzes
+    $upcomingQuizzes = \App\Models\Quiz::whereHas('courseOffering', function ($query) use ($user) {
             $query->where('lecturer_user_id', $user->id);
         })
         ->whereDate('quiz_date', '>=', $todayDate) 
@@ -293,33 +413,27 @@ $courseOfferings = CourseOffering::where('lecturer_user_id', $user->id)
         ->take(5)
         ->get();
 
-    // ៥. សេចក្តីជូនដំណឹង
-    $announcements = Announcement::where('target_role', 'all')
+    // 7. Announcements
+    $announcements = \App\Models\Announcement::where('target_role', 'all')
         ->orWhere('target_role', 'professor')
         ->orderBy('created_at', 'desc')
         ->take(5) 
         ->get();
 
-    // ៦. កាលវិភាគថ្ងៃនេះ
-    $todaySchedules = Schedule::whereHas('courseOffering', function ($query) use ($user) {
-            $query->where('lecturer_user_id', $user->id);
-        })
-        ->where('day_of_week', $today)
-        ->with(['courseOffering.course', 'room'])
-        ->orderBy('start_time')
-        ->get();
+    // 8. Count Total Courses (for stats card)
+    $courseOfferingsCount = \App\Models\CourseOffering::where('lecturer_user_id', $user->id)->count();
 
     return view('professor.dashboard', compact(
         'user',
         'professor',
-        'courseOfferings',
+        'todaySchedules', // ✅ Use this variable in your View loop
         'totalStudents',
+        'courseOfferingsCount', // Pass count for stats
         'upcomingAssignments',
         'upcomingExams',
         'upcomingQuizzes',
         'announcements',
-        'unreadNotificationsCount',
-        'todaySchedules',
+        'unreadNotificationsCount'
     ));
 }
 

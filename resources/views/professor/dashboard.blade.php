@@ -6,351 +6,347 @@
         <p class="mt-1 text-lg text-gray-500">{{ __('ទិដ្ឋភាពទូទៅនៃព័ត៌មានសំខាន់ៗ') }}</p>
     </x-slot>
 
-    <div class="bg-gray-50 min-h-screen">
-        <div class="max-w-full">
-            <div class="bg-white overflow-hidden shadow-2xl p-8 lg:p-12 border border-gray-100 transition-transform duration-500 ease-in-out transform hover:scale-[1.005]">
-                                <div class="mb-8">
-                    @if(!auth()->user()->telegram_chat_id)
-                        <button type="button" onclick="document.getElementById('telegramEntryModal').classList.remove('hidden')" 
-                            class="flex items-center gap-3 bg-[#0088cc] hover:bg-[#0077b5] text-white px-6 py-3 rounded-2xl font-bold shadow-xl shadow-blue-100 transition-all transform hover:scale-105">
-                            <i class="fab fa-telegram-plane text-xl"></i>
-                            <span>{{ __('ភ្ជាប់ជាមួយ Telegram សម្រាប់ទទួលការជូនដំណឹងពីកាលវិភាគបង្រៀន') }}</span>
-                        </button>
-                    @else
-                        <div class="inline-flex items-center gap-3 bg-green-50 text-green-600 border border-green-100 px-6 py-3 rounded-2xl font-bold shadow-sm">
-                            <i class="fas fa-check-circle text-xl"></i>
-                            <span>{{ __('បានភ្ជាប់ Telegram Bot រួចរាល់') }}</span>
-                        </div>
-                    @endif
-                    {{-- ផ្នែកបង្ហាញមុខវិជ្ជាដែលកំពុងបង្រៀន --}}
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-    
-    @foreach($courseOfferings as $offering) 
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all flex flex-col justify-between h-full">
+    <div class="bg-gray-50 min-h-screen font-['Battambang']">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             
-            {{-- ផ្នែកខាងលើ៖ ឈ្មោះ និង Status --}}
-            <div class="flex justify-between items-start mb-4">
-                <div>
-                    <h3 class="font-bold text-lg text-gray-800 line-clamp-1" title="{{ $offering->course->name }}">
-                        {{ $offering->course->name ?? $offering->course->title_en ?? 'N/A' }}
-                    </h3>
-                    <p class="text-sm text-gray-500 mt-1">
-                        {{ __('ជំនាន់') }}: <span class="font-medium text-gray-700">{{ $offering->generation }}</span> 
-                        <span class="mx-1">|</span> 
-                        <span class="text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded text-[11px]">
-                            {{ $offering->course->program->name_km ?? $offering->course->program->name_en ?? 'N/A' }}
-                        </span>
-                        {{-- {{ __('បន្ទប់') }}: <span class="font-medium text-gray-700">{{ $offering->room->room_number ?? $offering->room->room_number ?? 'N/A' }}</span> --}}
-                    </p>
-                </div>
+            {{-- Header Section (Telegram & Welcome) --}}
+            <div class="mb-10">
+                <div class="bg-white overflow-hidden shadow-xl rounded-[2rem] p-8 border border-gray-100 flex flex-col lg:flex-row items-center justify-between gap-6 transition-transform duration-500 hover:scale-[1.005]">
+                    <div>
+                        <h3 class="text-2xl font-black text-gray-800 leading-tight mb-2">
+                            {{ __('សូមស្វាគមន៍ត្រឡប់មកវិញ,') }} <span class="text-indigo-600">{{ Auth::user()->name }}</span>! 👋
+                        </h3>
+                        <p class="text-gray-500">{{ __('នេះគឺជាកាលវិភាគបង្រៀនរបស់អ្នកសម្រាប់') }} <b>{{ __('ថ្ងៃនេះ') }}</b></p>
+                    </div>
 
-                {{-- 🔥 LOGIC ប្តូរ STATUS BADGE 🔥 --}}
-                @if($offering->is_completed_today)
-                    {{-- 🟢 បើស្រង់រួច (Completed) --}}
-                    <span class="shrink-0 inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200 shadow-sm">
-                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        {{ __('រួចរាល់') }}
-                    </span>
-                @else
-                    {{-- 🔵 បើមិនទាន់ស្រង់ (Active) --}}
-                    <span class="shrink-0 inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-600 border border-blue-100">
-                        <span class="relative flex h-2 w-2">
-                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                          <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                        </span>
-                        {{ __('Active') }}
-                    </span>
-                @endif
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        @if(!auth()->user()->telegram_chat_id)
+                            <button type="button" onclick="document.getElementById('telegramEntryModal').classList.remove('hidden')" 
+                                class="flex items-center justify-center gap-2 bg-[#0088cc] hover:bg-[#0077b5] text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-blue-100 transition-all transform hover:scale-105 active:scale-95 text-sm">
+                                <i class="fab fa-telegram-plane text-xl"></i>
+                                <span>{{ __('ភ្ជាប់ Telegram') }}</span>
+                            </button>
+                        @else
+                            <div class="inline-flex items-center justify-center gap-2 bg-green-50 text-green-600 border border-green-100 px-6 py-3 rounded-2xl font-bold shadow-sm">
+                                <i class="fas fa-check-circle text-xl"></i>
+                                <span>{{ __('Telegram ភ្ជាប់រួចរាល់') }}</span>
+                            </div>
+                        @endif
+                        
+                        <div class="inline-flex items-center justify-center gap-2 bg-gray-50 text-gray-700 border border-gray-200 px-6 py-3 rounded-2xl font-bold">
+                            <i class="fas fa-calendar-alt text-gray-400"></i>
+                            <span>{{ now()->format('d M, Y') }}</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
-            {{-- ប៊ូតុងបើក QR Code Modal --}}
-            <button onclick="Livewire.dispatch('openAttendanceModal', { courseOfferingId: {{ $offering->id }} })"
-                    class="w-full mt-auto py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform active:scale-95
-                    {{ $offering->is_completed_today 
-                        ? 'bg-white border-2 border-green-500 text-green-600 hover:bg-green-50' /* បើស្រង់រួច ចេញប៊ូតុងស */
-                        : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-blue-200' /* បើមិនទាន់ស្រង់ ចេញប៊ូតុងខៀវ */
-                    }}">
+
+            {{-- 1. Statistics Cards --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                {{-- Card 1: Today's Classes --}}
+                <div class="bg-gradient-to-br from-blue-600 to-blue-700 text-white p-6 rounded-[2rem] shadow-lg shadow-blue-200 flex items-center justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl group cursor-pointer">
+                    <div>
+                        {{-- Count Unique Offerings instead of total sessions --}}
+                        <p class="text-sm font-medium text-blue-100 mb-1">{{ __('ថ្នាក់បង្រៀនថ្ងៃនេះ') }}</p>
+                        <p class="text-4xl font-black">{{ $todaySchedules->pluck('course_offering_id')->unique()->count() }}</p>
+                    </div>
+                    <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform">
+                        <i class="fas fa-chalkboard-teacher text-2xl"></i>
+                    </div>
+                </div>
+
+                {{-- Card 2: Total Students --}}
+                <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white p-6 rounded-[2rem] shadow-lg shadow-emerald-200 flex items-center justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl group cursor-pointer">
+                    <div>
+                        <p class="text-sm font-medium text-emerald-100 mb-1">{{ __('សិស្សសរុប') }}</p>
+                        <p class="text-4xl font-black">{{ $totalStudents }}</p>
+                    </div>
+                    <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform">
+                        <i class="fas fa-users text-2xl"></i>
+                    </div>
+                </div>
+
+                {{-- Card 3: Assignments --}}
+                <div class="bg-gradient-to-br from-amber-500 to-amber-600 text-white p-6 rounded-[2rem] shadow-lg shadow-amber-200 flex items-center justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl group cursor-pointer">
+                    <div>
+                        <p class="text-sm font-medium text-amber-100 mb-1">{{ __('កិច្ចការដាក់ឱ្យសិស្ស') }}</p>
+                        <p class="text-4xl font-black">{{ $upcomingAssignments->count() }}</p>
+                    </div>
+                    <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform">
+                        <i class="fas fa-file-alt text-2xl"></i>
+                    </div>
+                </div>
+
+                {{-- Card 4: Exams/Quizzes --}}
+                <div class="bg-gradient-to-br from-rose-500 to-rose-600 text-white p-6 rounded-[2rem] shadow-lg shadow-rose-200 flex items-center justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl group cursor-pointer">
+                    <div>
+                        <p class="text-sm font-medium text-rose-100 mb-1">{{ __('ការប្រឡង/ឃ្វុីស') }}</p>
+                        <p class="text-4xl font-black">{{ $upcomingExams->count() + $upcomingQuizzes->count() }}</p>
+                    </div>
+                    <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform">
+                        <i class="fas fa-graduation-cap text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 
-                @if($offering->is_completed_today)
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                    {{ __('មើលវត្តមាន') }}
-                @else
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                    </svg>
-                    {{ __('ចាប់ផ្ដើមស្រង់') }}
-                @endif
-            </button>
-        </div>
-    @endforeach
-</div>
-
-{{-- ដាក់ Livewire Modal នៅខាងក្រោមគេបង្អស់ --}}
-@livewire('teacher.attendance-modal')
-
-                    <div id="telegramEntryModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-start justify-center z-[9999] p-4">
-                        <div class="bg-white rounded-[32px] p-8 w-full max-w-md shadow-2xl border border-slate-100 mt-10">
-                            <div class="flex justify-between items-center mb-6">
-                                <div class="flex items-center gap-3">
-                                    <div class="p-3 bg-blue-100 rounded-2xl text-[#0088cc]">
-                                        <i class="fab fa-telegram-plane text-2xl"></i>
-                                    </div>
-                                    <h3 class="text-xl font-bold text-slate-800">{{ __('ភ្ជាប់តេឡេក្រាម') }}</h3>
-                                </div>
-                                <button onclick="document.getElementById('telegramEntryModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 transition">
-                                    <i class="fas fa-times text-2xl"></i>
-                                </button>
+                {{-- Left Column: Teaching Schedule & Courses --}}
+                <div class="lg:col-span-2 space-y-10">
+                    
+                    {{-- 2. Today's Sessions List (GROUPED BY COURSE OFFERING) --}}
+                    <section>
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="flex items-center gap-3">
+                                <div class="h-8 w-1.5 bg-indigo-600 rounded-full"></div>
+                                <h4 class="text-2xl font-black text-gray-800">{{ __('កាលវិភាគបង្រៀនថ្ងៃនេះ') }}</h4>
                             </div>
+                            <span class="bg-indigo-50 text-indigo-600 px-4 py-1.5 rounded-full text-xs font-bold border border-indigo-100">
+                                {{ $todaySchedules->pluck('course_offering_id')->unique()->count() }} {{ __('មុខវិជ្ជា') }}
+                            </span>
+                        </div>
 
-                            <div class="space-y-4">
-                                <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100 text-xs">
-                                    <p class="text-blue-700 leading-relaxed">
-                                        <strong>១. {{ __('យកលេខសម្គាល់ (ID):') }}</strong> {{ __('ផ្ញើសារទៅកាន់') }} 
-                                        <a href="https://t.me/userinfobot" target="_blank" class="font-bold underline text-blue-800">@userinfobot</a>
-                                    </p>
-                                </div>
-                                <div class="bg-amber-50 p-4 rounded-2xl border border-amber-100 text-xs">
-                                    <p class="text-amber-700 leading-relaxed">
-                                        <strong>២. {{ __('បើកដំណើរការ Bot:') }}</strong> {{ __('ចុចលើ') }} 
-                                        <a href="https://t.me/Nmu1_schedule_bot" target="_blank" class="font-bold underline text-amber-800">@Nmu1_schedule_bot</a> {{ __('រួចចុច "START"') }}
-                                    </p>
-                                </div>
-                                
-                                <form action="{{ route('professor.update_telegram') }}" method="POST">
-                                    @csrf
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            @php
+                                // Group schedules by course_offering_id to display as one card
+                                $groupedSchedules = $todaySchedules->groupBy('course_offering_id');
+                            @endphp
+
+                            @forelse ($groupedSchedules as $offeringId => $schedules)
+                                @php
+                                    $firstSchedule = $schedules->first();
+                                    $courseOffering = $firstSchedule->courseOffering;
+                                    
+                                    // Calculate overall start and end time
+                                    $startTime = $schedules->min('start_time');
+                                    $endTime = $schedules->max('end_time');
+                                    
+                                    // Check if ANY session in this group is completed (assuming if one is done, attendance is taken)
+                                    // Or you can check if an AttendanceSession exists for today for this offering
+                                    $isCompletedToday = $schedules->contains('is_completed_today', true);
+                                @endphp
+
+                                <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 hover:shadow-xl transition-all group flex flex-col justify-between h-full relative overflow-hidden">
+                                    
+                                    {{-- Time & Status --}}
+                                    <div class="flex justify-between items-start mb-4">
+                                        <div class="bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-xl flex items-center gap-2">
+                                            <i class="fas fa-clock text-indigo-500"></i>
+                                            <span class="font-bold text-gray-700 text-sm">
+                                                {{ $startTime->format('H:i') }} - {{ $endTime->format('H:i') }}
+                                            </span>
+                                        </div>
+
+                                        @if($isCompletedToday)
+                                            <span class="shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-600 shadow-sm" title="Completed Today">
+                                                <i class="fas fa-check"></i>
+                                            </span>
+                                        @else
+                                            <span class="shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-600 shadow-sm animate-pulse" title="Active">
+                                                <div class="w-2 h-2 bg-blue-600 rounded-full"></div>
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    {{-- Course Details --}}
                                     <div class="mb-6">
-                                        <label class="block text-sm font-bold text-slate-700 mb-2">{{ __('បញ្ចូលលេខ Telegram ID របស់អ្នក') }}</label>
-                                        <input type="number" name="telegram_chat_id" required placeholder="584930211"
-                                                class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition text-lg">
+                                        <h3 class="font-black text-lg text-gray-800 line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors mb-2" 
+                                            title="{{ $courseOffering->course->name }}">
+                                            {{ $courseOffering->course->name ?? $courseOffering->course->title_en }}
+                                        </h3>
+                                        
+                                        <div class="space-y-3">
+                                            {{-- Room & Gen --}}
+                                            <div class="flex items-center flex-wrap gap-2 text-sm text-gray-600">
+                                                <div class="flex items-center gap-1">
+                                                    <i class="fas fa-users text-gray-400 w-5 text-center"></i>
+                                                    <span>{{ __('ជំនាន់') }}: <b class="text-gray-800">{{ $courseOffering->generation }}</b></span>
+                                                </div>
+                                                <span class="text-gray-300">|</span>
+                                                <span class="bg-indigo-50 text-indigo-600 text-[10px] font-bold px-2 py-0.5 rounded">
+                                                    {{ $courseOffering->course->program->name_km ?? 'Program' }}
+                                                </span>
+                                            </div>
+
+                                            {{-- List Individual Sessions (Rooms) --}}
+                                            <div class="bg-gray-50 rounded-xl p-3 space-y-2">
+                                                <p class="text-[10px] font-bold text-gray-400 uppercase">{{ __('កាលវិភាគលម្អិត:') }}</p>
+                                                @foreach($schedules as $sched)
+                                                    <div class="flex justify-between items-center text-xs">
+                                                        <span class="text-gray-600 font-medium">
+                                                            Session {{ $loop->iteration }} ({{ $sched->start_time->format('H:i') }}-{{ $sched->end_time->format('H:i') }})
+                                                        </span>
+                                                        <span class="text-gray-800 font-bold bg-white px-2 py-0.5 rounded border border-gray-100">
+                                                            <i class="fas fa-door-open text-gray-400 mr-1"></i> {{ $sched->room->room_number ?? 'Online' }}
+                                                        </span>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="flex gap-3">
-                                        <button type="button" onclick="document.getElementById('telegramEntryModal').classList.add('hidden')" class="flex-1 px-4 py-4 bg-slate-100 rounded-2xl font-bold">{{ __('បោះបង់') }}</button>
-                                        <button type="submit" class="flex-[2] px-4 py-4 bg-[#0088cc] text-white rounded-2xl font-bold hover:bg-[#0077b5]">{{ __('រក្សាទុកទិន្នន័យ') }}</button>
+                                    
+                                    {{-- Action Button (ONE BUTTON PER OFFERING) --}}
+                                    {{-- We pass the courseOfferingId because attendance is usually tracked by offering for the day --}}
+                                    {{-- Or pass the first schedule ID if your backend logic requires it --}}
+                                    <button onclick="Livewire.dispatch('openAttendanceModal', { courseOfferingId: {{ $courseOffering->id }} })"
+                                            class="w-full mt-auto py-3.5 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-wide
+                                            {{ $isCompletedToday 
+                                                ? 'bg-white border-2 border-green-500 text-green-600 hover:bg-green-50' 
+                                                : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-200 hover:to-blue-800 active:scale-95' 
+                                            }}">
+                                        @if($isCompletedToday)
+                                            <i class="fas fa-eye"></i> {{ __('មើលវត្តមាន') }}
+                                        @else
+                                            <i class="fas fa-qrcode"></i> {{ __('ចាប់ផ្ដើមស្រង់ (Scan)') }}
+                                        @endif
+                                    </button>
+                                </div>
+                            @empty
+                                <div class="col-span-full bg-white border-2 border-dashed border-gray-200 rounded-[2rem] p-12 text-center">
+                                    <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-gray-300">
+                                        <i class="fas fa-mug-hot text-3xl"></i>
                                     </div>
-                                </form>
-                            </div>
+                                    <p class="text-gray-500 font-bold text-lg">{{ __('មិនមានម៉ោងបង្រៀនសម្រាប់ថ្ងៃនេះទេ។') }}</p>
+                                    <p class="text-sm text-gray-400 mt-2">{{ __('លោកគ្រូអាចសម្រាក ឬរៀបចំមេរៀនសម្រាប់ថ្ងៃស្អែក!') }}</p>
+                                </div>
+                            @endforelse
                         </div>
-                    </div>
+                    </section>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
-                    <div class="bg-gradient-to-br from-blue-600 to-blue-700 text-white p-6 rounded-2xl shadow-xl flex items-center justify-between transition-all duration-300 hover:scale-105 hover:shadow-2xl cursor-pointer group">
-                        <div>
-                            <p class="text-sm opacity-90">{{ __('មុខវិជ្ជាខ្ញុំបង្រៀនសរុប') }}</p>
-                            <p class="text-4xl font-bold mt-1">{{ $courseOfferings->count() }}</p>
+                {{-- Right Column: Announcements & Upcoming Tasks --}}
+                <div class="space-y-8">
+                    
+                    {{-- Announcements --}}
+                    <div class="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm">
+                        <div class="flex items-center justify-between mb-6">
+                            <h4 class="text-xl font-black text-gray-800 flex items-center gap-2">
+                                <i class="fas fa-bullhorn text-yellow-500 bg-yellow-50 p-2 rounded-xl"></i>
+                                {{ __('សេចក្តីប្រកាស') }}
+                            </h4>
                         </div>
-                        <svg class="w-12 h-12 text-blue-300 transition-transform duration-300 group-hover:rotate-[15deg]" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path><path fill-rule="evenodd" d="M4 5a2 2 0 012-2h2V1a1 1 0 012 0v2h2a2 2 0 012 2v2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2v2a2 2 0 01-2 2H9a2 2 0 01-2-2v-2H5a2 2 0 01-2-2V9a2 2 0 012-2h2V5zm3 2h2a1 1 0 100-2H7v2z" clip-rule="evenodd"></path></svg>
+
+                        <div class="space-y-4">
+                            @forelse ($announcements as $announcement)
+                                <div id="announcement-{{ $announcement->id }}" class="p-4 bg-gray-50 rounded-2xl border border-gray-100 relative group transition-all hover:bg-white hover:shadow-md">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h5 class="font-bold text-gray-800 text-sm leading-snug line-clamp-2">
+                                            {{ $announcement->title_km ?? $announcement->title_en }}
+                                        </h5>
+                                    </div>
+                                    <p class="text-xs text-gray-500 line-clamp-2 mb-3">{{ $announcement->content_km ?? $announcement->content_en }}</p>
+                                    <div class="flex items-center justify-between border-t border-gray-200 pt-3">
+                                        <span class="text-[10px] font-bold text-gray-400 uppercase">{{ \Carbon\Carbon::parse($announcement->created_at)->diffForHumans() }}</span>
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="text-center py-8 text-gray-400">
+                                    <p class="text-sm">{{ __('មិនមានសេចក្តីប្រកាសថ្មីទេ។') }}</p>
+                                </div>
+                            @endforelse
+                        </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-green-600 to-green-700 text-white p-6 rounded-2xl shadow-xl flex items-center justify-between transition-all duration-300 hover:scale-105 hover:shadow-2xl cursor-pointer group">
-                        <div>
-                            <p class="text-sm opacity-90">{{ __('សិស្សសរុប (ក្នុងមុខវិជ្ជាខ្ញុំ)') }}</p>
-                            <p class="text-4xl font-bold mt-1">{{ $totalStudents }}</p>
-                        </div>
-                        <svg class="w-12 h-12 text-green-300 transition-transform duration-300 group-hover:rotate-[15deg]" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>
-                    </div>
+                    {{-- Upcoming Tasks --}}
+                    <div class="bg-indigo-900 text-white p-6 rounded-[2.5rem] shadow-xl relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                        <div class="absolute bottom-0 left-0 w-24 h-24 bg-indigo-500/30 rounded-full blur-xl -ml-5 -mb-5"></div>
 
-                    <div class="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-6 rounded-2xl shadow-xl flex items-center justify-between transition-all duration-300 hover:scale-105 hover:shadow-2xl cursor-pointer group">
-                        <div>
-                            <p class="text-sm opacity-90">{{ __('កិច្ចការស្រាវជ្រាវដែលបានផ្តល់') }}</p>
-                            <p class="text-4xl font-bold mt-1">{{ $upcomingAssignments->count() }}</p>
-                        </div>
-                        <svg class="w-12 h-12 text-orange-300 transition-transform duration-300 group-hover:rotate-[15deg]" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 2a1 1 0 011-1h1.586l3 3H7a1 1 0 01-1-1v-2z" clip-rule="evenodd"></path></svg>
-                    </div>
-
-                    <div class="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-6 rounded-2xl shadow-xl flex items-center justify-between transition-all duration-300 hover:scale-105 hover:shadow-2xl cursor-pointer group">
-                        <div>
-                            <p class="text-sm opacity-90">{{ __('ឃ្វុីសដែលបានផ្តល់') }}</p>
-                            <p class="text-4xl font-bold mt-1">{{ $upcomingQuizzes->count() }}</p>
-                        </div>
-                        <svg class="w-12 h-12 text-orange-300 transition-transform duration-300 group-hover:rotate-[15deg]" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 2a1 1 0 011-1h1.586l3 3H7a1 1 0 01-1-1v-2z" clip-rule="evenodd"></path></svg>
-                    </div>
-
-                    <div class="bg-gradient-to-br from-red-600 to-red-700 text-white p-6 rounded-2xl shadow-xl flex items-center justify-between transition-all duration-300 hover:scale-105 hover:shadow-2xl cursor-pointer group">
-                        <div>
-                            <p class="text-sm opacity-90">{{ __('ការប្រលងដែលបានផ្តល់') }}</p>
-                            <p class="text-4xl font-bold mt-1">{{ $upcomingExams->count() }}</p>
-                        </div>
-                        <svg class="w-12 h-12 text-red-300 transition-transform duration-300 group-hover:rotate-[15deg]" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path></svg>
-                    </div>
-                </div>
-
-
-
-                
-
-
-
-                   <!-- Upcoming Lists Section -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-                    <!-- Upcoming Assignments List -->
-                    <div class="bg-gray-50 p-6 rounded-2xl shadow-inner border border-gray-100">
-                        <h4 class="text-2xl font-bold text-gray-700 mb-6 flex items-center">
-                            <svg class="w-6 h-6 mr-3 text-blue-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path></svg>
-                            {{ __('កិច្ចការស្រាវជ្រាវដែលបានផ្តល់') }}
+                        <h4 class="text-xl font-black mb-6 relative z-10 flex items-center gap-2">
+                            <i class="fas fa-tasks bg-white/20 p-2 rounded-xl"></i>
+                            {{ __('កិច្ចការត្រូវធ្វើ') }}
                         </h4>
-                        @forelse ($upcomingAssignments as $assignment)
-                            <a href="{{ route('professor.manage-grades', ['offering_id' => $assignment->course_offering_id]) }}" class="block p-4 bg-white rounded-xl shadow-md border border-gray-100 mb-4 transition-all duration-300 transform hover:scale-[1.01] hover:shadow-lg">
-                                <div class="flex items-center">
-                                    <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-blue-50 text-blue-600 rounded-full">
-                                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path><path fill-rule="evenodd" d="M4 5a2 2 0 012-2h2V1a1 1 0 012 0v2h2a2 2 0 012 2v2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2v2a2 2 0 01-2 2H9a2 2 0 01-2-2v-2H5a2 2 0 01-2-2V9a2 2 0 012-2h2V5zm3 2h2a1 1 0 100-2H7v2z" clip-rule="evenodd"></path></svg>
-                                    </div>
-                                    <div class="ml-4 flex-1">
-                                        <p class="font-bold text-gray-800">{{ $assignment->title_km ?? $assignment->title_en }}</p>
-                                        <p class="text-sm text-gray-500">{{ $assignment->courseOffering->course->title_km ?? 'N/A' }}</p>
-                                        <p class="text-xs text-gray-400 mt-1">
-                                            {{ __('ផុតកំណត់:') }} <span class="font-semibold">{{ \Carbon\Carbon::parse($assignment->due_date)->format('Y-m-d H:i A') }}</span>
+
+                        <div class="space-y-4 relative z-10">
+                            @forelse ($upcomingAssignments as $assignment)
+                                <a href="{{ route('professor.manage-grades', ['offering_id' => $assignment->course_offering_id]) }}" 
+                                   class="block bg-white/10 backdrop-blur-md border border-white/10 p-4 rounded-2xl hover:bg-white/20 transition-all group">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <span class="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 text-[10px] font-bold uppercase border border-amber-500/30">
+                                            Homework
+                                        </span>
+                                        <p class="text-xs text-indigo-200 font-mono">
+                                            Due: {{ \Carbon\Carbon::parse($assignment->due_date)->format('d M') }}
                                         </p>
                                     </div>
-                                    <svg class="w-5 h-5 text-gray-400 transform transition-transform duration-200 hover:translate-x-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>
+                                    <h5 class="font-bold text-sm text-white mb-1 group-hover:text-amber-300 transition-colors">
+                                        {{ $assignment->title_km ?? $assignment->title_en }}
+                                    </h5>
+                                </a>
+                            @empty
+                                <div class="text-center py-6 text-indigo-300 bg-white/5 rounded-2xl border border-dashed border-white/10">
+                                    <p class="text-sm">{{ __('មិនមានកិច្ចការជិតដល់ទេ។') }}</p>
                                 </div>
-                            </a>
-                        @empty
-                            <div class="text-center py-6 text-gray-500">
-                                <svg class="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m4 4v10m0 0l-8-4m8 4l-8-4"></path></svg>
-                                <p>{{ __('មិនមានកិច្ចការផ្ទះជិតដល់ថ្ងៃកំណត់នៅឡើយទេ។') }}</p>
-                            </div>
-                        @endforelse
+                            @endforelse
+                        </div>
                     </div>
 
-                    <!-- Upcoming Exams List -->
-                    <div class="bg-gray-50 p-6 rounded-2xl shadow-inner border border-gray-100">
-                        <h4 class="text-2xl font-bold text-gray-700 mb-6 flex items-center">
-                            <svg class="w-6 h-6 mr-3 text-red-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zM5 9a1 1 0 000 2h4.586l1.293 1.293a1 1 0 001.414 0l2-2a1 1 0 000-1.414l-2-2a1 1 0 00-1.414 0L9.586 9H5z" clip-rule="evenodd"></path></svg>
-                            {{ __('ការប្រលងដែលបានផ្តល់') }}
-                        </h4>
-                        @forelse ($upcomingExams as $exam)
-                            <a href="{{ route('professor.manage-grades', ['offering_id' => $exam->course_offering_id]) }}" class="block p-4 bg-white rounded-xl shadow-md border border-gray-100 mb-4 transition-all duration-300 transform hover:scale-[1.01] hover:shadow-lg">
-                                <div class="flex items-center">
-                                    <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-red-50 text-red-600 rounded-full">
-                                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zM5 9a1 1 0 000 2h4.586l1.293 1.293a1 1 0 001.414 0l2-2a1 1 0 000-1.414l-2-2a1 1 0 00-1.414 0L9.586 9H5z"></path></svg>
-                                    </div>
-                                    <div class="ml-4 flex-1">
-                                        <p class="font-bold text-gray-800">{{ $exam->title_km ?? $exam->title_en }}</p>
-                                        <p class="text-sm text-gray-500">{{ $exam->courseOffering->course->title_km ?? 'N/A' }}</p>
-                                        <p class="text-xs text-gray-400 mt-1">
-                                            {{ __('ថ្ងៃទី:') }} <span class="font-semibold">{{ \Carbon\Carbon::parse($exam->exam_date)->format('Y-m-d') }}</span> {{ __('ម៉ោង:') }} <span class="font-semibold">{{ \Carbon\Carbon::parse($exam->exam_date)->format('H:i A') }}</span>
-                                        </p>
-                                    </div>
-                                    <svg class="w-5 h-5 text-gray-400 transform transition-transform duration-200 hover:translate-x-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>
-                                </div>
-                            </a>
-                        @empty
-                            <div class="text-center py-6 text-gray-500">
-                                <svg class="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                <p>{{ __('មិនមានការប្រលងជិតដល់នៅឡើយទេ។') }}</p>
-                            </div>
-                        @endforelse
-                    </div>
                 </div>
-
-
-
-
-
-
-
-
-                <div class="mb-10">
-                    <h4 class="text-2xl font-bold text-gray-700 mb-6 flex items-center">
-                        <svg class="w-7 h-7 mr-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        {{ __('កាលវិភាគបង្រៀនថ្ងៃនេះ') }} 
-                        <span class="ml-3 text-sm font-normal text-gray-400 bg-gray-100 px-3 py-1 rounded-full">{{ now()->format('d-M-Y') }}</span>
-                    </h4>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        @forelse ($todaySchedules as $schedule)
-                            <div class="bg-white p-6 rounded-2xl shadow-md border-l-4 border-indigo-500 hover:shadow-xl transition-all relative overflow-hidden group">
-                                <div class="flex justify-between items-start mb-4">
-                                    <span class="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-lg">
-                                        {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}
-                                    </span>
-                                    <span class="text-gray-400 text-xs"><i class="fas fa-door-open mr-1"></i> {{ $schedule->room->room_number ?? 'Online' }}</span>
-                                </div>
-                                <h5 class="font-extrabold text-lg text-gray-800 mb-1">{{ $schedule->courseOffering->course->title_km ?? $schedule->courseOffering->course->title_en }}</h5>
-                                <p class="text-xs text-gray-400">បន្ទប់រៀន: {{ $schedule->room->room_number ?? 'N/A' }}</p>
-                            </div>
-                        @empty
-                            <div class="col-span-full bg-white p-10 rounded-2xl border border-dashed border-gray-300 text-center text-gray-500">
-                                {{ __('មិនមានម៉ោងបង្រៀនសម្រាប់ថ្ងៃនេះទេ។') }}
-                            </div>
-                        @endforelse
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-                    <div class="lg:col-span-2 bg-gray-50 p-6 rounded-2xl shadow-inner border border-gray-100">
-                        <h4 class="text-2xl font-bold text-gray-700 mb-6 flex items-center">
-                            <i class="fas fa-bullhorn mr-3 text-yellow-600"></i> {{ __('សេចក្តីប្រកាស') }}
-                        </h4>
-                        @forelse ($announcements as $announcement)
-                            <div id="announcement-{{ $announcement->id }}" class="p-4 bg-white rounded-xl shadow-md border mb-4 @if($announcement->is_read) opacity-60 @endif">
-                                <p class="font-bold text-gray-800">{{ $announcement->title_km ?? $announcement->title_en }}</p>
-                                <p class="text-sm text-gray-600 my-2">{{ $announcement->content_km ?? $announcement->content_en }}</p>
-                                <div class="flex justify-between items-center mt-3 pt-3 border-t">
-                                    <span class="text-xs text-gray-400">{{ \Carbon\Carbon::parse($announcement->created_at)->diffForHumans() }}</span>
-                                    @if(!$announcement->is_read)
-                                        <button onclick="markAsRead({{ $announcement->id }})" class="text-xs text-blue-600 font-bold border border-blue-600 px-3 py-1 rounded-full hover:bg-blue-50">
-                                            {{ __('សម្គាល់ថាបានអាន') }}
-                                        </button>
-                                    @else
-                                        <span class="text-xs text-green-600 font-bold">{{ __('បានអានហើយ') }}</span>
-                                    @endif
-                                </div>
-                            </div>
-                        @empty
-                            <p class="text-center text-gray-500">{{ __('មិនមានសេចក្តីប្រកាសថ្មីទេ។') }}</p>
-                        @endforelse
-                    </div>
-
-                    <div class="bg-gray-50 p-6 rounded-2xl shadow-inner border border-gray-100">
-                        <h4 class="text-2xl font-bold text-gray-700 mb-6">{{ __('សកម្មភាពរហ័ស') }}</h4>
-                        <div class="grid grid-cols-1 gap-4">
-                            <a href="{{ route('professor.my-course-offerings') }}" class="flex items-center p-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition">
-                                <i class="fas fa-book mr-3"></i> <span>{{ __('មើលមុខវិជ្ជាខ្ញុំ') }}</span>
-                            </a>
-                            </div>
-                    </div>
-                </div>
-
             </div>
         </div>
     </div>
 
-<script>
-    const readText = "{{ __('បានអានហើយ') }}";
+    {{-- Telegram Modal --}}
+    <div id="telegramEntryModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-[9999] p-4">
+        <div class="bg-white rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl transform transition-all border border-slate-100">
+            <div class="flex justify-between items-center mb-8">
+                <div class="flex items-center gap-3">
+                    <div class="p-3 bg-blue-100 rounded-2xl text-[#0088cc]">
+                        <i class="fab fa-telegram-plane text-2xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-black text-slate-800">ភ្ជាប់ Telegram</h3>
+                        <p class="text-[10px] text-slate-400 font-bold">ទទួលការជូនដំណឹងកាលវិភាគ</p>
+                    </div>
+                </div>
+                <button onclick="document.getElementById('telegramEntryModal').classList.add('hidden')" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-50 text-slate-400 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
 
-    function markAsRead(id) {
-        fetch(`/professor/announcements/${id}/mark-as-read`, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            }
-        })
-        .then(res => res.json())
-        .then(data => {
-            // ប្រើ data.success ដើម្បីផ្ទៀងផ្ទាត់វិញទើបមានសុវត្ថិភាពជាង
-            if (data.success) {
-                const el = document.getElementById(`announcement-${id}`);
-                if (el) {
-                    el.classList.add('opacity-60'); // បន្ថយពណ៌អត្ថបទ
-                    const btn = el.querySelector('button');
-                    if(btn) {
-                        btn.outerHTML = `<span class="text-xs text-green-600 font-bold">${readText}</span>`;
-                    }
-                }
-            } else {
-                alert(data.message); // បង្ហាញសារកំហុសបើមាន
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    }
-</script>
+            <div class="space-y-4 mb-8">
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 group hover:border-blue-200 transition-all">
+                    <div class="flex gap-4">
+                        <span class="flex-none w-8 h-8 bg-white shadow-sm text-blue-600 rounded-lg flex items-center justify-center text-xs font-black">០១</span>
+                        <p class="text-[11px] text-slate-600 leading-relaxed">
+                            <span class="font-bold text-slate-800 block mb-1">យកលេខសម្គាល់ (Chat ID):</span>
+                            ផ្ញើសារទៅកាន់ <a href="https://t.me/userinfobot" target="_blank" class="font-bold underline text-blue-600">@userinfobot</a> រួចចម្លងលេខ ID របស់អ្នក។
+                        </p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 group hover:border-amber-200 transition-all">
+                    <div class="flex gap-4">
+                        <span class="flex-none w-8 h-8 bg-white shadow-sm text-amber-500 rounded-lg flex items-center justify-center text-xs font-black">០២</span>
+                        <p class="text-[11px] text-slate-600 leading-relaxed">
+                            <span class="font-bold text-slate-800 block mb-1">បើកដំណើរការ Bot:</span>
+                            ចុចលើ <a href="https://t.me/Nmu1_schedule_bot" target="_blank" class="font-bold underline text-amber-600">@Nmu1_schedule_bot</a> រួចចុច <span class="bg-amber-100 px-2 py-0.5 rounded italic">START</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <form action="{{ route('professor.update_telegram') }}" method="POST">
+                @csrf
+                <div class="mb-6">
+                    <label class="block text-sm font-black text-slate-700 mb-3">បញ្ចូលលេខ Telegram ID របស់អ្នក</label>
+                    <input type="number" name="telegram_chat_id" required 
+                           placeholder="ឧទាហរណ៍៖ 584930211"
+                           class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition text-slate-700 font-mono text-lg">
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" onclick="document.getElementById('telegramEntryModal').classList.add('hidden')" 
+                            class="flex-1 px-4 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition">
+                        បោះបង់
+                    </button>
+                    <button type="submit" class="flex-[2] px-4 py-4 bg-[#0088cc] text-white rounded-2xl font-bold hover:bg-[#0077b5] shadow-lg shadow-blue-100 transition transform active:scale-95">
+                        រក្សាទុកទិន្នន័យ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Livewire Modal --}}
+    @livewire('teacher.attendance-modal')
 </x-app-layout>

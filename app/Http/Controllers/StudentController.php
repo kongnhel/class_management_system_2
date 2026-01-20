@@ -201,26 +201,44 @@ public function dashboard()
     $totalPermission = \App\Models\AttendanceRecord::where('student_user_id', $studentId)->where('status', 'permission')->count();
     $totalLate = \App\Models\AttendanceRecord::where('student_user_id', $studentId)->where('status', 'late')->count();
 
-
+    $todayOfferingIds = \App\Models\Schedule::where('day_of_week', $todayName)
+        ->pluck('course_offering_id');
     // --- 1. ទាញយកមុខវិជ្ជា + ឆែកស្ថានភាពវត្តមានថ្ងៃនេះ (UPDATED) ---
-    $enrolledCourses = CourseOffering::whereHas('students', function($query) use ($studentId) {
-        $query->where('student_user_id', $studentId);
-    })->with(['course', 'lecturer', 'studentCourseEnrollments' => function($query) use ($studentId) {
-        $query->where('student_user_id', $studentId);
-    }])
-    ->withCount('studentCourseEnrollments') 
-    ->get()
-    // 👉 កែសម្រួល៖ ឆែកមើលថាថ្ងៃនេះបានស្កែនឬនៅ? ដើម្បីបង្ហាញ Badge
-    ->map(function ($offering) use ($studentId, $todayDate) {
-        $record = \App\Models\AttendanceRecord::where('student_user_id', $studentId)
-                    ->where('course_offering_id', $offering->id)
-                    ->where('date', $todayDate)
-                    ->first();
+    // $enrolledCourses = CourseOffering::whereHas('students', function($query) use ($studentId) {
+    //     $query->where('student_user_id', $studentId);
+    // })->with(['course', 'lecturer', 'studentCourseEnrollments' => function($query) use ($studentId) {
+    //     $query->where('student_user_id', $studentId);
+    // }])
+    // ->withCount('studentCourseEnrollments') 
+    // ->get()
+    // // 👉 កែសម្រួល៖ ឆែកមើលថាថ្ងៃនេះបានស្កែនឬនៅ? ដើម្បីបង្ហាញ Badge
+    // ->map(function ($offering) use ($studentId, $todayDate) {
+    //     $record = \App\Models\AttendanceRecord::where('student_user_id', $studentId)
+    //                 ->where('course_offering_id', $offering->id)
+    //                 ->where('date', $todayDate)
+    //                 ->first();
 
-        // ដាក់ status (present, absent, etc.) ចូលក្នុង object
-        $offering->today_status = $record ? $record->status : null;
-        return $offering;
-    });
+    //     // ដាក់ status (present, absent, etc.) ចូលក្នុង object
+    //     $offering->today_status = $record ? $record->status : null;
+    //     return $offering;
+    // });
+    $enrolledCourses = CourseOffering::whereIn('id', $todayOfferingIds) // ✅ Filter យកតែមុខវិជ្ជាមានរៀនថ្ងៃនេះ
+        ->whereHas('students', function($query) use ($studentId) {
+            $query->where('student_user_id', $studentId);
+        })
+        ->with(['course', 'lecturer', 'studentCourseEnrollments' => function($query) use ($studentId) {
+            $query->where('student_user_id', $studentId);
+        }])
+        ->get()
+        ->map(function ($offering) use ($studentId, $todayDate) {
+            $record = \App\Models\AttendanceRecord::where('student_user_id', $studentId)
+                        ->where('course_offering_id', $offering->id)
+                        ->where('date', $todayDate)
+                        ->first();
+
+            $offering->today_status = $record ? $record->status : null;
+            return $offering;
+        });
 
 
     // 2. ទាញយកទិន្នន័យ Enrollment លម្អិត (សម្រាប់ Progress ឬ Status)
@@ -280,15 +298,28 @@ public function dashboard()
 
         $studentGeneration = $user->generation;
         
+        // $availableCoursesInProgram = CourseOffering::with(['course', 'lecturer'])
+        //     ->withCount('studentCourseEnrollments')
+        //     ->whereHas('course', function ($query) use ($studentProgram) {
+        //         $query->where('program_id', $studentProgram->id);
+        //     })
+        //     ->whereNotIn('id', $enrolledCourseOfferingIds)
+        //     ->where('end_date', '>=', now())
+        //     ->where('generation', $studentGeneration)
+        //     ->get();
         $availableCoursesInProgram = CourseOffering::with(['course', 'lecturer'])
-            ->withCount('studentCourseEnrollments')
-            ->whereHas('course', function ($query) use ($studentProgram) {
-                $query->where('program_id', $studentProgram->id);
-            })
-            ->whereNotIn('id', $enrolledCourseOfferingIds)
-            ->where('end_date', '>=', now())
-            ->where('generation', $studentGeneration)
-            ->get();
+        ->withCount('studentCourseEnrollments')
+        
+        // ឆែកក្នុងតារាង Pivot (course_offering_program)
+        ->whereHas('targetPrograms', function ($query) use ($user) {
+            $query->where('program_id', $user->program_id)      // ត្រូវនឹងជំនាញសិស្ស
+                  ->where('generation', $user->generation);     // ត្រូវនឹងជំនាន់សិស្ស
+        })
+        
+        // លក្ខខណ្ឌបន្ថែម (មិនទាន់ផុតកំណត់, មិនទាន់ចុះឈ្មោះ)
+        ->where('end_date', '>=', now())
+        ->whereNotIn('id', $enrolledCourseOfferingIds) // $enrolledCourseOfferingIds បានពីកូដចាស់
+        ->get();
     }
 
     // 5. Statistics
@@ -331,12 +362,6 @@ public function dashboard()
     // 7. បញ្ជូនទិន្នន័យទៅ View
     return view('student.dashboard', compact(
         'user',
-        // Attendance Stats
-        'totalPresent',
-        'totalAbsent',
-        'totalPermission',
-        'totalLate',
-        // Courses with Status
         'enrolledCourses',
         'enrollments',
         'upcomingAssignments',
@@ -549,7 +574,7 @@ public function notifications()
 //                 'date'            => $submission->updated_at,
 //             ];
 //         });
-
+// my-enrolled-courses
 //     // បញ្ចូលទិន្នន័យចូលគ្នា (ការពារកុំឱ្យមានទិន្នន័យជាន់គ្នា ប្រសិនបើមានទាំងក្នុង Submission និង ExamResult)
 //     // ក្នុងករណីនេះ យើងយកទិន្នន័យពី ExamResult ជាអាទិភាព (ករណី Import Excel)
 //     $allGrades = $examResults->concat($submissionGrades)->unique(function ($item) {
@@ -1073,30 +1098,31 @@ public function enrollSelf(Request $request)
    
 
 
-    public function myEnrolledCourses()
+public function myEnrolledCourses()
 {
     $user = Auth::user();
 
-    // ១. ស្វែងរក Program ដែលសិស្សបានចុះឈ្មោះ (រក្សានៅដដែល)
-    $studentProgramEnrollment = StudentProgramEnrollment::where('student_user_id', $user->id)
+    // ១. ស្វែងរក Program ដែលសិស្សបានចុះឈ្មោះ (Active)
+    $studentProgramEnrollment = \App\Models\StudentProgramEnrollment::where('student_user_id', $user->id)
         ->where('status', 'active')
         ->with('program')
         ->first();
-        
 
     $studentProgram = $studentProgramEnrollment ? $studentProgramEnrollment->program : null;
 
-    // ២. ទាញយកមុខវិជ្ជាដែលបានចុះឈ្មោះ (ត្រូវប្រាកដថាទាញយក is_class_leader ពីតារាង enrollment)
-    $enrollments = StudentCourseEnrollment::where('student_user_id', $user->id)
+    // ២. ទាញយកមុខវិជ្ជាដែលបានចុះឈ្មោះ
+    $enrollments = \App\Models\StudentCourseEnrollment::where('student_user_id', $user->id)
         ->with([
             'courseOffering.course', 
-            'courseOffering.lecturer',
-            'courseOffering.lecturer.userProfile',
-            'courseOffering.lecturer.studentProfile' // ករណីសាស្ត្រាចារ្យមាន Profile ក្នុងតារាង Student
+            'courseOffering.lecturer.userProfile', // សម្រាប់រូប Profile គ្រូ
+            
+            // ✅ បន្ថែមថ្មី៖ Load កាលវិភាគ និងបន្ទប់ មកជាមួយ ដើម្បីបង្ហាញក្នុង Card
+            'courseOffering.schedules.room'        
         ])
+        // រៀបតាមលំដាប់ចុះឈ្មោះចុងក្រោយនៅខាងលើ
+        ->orderBy('created_at', 'desc') 
         ->paginate(10);
 
-    // បញ្ជូន variable $enrollments ទៅកាន់ view
     return view('student.my-enrolled-courses', compact('user', 'enrollments', 'studentProgram'));
 }
 

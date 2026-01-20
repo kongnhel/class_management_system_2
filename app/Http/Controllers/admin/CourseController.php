@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\admin;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\Room;
 use App\Models\Program;    
 use App\Models\Department;
 use App\Models\User;
@@ -19,8 +20,9 @@ class CourseController extends Controller
      */
     public function index()
     {
+        $room = Room::all();
         $courses = Course::with('department', 'program')->paginate(10);
-        return view('admin.courses.index', compact('courses'));
+        return view('admin.courses.index', compact('courses','room'));
     }
 
     /**

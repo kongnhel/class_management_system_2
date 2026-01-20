@@ -8,6 +8,8 @@
     <div class="py-12 bg-gray-50/50">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white shadow-2xl shadow-gray-200/50 sm:rounded-3xl overflow-hidden">
+                
+                {{-- Flash Messages --}}
                 <div class="p-6 sm:px-12 pt-10">
                     @if (session('success'))
                         <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded-xl mb-6 flex items-center shadow-sm">
@@ -39,46 +41,54 @@
                 <form method="POST" action="{{ route('admin.store-course-offering') }}" class="p-6 sm:px-12 pb-12">
                     @csrf
                     <div class="space-y-12">
+                        
+                        {{-- 1. Basic Info & Course Selection --}}
                         <section>
                             <div class="flex items-center space-x-3 mb-6">
                                 <span class="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-600 font-bold text-sm">1</span>
                                 <h3 class="text-xl font-bold text-gray-800">{{ __('ព័ត៌មានមូលដ្ឋាន') }}</h3>
                             </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                <div class="space-y-2">
-                                    <label for="program_id" class="block text-sm font-semibold text-gray-700 uppercase tracking-wider">{{ __('កម្មវិធីសិក្សា') }}<span class="text-red-500">*</span></label>
-                                    <select id="program_id" name="program_id" class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50 transition duration-200" required>
-                                        <option value="">{{ __('ជ្រើសរើសកម្មវិធីសិក្សា') }}</option>
-                                        @foreach ($programs as $program)
-                                            <option value="{{ $program->id }}" {{ old('program_id') == $program->id ? 'selected' : '' }}>{{ $program->name_km ?? $program->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                
-                                <div class="space-y-2">
-                                    <label for="generation" class="block text-sm font-semibold text-gray-700 uppercase tracking-wider">{{ __('ជំនាន់') }}<span class="text-red-500">*</span></label>
-                                    <select id="generation" name="generation" class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50 transition duration-200" required>
-                                        <option value="">{{ __('ជ្រើសរើសជំនាន់') }}</option>
-                                        @foreach ($generations as $generation)
-                                            <option value="{{ $generation }}">{{ $generation }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {{-- Course Selection --}}
                                 <div class="space-y-2">
                                     <label for="course_id" class="block text-sm font-semibold text-gray-700 uppercase tracking-wider">{{ __('មុខវិជ្ជា') }}<span class="text-red-500">*</span></label>
-                                    <select id="course_id" name="course_id" class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50 transition duration-200 bg-gray-50" required disabled>
-                                        <option value="">{{ __('សូមជ្រើសរើសកម្មវិធីសិក្សានិងជំនាន់សិន') }}</option>
+                                    <select id="course_id" name="course_id" class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50 transition duration-200" required>
+                                        <option value="">{{ __('ជ្រើសរើសមុខវិជ្ជា') }}</option>
+                                        @foreach ($courses as $course)
+                                            <option value="{{ $course->id }}" {{ old('course_id') == $course->id ? 'selected' : '' }}>
+                                                {{ $course->title_en ?? $course->title }}
+                                            </option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
                         </section>
 
+                        {{-- 2. Target Programs (UPDATED WITH AUTO GENERATION) --}}
+                        <section class="bg-blue-50/50 p-8 rounded-3xl border border-blue-100 shadow-inner">
+                            <div class="flex items-center justify-between mb-6">
+                                <div class="flex items-center space-x-3">
+                                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-bold text-sm">2</span>
+                                    <h3 class="text-xl font-bold text-gray-800">{{ __('កម្មវិធីសិក្សា និង ជំនាន់ (Target Audience)') }}</h3>
+                                </div>
+                                <button type="button" id="add-program" class="text-sm bg-white border border-blue-200 text-blue-600 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-blue-50 transition">
+                                    + {{ __('បន្ថែមកម្មវិធីសិក្សា') }}
+                                </button>
+                            </div>
+
+                            <div id="programs-container" class="space-y-3">
+                                {{-- Program Rows will be added here via JS --}}
+                            </div>
+                            @error('target_programs') <p class="text-red-500 text-xs mt-2 italic">* {{ $message }}</p> @enderror
+                        </section>
+
+                        {{-- 3. Offering Details --}}
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
                             <section class="bg-gray-50/80 p-8 rounded-3xl border border-gray-100 shadow-inner">
                                 <div class="flex items-center space-x-3 mb-8">
-                                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-600 font-bold text-sm">2</span>
-                                    <h3 class="text-xl font-bold text-gray-800">{{ __('ព័ត៌មានការផ្តល់ជូនមុខវិជ្ជា') }}</h3>
+                                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-600 font-bold text-sm">3</span>
+                                    <h3 class="text-xl font-bold text-gray-800">{{ __('ព័ត៌មានការផ្តល់ជូន') }}</h3>
                                 </div>
                                 <div class="space-y-6">
                                     <div class="space-y-2">
@@ -121,28 +131,37 @@
                                             <input type="date" name="end_date" id="end_date" class="block w-full rounded-xl border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500" value="{{ old('end_date') }}" required>
                                         </div>
                                     </div>
+                                    
+                                    <div class="pt-2">
+                                        <label class="flex items-center space-x-3">
+                                            <input type="checkbox" name="is_open_for_self_enrollment" value="1" class="rounded border-gray-300 text-green-600 shadow-sm focus:border-green-300 focus:ring focus:ring-green-200 focus:ring-opacity-50" {{ old('is_open_for_self_enrollment') ? 'checked' : '' }}>
+                                            <span class="text-sm font-medium text-gray-700">{{ __('អនុញ្ញាតឱ្យសិស្សចុះឈ្មោះដោយខ្លួនឯង') }}</span>
+                                        </label>
+                                    </div>
                                 </div>
                             </section>
 
+                            {{-- 4. Schedules --}}
                             <section class="border-2 border-dashed border-gray-200 p-8 rounded-3xl flex flex-col">
                                 <div class="flex items-center justify-between mb-8">
                                     <div class="flex items-center space-x-3">
-                                        <span class="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-600 font-bold text-sm">3</span>
+                                        <span class="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-600 font-bold text-sm">4</span>
                                         <h3 class="text-xl font-bold text-gray-800">{{ __('កាលវិភាគសិក្សា') }}</h3>
                                     </div>
                                 </div>
                                 
                                 <div id="schedules-container" class="space-y-4 flex-grow">
-                                    </div>
+                                    {{-- Schedule Rows added here --}}
+                                </div>
 
                                 <div class="mt-8 pt-6 border-t border-gray-100">
                                     <button type="button" id="add-schedule" class="group flex items-center space-x-2 text-green-600 font-bold hover:text-green-700 transition duration-200">
                                         <span class="flex items-center justify-center w-8 h-8 rounded-full bg-green-50 group-hover:bg-green-100 transition duration-200">
                                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
                                         </span>
-                                        <span>{{ __('បន្ថែមម៉ោងសិក្សាថ្មី (Next Session)') }}</span>
+                                        <span>{{ __('បន្ថែមម៉ោងសិក្សាថ្មី') }}</span>
                                     </button>
-                                    @error('schedules') <p class="text-red-500 text-xs mt-2 italic">* {{ __('សូមបន្ថែមយ៉ាងហោចណាស់កាលវិភាគមួយ។') }}</p> @enderror
+                                    @error('schedules') <p class="text-red-500 text-xs mt-2 italic">* {{ $message }}</p> @enderror
                                 </div>
                             </section>
                         </div>
@@ -167,8 +186,123 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const container = document.getElementById('schedules-container');
-            const addButton = document.getElementById('add-schedule');
+            // ============================================
+            // 1. DATA PREPARATION (Map Programs to Gens)
+            // ============================================
+            const allPrograms = {!! json_encode($programs) !!};
+            const allCourses = {!! json_encode($courses) !!}; 
+            
+            // បង្កើត Map: Program_ID => [Gen1, Gen2, Gen3]
+            const programGenMap = {};
+
+            allCourses.forEach(course => {
+                if (course.program_id && course.generation) {
+                    if (!programGenMap[course.program_id]) {
+                        programGenMap[course.program_id] = new Set();
+                    }
+                    programGenMap[course.program_id].add(course.generation);
+                }
+            });
+
+            // ============================================
+            // 2. DYNAMIC PROGRAM ROWS LOGIC
+            // ============================================
+            const programsContainer = document.getElementById('programs-container');
+            const addProgramBtn = document.getElementById('add-program');
+            let programIndex = 0;
+
+            function addProgramRow(data = {}) {
+                const rowId = `program-row-${programIndex}`;
+                const div = document.createElement('div');
+                div.className = 'flex items-center gap-4 bg-white p-3 rounded-xl border border-blue-100 shadow-sm animate-fadeIn';
+                div.id = rowId;
+
+                // Create Program Options
+                let programOptions = `<option value="">{{ __('ជ្រើសរើសជំនាញ') }}</option>`;
+                allPrograms.forEach(p => {
+                    const selected = (data.program_id == p.id) ? 'selected' : '';
+                    programOptions += `<option value="${p.id}" ${selected}>${p.name_km ?? p.name}</option>`;
+                });
+
+                div.innerHTML = `
+                    <div class="flex-grow grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">{{ __('ជំនាញ (Program)') }}</label>
+                            <select name="target_programs[${programIndex}][program_id]" class="program-select w-full rounded-lg border-gray-200 text-sm focus:ring-blue-500" required>
+                                ${programOptions}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">{{ __('ជំនាន់ (Generation)') }}</label>
+                            <select name="target_programs[${programIndex}][generation]" class="generation-select w-full rounded-lg border-gray-200 text-sm focus:ring-blue-500 bg-gray-50" required disabled>
+                                <option value="">{{ __('សូមជ្រើសរើសជំនាញជាមុន') }}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="button" onclick="document.getElementById('${rowId}').remove()" class="mt-5 text-red-400 hover:text-red-600 p-2 rounded-full hover:bg-red-50 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>
+                `;
+                programsContainer.appendChild(div);
+
+                // Add Event Listener to the new Program Select
+                const progSelect = div.querySelector('.program-select');
+                const genSelect = div.querySelector('.generation-select');
+
+                progSelect.addEventListener('change', function() {
+                    const progId = this.value;
+                    genSelect.innerHTML = '<option value="">{{ __("ជ្រើសរើសជំនាន់") }}</option>';
+                    
+                    if (progId && programGenMap[progId]) {
+                        // Sort generations
+                        const gens = Array.from(programGenMap[progId]).sort();
+                        
+                        if (gens.length > 0) {
+                            gens.forEach(gen => {
+                                const selected = (data.generation == gen) ? 'selected' : '';
+                                const option = document.createElement('option');
+                                option.value = gen;
+                                option.textContent = gen;
+                                if (selected) option.selected = true;
+                                genSelect.appendChild(option);
+                            });
+                            genSelect.disabled = false;
+                            genSelect.classList.remove('bg-gray-50');
+                        } else {
+                            genSelect.innerHTML = '<option value="">{{ __("មិនមានទិន្នន័យជំនាន់") }}</option>';
+                            genSelect.disabled = true;
+                        }
+                    } else {
+                        genSelect.disabled = true;
+                        genSelect.classList.add('bg-gray-50');
+                        genSelect.innerHTML = '<option value="">{{ __("សូមជ្រើសរើសជំនាញជាមុន") }}</option>';
+                    }
+                });
+
+                // Trigger change manually if we have initial data (for old input or edit)
+                if (data.program_id) {
+                    progSelect.dispatchEvent(new Event('change'));
+                }
+
+                programIndex++;
+            }
+
+            addProgramBtn.addEventListener('click', () => addProgramRow());
+
+            // Handle Old Data (Validation Error Repopulation)
+            const oldPrograms = {!! json_encode(old('target_programs', [])) !!};
+            if (Object.keys(oldPrograms).length > 0) {
+                Object.values(oldPrograms).forEach(p => addProgramRow(p));
+            } else {
+                addProgramRow(); // Default row
+            }
+
+
+            // ============================================
+            // 3. SCHEDULE LOGIC (Existing)
+            // ============================================
+            const scheduleContainer = document.getElementById('schedules-container');
+            const addScheduleBtn = document.getElementById('add-schedule');
             const rooms = {!! json_encode($rooms) !!};
             let scheduleIndex = 0;
 
@@ -176,7 +310,6 @@
                 const scheduleDiv = document.createElement('div');
                 scheduleDiv.className = 'schedule-row group relative bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:border-green-200 transition duration-200 animate-fadeIn mb-4';
                 
-                // បន្ថែម Logic ដើម្បីទាញយកលេខរៀង Session (1, 2, 3...)
                 const currentSessions = document.querySelectorAll('.schedule-row').length + 1;
                 const roomOptions = rooms.map(room => `<option value="${room.id}" ${initialData.room_id == room.id ? 'selected' : ''}>${room.room_number}</option>`).join('');
 
@@ -220,83 +353,27 @@
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 `;
-                container.appendChild(scheduleDiv);
+                scheduleContainer.appendChild(scheduleDiv);
                 
-                // បន្ថែម Event សម្រាប់លុប និង Update លេខ Session ឡើងវិញ
                 scheduleDiv.querySelector('.remove-schedule').addEventListener('click', function() { 
-                    scheduleDiv.classList.add('scale-95', 'opacity-0');
-                    setTimeout(() => {
-                        scheduleDiv.remove();
-                        updateSessionNumbers(); // ហៅ Function ដើម្បីរៀបលេខ Session ឡើងវិញ
-                    }, 200);
+                    scheduleDiv.remove();
+                    // Update session numbers
+                    document.querySelectorAll('.schedule-row').forEach((row, i) => {
+                        row.querySelector('.flex.items-center.text-green-600').innerHTML = 
+                            `<svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"></path></svg> Session ${i + 1}`;
+                    });
                 });
                 scheduleIndex++;
             }
 
-            // Function សម្រាប់ប្តូរលេខ Session ឡើងវិញនៅពេលលុប Row ណាមួយចោល
-            function updateSessionNumbers() {
-                document.querySelectorAll('.schedule-row').forEach((row, index) => {
-                    const sessionLabel = row.querySelector('.flex.items-center.text-green-600');
-                    if (sessionLabel) {
-                        sessionLabel.innerHTML = `
-                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"></path></svg>
-                            Session ${index + 1}
-                        `;
-                    }
-                });
-            }
-
-            addButton.addEventListener('click', () => addScheduleRow());
+            addScheduleBtn.addEventListener('click', () => addScheduleRow());
             
             const oldSchedules = {!! json_encode(old('schedules', [])) !!};
             if (Object.keys(oldSchedules).length > 0) {
-                Object.values(oldSchedules).forEach(schedule => addScheduleRow(schedule));
+                Object.values(oldSchedules).forEach(s => addScheduleRow(s));
             } else {
                 addScheduleRow();
             }
-
-            // --- Dependent Dropdown Logic ---
-            const programSelect = document.getElementById('program_id');
-            const generationSelect = document.getElementById('generation');
-            const courseSelect = document.getElementById('course_id');
-
-            function fetchAndPopulateCourses() {
-                const programId = programSelect.value;
-                const generation = generationSelect.value;
-                
-                if (!programId || !generation) {
-                    courseSelect.innerHTML = '<option value="">{{ __("សូមជ្រើសរើសកម្មវិធីសិក្សានិងជំនាន់សិន") }}</option>';
-                    courseSelect.disabled = true;
-                    courseSelect.classList.add('bg-gray-50');
-                    return;
-                }
-
-                courseSelect.innerHTML = '<option value="">{{ __("កំពុងផ្ទុក...") }}</option>';
-                
-                fetch(`/admin/get-courses-by-program-and-generation?program_id=${programId}&generation=${generation}`)
-                    .then(response => response.json())
-                    .then(courses => {
-                        courseSelect.innerHTML = '<option value="">{{ __("ជ្រើសរើសមុខវិជ្ជា") }}</option>';
-                        if (courses.length > 0) {
-                            courses.forEach(course => {
-                                const option = document.createElement('option');
-                                option.value = course.id;
-                                option.textContent = course.title_km || course.title;
-                                courseSelect.appendChild(option);
-                            });
-                            courseSelect.disabled = false;
-                            courseSelect.classList.remove('bg-gray-50');
-                        } else {
-                            courseSelect.innerHTML = '<option value="">{{ __("មិនមានមុខវិជ្ជាទេ") }}</option>';
-                        }
-                    })
-                    .catch(() => {
-                        courseSelect.innerHTML = '<option value="">{{ __("មានបញ្ហាក្នុងការផ្ទុក") }}</option>';
-                    });
-            }
-
-            programSelect.addEventListener('change', fetchAndPopulateCourses);
-            generationSelect.addEventListener('change', fetchAndPopulateCourses);
         });
     </script>
 

@@ -154,5 +154,12 @@ public function professor()
     //     return $this->belongsTo(User::class, 'lecturer_id');
     // }
 
+    public function targetPrograms()
+    {
+        return $this->belongsToMany(Program::class, 'course_offering_program')
+                    ->withPivot('generation') // យកទិន្នន័យ generation មកប្រើ
+                    ->withTimestamps();
+    }
+
 
 }
