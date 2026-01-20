@@ -362,6 +362,10 @@ public function dashboard()
     // 7. បញ្ជូនទិន្នន័យទៅ View
     return view('student.dashboard', compact(
         'user',
+        'totalPresent',
+        'totalAbsent',
+        'totalPermission',
+        'totalLate',
         'enrolledCourses',
         'enrollments',
         'upcomingAssignments',
