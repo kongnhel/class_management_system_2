@@ -156,72 +156,90 @@
 
 
                     {{-- មុខវិជ្ជាដែលកំពុងសិក្សា (Enrolled Courses) --}}
-{{-- ផ្នែកបង្ហាញមុខវិជ្ជាសម្រាប់ស្កែនវត្តមានថ្ងៃនេះ --}}
-<section>
-    <div class="flex items-center gap-3 mb-6">
-        <div class="h-8 w-1.5 bg-blue-600 rounded-full"></div>
-        <h4 class="text-2xl font-black text-gray-800">{{ __('មុខវិជ្ជាត្រូវស្កែនវត្តមានថ្ងៃនេះ') }}</h4>
-    </div>
-    
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        @forelse($enrolledCourses as $course)
-            @php
-                $myEnrollment = $course->studentCourseEnrollments->first(); 
-                $isLeader = $myEnrollment ? $myEnrollment->is_class_leader : false;
-            @endphp
-
-            <div class="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm hover:border-blue-200 transition-all relative group overflow-hidden">
-                {{-- Status Badge --}}
-                <div class="absolute top-6 right-6">
-                    @if($course->today_status == 'present')
-                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200 flex items-center gap-1 shadow-sm">
-                            <i class="fas fa-check-circle"></i> {{ __('បានស្កែនរួច') }}
-                        </span>
-                    @else
-                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-600 border border-amber-100 animate-pulse">
-                            {{ __('មិនទាន់កត់ត្រា') }}
-                        </span>
-                    @endif
-                </div>
-
-                {{-- Course Info --}}
-                <div class="flex flex-col justify-between h-full">
-                    <div class="mb-6">
-                        <h3 class="font-black text-gray-800 leading-tight text-lg mb-1">{{ $course->course->title_en ?? $course->course->name }}</h3>
-                        <p class="text-[10px] text-blue-500 uppercase font-black tracking-widest">{{ $course->academic_year }} • ឆមាស {{ $course->semester }}</p>
-                    </div>
-                    
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                            <i class="fas fa-user-tie"></i>
+                    <section>
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="h-8 w-1.5 bg-blue-600 rounded-full"></div>
+                            <h4 class="text-2xl font-black text-gray-800">{{ __('មុខវិជ្ជាដែលកំពុងសិក្សា') }}</h4>
                         </div>
-                        <div>
-                            <p class="text-[10px] text-gray-400 font-bold uppercase">{{ __('សាស្ត្រាចារ្យ') }}</p>
-                            <p class="text-sm font-bold text-gray-700">{{ $course->lecturer->name }}</p>
-                        </div>
-                    </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            @foreach($enrolledCourses as $course)
+                                @php
+                                    // រកមើលថាសិស្សជាប្រធានថ្នាក់ឬអត់
+                                    // ដោយសារយើង load relation 'studentCourseEnrollments' ដែល filter តែសិស្សម្នាក់នេះ
+                                    // ដូច្នេះយកធាតុទី 1 មកឆែក
+                                    $myEnrollment = $course->studentCourseEnrollments->first(); 
+                                    $isLeader = $myEnrollment ? $myEnrollment->is_class_leader : false;
+                                @endphp
 
-                    {{-- Action Button --}}
-                    @if($course->today_status == 'present')
-                        <button disabled class="w-full py-3.5 rounded-2xl font-bold bg-green-50 text-green-600 cursor-default flex items-center justify-center gap-2">
-                            <i class="fas fa-check"></i> {{ __('វត្តមានរួចរាល់') }}
-                        </button>
-                    @else
-                        <a href="{{ route('student.scan') }}" class="w-full py-3.5 rounded-2xl font-bold bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all flex items-center justify-center gap-2">
-                            <i class="fas fa-qrcode"></i> {{ __('ស្កែនវត្តមានឥឡូវនេះ') }}
-                        </a>
-                    @endif
-                </div>
-            </div>
-        @empty
-            {{-- បង្ហាញនៅពេលគ្មានម៉ោងរៀនថ្ងៃនេះ --}}
-            <div class="col-span-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-[2.5rem] p-10 text-center">
-                <i class="fas fa-calendar-check text-gray-300 text-4xl mb-4"></i>
-                <p class="text-gray-400 font-bold italic">{{ __('មិនមានម៉ោងសិក្សាដែលត្រូវស្កែនវត្តមាននៅថ្ងៃនេះទេ') }}</p>
-            </div>
-        @endforelse
-    </div>
-</section>
+                                <div class="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm hover:border-blue-200 transition-all relative group overflow-hidden">
+                                    
+                                    {{-- 🔥 STATUS BADGE (បង្ហាញនៅជ្រុង) 🔥 --}}
+                                    <div class="absolute top-6 right-6 z-10">
+                                        @if($course->today_status == 'present')
+                                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200 flex items-center gap-1 shadow-sm">
+                                                <i class="fas fa-check-circle"></i> {{ __('វត្តមាន') }}
+                                            </span>
+                                        @elseif($course->today_status == 'absent')
+                                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm">
+                                                {{ __('អវត្តមាន') }}
+                                            </span>
+                                        @elseif($course->today_status == 'late')
+                                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 border border-yellow-200 shadow-sm">
+                                                {{ __('យឺត') }}
+                                            </span>
+                                        @else
+                                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-gray-50 text-gray-400 border border-gray-100">
+                                                {{ __('មិនទាន់កត់ត្រា') }}
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    <div class="flex flex-col justify-between h-full">
+                                        <div class="mb-6 max-w-[70%]">
+                                            <h3 class="font-black text-gray-800 leading-tight text-lg mb-1">
+                                                {{ $course->course->title_en ?? $course->course->name }}
+                                            </h3>
+                                            <p class="text-[10px] text-blue-500 uppercase font-black tracking-widest">
+                                                {{ $course->academic_year }} • ឆមាស {{ $course->semester }}
+                                            </p>
+                                        </div>
+                                        
+                                        <div class="flex items-center gap-3 mb-6">
+                                            <div class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 border border-gray-100">
+                                                <i class="fas fa-user-tie"></i>
+                                            </div>
+                                            <div>
+                                                <p class="text-[10px] text-gray-400 font-bold uppercase">{{ __('សាស្ត្រាចារ្យ') }}</p>
+                                                <p class="text-sm font-bold text-gray-700">{{ $course->lecturer->name }}</p>
+                                            </div>
+                                        </div>
+
+                                        {{-- ប៊ូតុងចូលស្កែន ឬ មើលវត្តមាន --}}
+                                        <div class="flex flex-col gap-2">
+                                            @if($course->today_status == 'present')
+                                                <button disabled class="w-full py-3 rounded-xl font-bold bg-green-50 text-green-600 cursor-default flex items-center justify-center gap-2">
+                                                    <i class="fas fa-check"></i> {{ __('បានស្កែនរួចរាល់') }}
+                                                </button>
+                                            @else
+                                                <a href="{{ route('student.scan') }}" class="w-full py-3 rounded-xl font-bold bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all flex items-center justify-center gap-2">
+                                                    <i class="fas fa-qrcode"></i> {{ __('ស្កែនវត្តមាន') }}
+                                                </a>
+                                            @endif
+
+                                            @if($isLeader)
+                                                <a href="{{ route('student.leader.attendance', $course->id) }}" 
+                                                   class="w-full bg-slate-800 text-white px-4 py-3 rounded-xl text-xs font-bold hover:bg-slate-700 transition-all flex items-center justify-center gap-2">
+                                                    <i class="fas fa-clipboard-check"></i> {{ __('គ្រប់គ្រងវត្តមាន (ប្រធានថ្នាក់)') }}
+                                                </a>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </section>
+
                     {{-- កម្មវិធីសិក្សា (Curriculum) --}}
                     <section>
                          <div class="flex items-center gap-3 mb-6">
