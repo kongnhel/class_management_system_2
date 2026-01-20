@@ -18,6 +18,12 @@
 
     <div class="min-h-screen bg-gray-50 flex flex-col items-center pt-6 px-4">
         
+        {{-- HTTPS Warning Banner (នឹងបង្ហាញតែពេលមិនមែន HTTPS) --}}
+        <div id="https-warning" class="hidden w-full max-w-md mb-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-md" role="alert">
+            <p class="font-bold">⚠️ Camera Error</p>
+            <p class="text-sm">កាមេរ៉ាមិនដំណើរការលើ HTTP ទេ។ សូមប្រើប្រាស់ <b>HTTPS</b> ឬ <b>Ngrok</b>។</p>
+        </div>
+
         {{-- Header: ប៊ូតុងត្រឡប់ក្រោយ --}}
         <div class="w-full max-w-md flex justify-between items-center mb-6">
             <a href="{{ route('student.dashboard') }}" class="p-3 rounded-full bg-white shadow-sm text-gray-500 hover:text-gray-900 transition-all active:scale-95">
@@ -91,6 +97,11 @@
 
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script>
+        // Check HTTPS Security ភ្លាមៗ
+        if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+            document.getElementById('https-warning').classList.remove('hidden');
+        }
+
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
         const overlay = document.getElementById('result-overlay');
         const modalTitle = document.getElementById('modal-title');
@@ -101,20 +112,17 @@
         let isProcessing = false;
         let html5QrcodeScanner = null;
 
-        // --- 1. បន្ថែម Function សម្រាប់ចាប់ Error (ពេល Scan មិនចេញ) ---
         function onScanFailure(error) {
-            // កុំបង្ហាញ Alert រំខានពេលកំពុង Scan កាមេរ៉ា
-            // ប៉ុន្តែយើងអាចមើលក្នុង Console បានថាហេតុអ្វីវាអានរូបភាពមិនចេញ
-            console.warn(`Code scan error = ${error}`);
+            // console.warn(`Code scan error = ${error}`);
         }
 
         function onScanSuccess(decodedText, decodedResult) {
             if (isProcessing) return;
             isProcessing = true;
 
-            // Pause Camera
+            // Stop Camera
             try {
-                html5QrcodeScanner.clear(); // ប្រើ clear() ជំនួស pause() ដើម្បីបិទទាំងស្រុងពេលជោគជ័យ
+                html5QrcodeScanner.clear(); 
             } catch (e) { console.log(e); }
             
             if (navigator.vibrate) navigator.vibrate(200);
@@ -181,7 +189,6 @@
             overlay.classList.add('hidden');
             overlay.classList.remove('flex');
             isProcessing = false;
-            // Reload page ដើម្បី reset scanner ទាំងស្រុង (វិធីសុវត្ថិភាពបំផុតសម្រាប់ library នេះ)
             window.location.reload();
         }
 
@@ -192,7 +199,7 @@
                 fps: 10, 
                 qrbox: {width: 250, height: 250},
                 aspectRatio: 1.0,
-                // បើក Experimental Features ដើម្បីឱ្យវាព្យាយាមចាប់ QR ពិបាកៗ
+                // Feature សំខាន់សម្រាប់ស្កែន QR ពណ៌សលើខ្មៅ
                 experimentalFeatures: {
                     useBarCodeDetectorIfSupported: true
                 },
@@ -201,7 +208,6 @@
             false
         );
         
-        // 👉 ដាក់ onScanFailure នៅទីនេះ
         html5QrcodeScanner.render(onScanSuccess, onScanFailure);
 
         // CSS Animations
