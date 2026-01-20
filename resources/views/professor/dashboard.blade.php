@@ -37,6 +37,9 @@
                     <p class="text-sm text-gray-500 mt-1">
                         {{ __('ជំនាន់') }}: <span class="font-medium text-gray-700">{{ $offering->generation }}</span> 
                         <span class="mx-1">|</span> 
+                        <span class="text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded text-[11px]">
+                            {{ $offering->course->program->name_km ?? $offering->course->program->name_en ?? 'N/A' }}
+                        </span>
                         {{-- {{ __('បន្ទប់') }}: <span class="font-medium text-gray-700">{{ $offering->room->room_number ?? $offering->room->room_number ?? 'N/A' }}</span> --}}
                     </p>
                 </div>

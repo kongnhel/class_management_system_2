@@ -31,6 +31,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use App\Models\StudentProfile;
 use App\Models\StudentCourseEnrollment;
+use App\Models\StudentProgramEnrollment;
 use App\Notifications\GeneralNotification;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
@@ -149,37 +150,125 @@ class ProfessorController extends Controller
     // }
 
 
+// public function dashboard()
+// {
+//     $user = Auth::user();
+//     $today = now()->format('l'); // e.g., "Monday"
+//     $todayDate = now()->toDateString(); // 2026-01-19
+
+//     $unreadNotificationsCount = $user->unreadNotifications()->count();
+
+//     // 1. Get Course Offerings & CHECK ATTENDANCE STATUS (For the Badge)
+//     $courseOfferings = CourseOffering::where('lecturer_user_id', $user->id)
+//         ->with('course')
+//         ->get()
+//         ->map(function ($offering) use ($todayDate) {
+//             // Check if attendance record exists for THIS course TODAY
+//             $hasRecord = \App\Models\AttendanceRecord::where('course_offering_id', $offering->id)
+//                             ->where('date', $todayDate)
+//                             ->exists();
+            
+//             // Add this property so the View can use it for the Green/Blue badge
+//             $offering->is_completed_today = $hasRecord;
+            
+//             return $offering;
+//         });
+
+//     // 2. Optimized Student Count (Better Performance)
+//     // Instead of looping through PHP arrays, we use SQL to count unique students
+//     $totalStudents = \App\Models\StudentCourseEnrollment::whereHas('courseOffering', function ($q) use ($user) {
+//         $q->where('lecturer_user_id', $user->id);
+//     })->distinct('student_user_id')->count('student_user_id');
+
+//     // 3. Upcoming Assignments
+//     $upcomingAssignments = Assignment::whereHas('courseOffering', function ($query) use ($user) {
+//             $query->where('lecturer_user_id', $user->id);
+//         })
+//         ->whereDate('due_date', '>=', $todayDate)
+//         ->orderBy('due_date')
+//         ->take(5)
+//         ->get();
+
+//     // 4. Upcoming Exams
+//     $upcomingExams = Exam::whereHas('courseOffering', function ($query) use ($user) {
+//             $query->where('lecturer_user_id', $user->id);
+//         })
+//         ->whereDate('exam_date', '>=', $todayDate)
+//         ->orderBy('exam_date')
+//         ->take(5)
+//         ->get();
+
+//     // 5. Announcements
+//     $announcements = Announcement::where('target_role', 'all')
+//         ->orWhere('target_role', 'professor')
+//         ->orderBy('created_at', 'desc')
+//         ->take(5) 
+//         ->get();
+
+//     // 6. Upcoming Quizzes (FIXED: Uncommented the user check)
+//     $upcomingQuizzes = Quiz::whereHas('courseOffering', function ($query) use ($user) {
+//             $query->where('lecturer_user_id', $user->id); // ✅ Fixed: Now only shows YOUR quizzes
+//         })
+//         ->whereDate('quiz_date', '>=', $todayDate) 
+//         ->orderBy('quiz_date', 'asc')
+//         ->take(5)
+//         ->get();
+
+//     // 7. Today's Schedule
+//     $todaySchedules = Schedule::whereHas('courseOffering', function ($query) use ($user) {
+//             $query->where('lecturer_user_id', $user->id);
+//         })
+//         ->where('day_of_week', $today)
+//         ->with(['courseOffering.course', 'room'])
+//         ->orderBy('start_time')
+//         ->get();
+        
+
+//     return view('professor.dashboard', compact(
+//         'user',
+//         'courseOfferings', // Contains is_completed_today for the badge
+//         'totalStudents',
+//         'upcomingAssignments',
+//         'upcomingExams',
+//         'upcomingQuizzes',
+//         'announcements',
+//         'unreadNotificationsCount',
+//         'todaySchedules',
+//         'courseOfferings',
+//     ));
+// }
+
 public function dashboard()
 {
     $user = Auth::user();
     $today = now()->format('l'); // e.g., "Monday"
-    $todayDate = now()->toDateString(); // 2026-01-19
+    $todayDate = now()->toDateString(); 
 
     $unreadNotificationsCount = $user->unreadNotifications()->count();
 
-    // 1. Get Course Offerings & CHECK ATTENDANCE STATUS (For the Badge)
-    $courseOfferings = CourseOffering::where('lecturer_user_id', $user->id)
-        ->with('course')
-        ->get()
-        ->map(function ($offering) use ($todayDate) {
-            // Check if attendance record exists for THIS course TODAY
-            $hasRecord = \App\Models\AttendanceRecord::where('course_offering_id', $offering->id)
-                            ->where('date', $todayDate)
-                            ->exists();
-            
-            // Add this property so the View can use it for the Green/Blue badge
-            $offering->is_completed_today = $hasRecord;
-            
-            return $offering;
-        });
+    // ១. ទាញយកព័ត៌មានសាស្ត្រាចារ្យ និងដេប៉ាតឺម៉ង់
+    $professor = User::where('id', $user->id)
+        ->with('department')
+        ->first();
 
-    // 2. Optimized Student Count (Better Performance)
-    // Instead of looping through PHP arrays, we use SQL to count unique students
+    // ២. ទាញយក Course Offerings & ឆែកស្ថានភាពវត្តមានថ្ងៃនេះ
+// នៅក្នុង ProfessorDashboardController.php
+$courseOfferings = CourseOffering::where('lecturer_user_id', $user->id)
+    ->with(['course.program']) // ✅ បន្ថែមការ load program ពីក្នុង course
+    ->get()
+    ->map(function ($offering) use ($todayDate) {
+        $hasRecord = \App\Models\AttendanceRecord::where('course_offering_id', $offering->id)
+                        ->where('date', $todayDate)
+                        ->exists();
+        $offering->is_completed_today = $hasRecord;
+        return $offering;
+    });
+    // ៣. រាប់ចំនួនសិស្សសរុប (Unique Students)
     $totalStudents = \App\Models\StudentCourseEnrollment::whereHas('courseOffering', function ($q) use ($user) {
         $q->where('lecturer_user_id', $user->id);
     })->distinct('student_user_id')->count('student_user_id');
 
-    // 3. Upcoming Assignments
+    // ៤. ទាញយកកិច្ចការ ការប្រឡង និង Quiz
     $upcomingAssignments = Assignment::whereHas('courseOffering', function ($query) use ($user) {
             $query->where('lecturer_user_id', $user->id);
         })
@@ -188,7 +277,6 @@ public function dashboard()
         ->take(5)
         ->get();
 
-    // 4. Upcoming Exams
     $upcomingExams = Exam::whereHas('courseOffering', function ($query) use ($user) {
             $query->where('lecturer_user_id', $user->id);
         })
@@ -197,23 +285,22 @@ public function dashboard()
         ->take(5)
         ->get();
 
-    // 5. Announcements
-    $announcements = Announcement::where('target_role', 'all')
-        ->orWhere('target_role', 'professor')
-        ->orderBy('created_at', 'desc')
-        ->take(5) 
-        ->get();
-
-    // 6. Upcoming Quizzes (FIXED: Uncommented the user check)
     $upcomingQuizzes = Quiz::whereHas('courseOffering', function ($query) use ($user) {
-            $query->where('lecturer_user_id', $user->id); // ✅ Fixed: Now only shows YOUR quizzes
+            $query->where('lecturer_user_id', $user->id);
         })
         ->whereDate('quiz_date', '>=', $todayDate) 
         ->orderBy('quiz_date', 'asc')
         ->take(5)
         ->get();
 
-    // 7. Today's Schedule
+    // ៥. សេចក្តីជូនដំណឹង
+    $announcements = Announcement::where('target_role', 'all')
+        ->orWhere('target_role', 'professor')
+        ->orderBy('created_at', 'desc')
+        ->take(5) 
+        ->get();
+
+    // ៦. កាលវិភាគថ្ងៃនេះ
     $todaySchedules = Schedule::whereHas('courseOffering', function ($query) use ($user) {
             $query->where('lecturer_user_id', $user->id);
         })
@@ -224,7 +311,8 @@ public function dashboard()
 
     return view('professor.dashboard', compact(
         'user',
-        'courseOfferings', // Contains is_completed_today for the badge
+        'professor',
+        'courseOfferings',
         'totalStudents',
         'upcomingAssignments',
         'upcomingExams',
