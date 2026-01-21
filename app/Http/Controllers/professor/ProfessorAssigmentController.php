@@ -4,6 +4,8 @@ namespace App\Http\Controllers\professor;
 
 use App\Http\Controllers\Controller;
 use App\Models\Assignment;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 
 class ProfessorAssigmentController extends Controller

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\professor;
 use App\Http\Controllers\Controller;
 use App\Models\AttendanceRecord;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 use Illuminate\Http\Request;
 

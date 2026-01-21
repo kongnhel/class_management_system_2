@@ -9,6 +9,8 @@ use App\Models\Program;
 use App\Models\CourseOffering;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 
 class ProfessorCourseOfferingController extends Controller
