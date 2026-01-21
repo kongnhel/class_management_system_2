@@ -271,104 +271,117 @@ activeTab: $persist('admins').as('user_manage_tab'),
     @endif
 </div>
 
-<div x-show="activeTab === 'professors'" class="space-y-3">
-    @if ($professors->isEmpty())
-        <div class="bg-gray-100 p-6 rounded-xl text-center text-gray-500 shadow-inner">
-            <p class="text-base font-medium">{{ __('មិនទាន់មានលោកគ្រូអ្នកគ្រូណាមួយនៅឡើយទេ។') }}</p>
+<div x-show="activeTab === 'professors'" class="space-y-4">
+    @if ($professorsGrouped->isEmpty())
+        <div class="bg-gray-100 p-8 rounded-2xl text-center text-gray-500 shadow-inner border-2 border-dashed border-gray-200">
+            <i class="fas fa-user-tie text-4xl mb-3 text-gray-300"></i>
+            <p class="text-lg font-medium">{{ __('មិនទាន់មានលោកគ្រូអ្នកគ្រូណាមួយនៅឡើយទេ។') }}</p>
         </div>
     @else
-        {{-- 1. DESKTOP VERSION --}}
-        <div id="screen-professors" class="hidden md:block overflow-x-auto rounded-2xl shadow-sm border border-gray-200">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">{{ __('រូបភាព') }}</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">{{ __('ឈ្មោះអ្នកប្រើ') }}</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">{{ __('អ៊ីម៉ែល') }}</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">{{ __('ឈ្មោះពេញ') }}</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">{{ __('ដេប៉ាតឺម៉ង់') }}</th>
-                        <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">{{ __('សកម្មភាព') }}</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-100 text-sm">
-                    @foreach ($professors as $professor)
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-6 py-3">
-@if ($professor->profile && $professor->profile->profile_picture_url)
-    {{-- លុប asset('storage/' . ...) ចេញ ហើយប្រើ URL ពី database ដោយផ្ទាល់ --}}
-    <img src="{{ $professor->profile->profile_picture_url }}" 
-         class="h-10 w-10 rounded-full object-cover border border-gray-100"
-         alt="{{ $professor->name }}">
-@else
-    <div class="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
-        {{ strtoupper(substr($professor->name, 0, 1)) }}
-    </div>
-@endif
-                            </td>
-                            <td class="px-6 py-3 font-semibold text-gray-900">{{ $professor->name }}</td>
-                            <td class="px-6 py-3 text-gray-600">{{ $professor->email }}</td>
-                            <td class="px-6 py-3 text-gray-600">{{ $professor->profile->full_name_km ?? 'N/A' }}</td>
-                            <td class="px-6 py-3 text-gray-600">{{ $professor->department->name_km ?? 'N/A' }}</td>
-                            <td class="px-6 py-3 text-right font-bold space-x-3">
-                                <a href="{{ route('admin.show-user', $professor->id) }}" class="text-green-600 hover:underline">{{ __('មើល') }}</a>
-                                <a href="{{ route('admin.edit-user', $professor->id) }}" class="text-blue-600 hover:underline">{{ __('កែប្រែ') }}</a>
-                                <button type="button" @click="confirmDelete('delete-professor-{{ $professor->id }}', '{{ __('លោកគ្រូអ្នកគ្រូ') }}')" class="text-red-500 hover:underline">{{ __('លុប') }}</button>
-                                <form id="delete-professor-{{ $professor->id }}" action="{{ route('admin.delete-user', $professor->id) }}" method="POST" class="hidden">@csrf @method('DELETE')</form>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-
-        {{-- 2. MOBILE VERSION --}}
-        <div id="mobile-professors" class="md:hidden space-y-3">
-            @foreach ($professors as $professor)
-                <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-                    <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-50">
-                        <div class="flex items-center space-x-3 min-w-0">
-@if ($professor->profile && $professor->profile->profile_picture_url)
-    {{-- ប្តូរ src ឱ្យទៅហៅ URL ពី ImgBB ដោយផ្ទាល់ ដោយមិនប្រើ asset('storage/...') --}}
-    <img src="{{ $professor->profile->profile_picture_url }}" 
-         class="h-12 w-12 rounded-full object-cover border border-gray-100"
-         alt="{{ $professor->name }}">
-@else
-    <div class="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-black text-xl shadow-md flex-shrink-0">
-        {{ strtoupper(substr($professor->name, 0, 1)) }}
-    </div>
-@endif
-                            <div class="min-w-0">
-                                <h4 class="text-base font-black text-gray-900 truncate tracking-tight uppercase">{{ $professor->name }}</h4>
-                                <p class="text-xs text-gray-500 truncate">{{ $professor->email }}</p>
-                            </div>
+        {{-- Loop តាមដេប៉ាតឺម៉ង់ (Department) --}}
+        @foreach ($professorsGrouped as $deptName => $professorList)
+            <div x-data="{ openDept: {{ $loop->first ? 'true' : 'false' }} }" class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden transition-all duration-300">
+                
+                <button @click="openDept = !openDept" 
+                        class="w-full flex items-center justify-between px-6 py-4 bg-blue-50/30 hover:bg-blue-50 transition-colors border-b border-gray-100">
+                    <div class="flex items-center">
+                        <div class="h-11 w-11 bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-xl flex items-center justify-center shadow-lg shadow-blue-100 mr-4 font-bold">
+                            <i class="fas fa-university text-sm"></i>
+                        </div>
+                        <div class="text-left">
+                            <h3 class="text-lg font-bold text-gray-800 tracking-tight">{{ $deptName }}</h3>
+                            <p class="text-xs font-medium text-gray-500">{{ $professorList->count() }} {{ __('រូប') }}</p>
                         </div>
                     </div>
-                    
-                    <div class="flex items-center justify-between">
-                        <div class="min-w-0 pr-2">
-                            <p class="text-[11px] text-gray-400 font-medium uppercase tracking-tighter">{{ __('ដេប៉ាតឺម៉ង់') }}</p>
-                            <p class="text-xs text-gray-700 font-bold truncate">{{ $professor->department->name_km ?? 'N/A' }}</p>
+                    <div class="flex items-center space-x-3">
+                        <span class="hidden sm:inline-block text-[10px] font-bold text-gray-400 uppercase tracking-widest" x-text="openDept ? '{{ __('បិទវិញ') }}' : '{{ __('មើលបញ្ជី') }}'"></span>
+                        <i class="fas fa-chevron-down text-gray-400 transition-transform duration-500" :class="openDept ? 'rotate-180' : ''"></i>
+                    </div>
+                </button>
+
+                <div x-show="openDept" x-collapse>
+                    <div class="p-6">
+                        {{-- 1. DESKTOP VERSION --}}
+                        <div class="hidden md:block overflow-x-auto rounded-xl border border-gray-100 shadow-sm">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50/50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">{{ __('រូបភាព') }}</th>
+                                        <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">{{ __('ឈ្មោះអ្នកប្រើ / ពេញ') }}</th>
+                                        <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">{{ __('អ៊ីម៉ែល') }}</th>
+                                        <th class="px-6 py-3 text-right text-[10px] font-bold text-gray-400 uppercase tracking-widest">{{ __('សកម្មភាព') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-100">
+                                    @foreach ($professorList as $professor)
+                                        <tr class="hover:bg-gray-50 transition-colors">
+                                            <td class="px-6 py-3 whitespace-nowrap">
+                                                @if ($professor->profile && $professor->profile->profile_picture_url)
+                                                    <img src="{{ $professor->profile->profile_picture_url }}" class="h-10 w-10 rounded-full object-cover border border-gray-100 shadow-sm">
+                                                @else
+                                                    <div class="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
+                                                        {{ strtoupper(substr($professor->name, 0, 1)) }}
+                                                    </div>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-3">
+                                                <div class="text-sm font-bold text-gray-900 uppercase tracking-tighter">{{ $professor->name }}</div>
+                                                <div class="text-[11px] text-gray-500 font-medium">{{ $professor->profile->full_name_km ?? 'N/A' }}</div>
+                                            </td>
+                                            <td class="px-6 py-3 text-sm text-gray-600 font-medium">{{ $professor->email }}</td>
+                                            <td class="px-6 py-3 text-right space-x-1">
+                                                <a href="{{ route('admin.show-user', $professor->id) }}" class="inline-flex items-center justify-center p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all">
+                                                    <i class="fas fa-eye text-sm"></i>
+                                                </a>
+                                                <a href="{{ route('admin.edit-user', $professor->id) }}" class="inline-flex items-center justify-center p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
+                                                    <i class="fas fa-edit text-sm"></i>
+                                                </a>
+                                                <button type="button" @click="confirmDelete('del-prof-{{ $professor->id }}', '{{ __('លោកគ្រូអ្នកគ្រូ') }}')" class="inline-flex items-center justify-center p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all">
+                                                    <i class="fas fa-trash text-sm"></i>
+                                                </button>
+                                                <form id="del-prof-{{ $professor->id }}" action="{{ route('admin.delete-user', $professor->id) }}" method="POST" class="hidden">@csrf @method('DELETE')</form>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="flex space-x-4 text-xs font-bold flex-shrink-0">
-                            <a href="{{ route('admin.show-user', $professor->id) }}" class="text-green-600 flex items-center">
-                                <i class="fas fa-eye mr-1 text-[10px]"></i> {{ __('មើល') }}
-                            </a>
-                            <a href="{{ route('admin.edit-user', $professor->id) }}" class="text-blue-600 flex items-center">
-                                <i class="fas fa-edit mr-1 text-[10px]"></i> {{ __('កែ') }}
-                            </a>
-                            <button @click="confirmDelete('del-prof-mob-{{ $professor->id }}', 'Professor')" class="text-red-500 flex items-center">
-                                <i class="fas fa-trash mr-1 text-[10px]"></i> {{ __('លុប') }}
-                            </button>
+
+                        {{-- 2. MOBILE VERSION --}}
+                        <div class="md:hidden space-y-3">
+                            @foreach ($professorList as $professor)
+                                <div class="bg-gray-50/50 border border-gray-100 rounded-xl p-4 shadow-sm hover:border-blue-200 transition-colors">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center space-x-3">
+                                            @if ($professor->profile && $professor->profile->profile_picture_url)
+                                                <img src="{{ $professor->profile->profile_picture_url }}" class="h-12 w-12 rounded-full object-cover border-2 border-white shadow-sm">
+                                            @else
+                                                <div class="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-black text-lg shadow-sm">
+                                                    {{ strtoupper(substr($professor->name, 0, 1)) }}
+                                                </div>
+                                            @endif
+                                            <div class="min-w-0">
+                                                <h5 class="text-sm font-black text-gray-900 uppercase truncate">{{ $professor->name }}</h5>
+                                                <p class="text-[10px] text-gray-500 truncate font-medium">{{ $professor->email }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+                                        <span class="text-[10px] font-bold text-gray-400 italic">{{ $professor->profile->full_name_km ?? 'N/A' }}</span>
+                                        <div class="flex space-x-4">
+                                            <a href="{{ route('admin.show-user', $professor->id) }}" class="text-green-600 text-xs font-bold uppercase tracking-widest">{{ __('មើល') }}</a>
+                                            <a href="{{ route('admin.edit-user', $professor->id) }}" class="text-blue-600 text-xs font-bold uppercase tracking-widest">{{ __('កែ') }}</a>
+                                            <button @click="confirmDelete('del-mob-prof-{{ $professor->id }}', 'Professor')" class="text-red-500 text-xs font-bold uppercase tracking-widest">{{ __('លុប') }}</button>
+                                        </div>
+                                    </div>
+                                    <form id="del-mob-prof-{{ $professor->id }}" action="{{ route('admin.delete-user', $professor->id) }}" method="POST" class="hidden">@csrf @method('DELETE')</form>
+                                </div>
+                            @endforeach
                         </div>
-                        <form id="del-prof-mob-{{ $professor->id }}" action="{{ route('admin.delete-user', $professor->id) }}" method="POST" class="hidden">@csrf @method('DELETE')</form>
                     </div>
                 </div>
-            @endforeach
-        </div>
-
-        <div class="mt-5">
-            {{ $professors->links('pagination::tailwind', ['pageName' => 'professorsPage']) }}
-        </div>
+            </div>
+        @endforeach
     @endif
 </div>
 

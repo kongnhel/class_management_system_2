@@ -41,23 +41,29 @@ class UserController extends Controller
                   ->orderBy('name')
                   ->paginate(10, ['*'], 'adminsPage');
 
-    $professors = User::where('role', 'professor')
-                      ->with('profile', 'department')
-                      ->when($search, function($query, $search) {
-                          $query->where(function ($q) use ($search) {
-                              $q->where('name', 'LIKE', "%{$search}%")
-                                ->orWhere('email', 'LIKE', "%{$search}%")
-                                ->orWhereHas('profile', function ($q2) use ($search) {
-                                    $q2->where('full_name_km', 'LIKE', "%{$search}%");
-                                })
-                                ->orWhereHas('department', function ($q3) use ($search) {
-                                    $q3->where('name_km', 'LIKE', "%{$search}%")
-                                       ->orWhere('name_en', 'LIKE', "%{$search}%");
-                                });
-                          });
-                      })
-                      ->orderBy('name')
-                      ->paginate(10, ['*'], 'professorsPage');
+// Fetch Professors and group them by Department
+$professors = User::where('role', 'professor')
+    ->with(['profile', 'department'])
+    ->when($search, function($query, $search) {
+        $query->where(function ($q) use ($search) {
+            $q->where('name', 'LIKE', "%{$search}%")
+              ->orWhere('email', 'LIKE', "%{$search}%")
+              ->orWhereHas('profile', function ($q2) use ($search) {
+                  $q2->where('full_name_km', 'LIKE', "%{$search}%");
+              })
+              ->orWhereHas('department', function ($q3) use ($search) {
+                  $q3->where('name_km', 'LIKE', "%{$search}%")
+                     ->orWhere('name_en', 'LIKE', "%{$search}%");
+              });
+        });
+    })
+    ->orderBy('name', 'asc')
+    ->get(); // ប្តូរពី paginate() មក get() ដើម្បីអាចធ្វើការ Group បានពេញលេញ
+
+// ធ្វើការបែងចែកជាក្រុមតាមឈ្មោះដេប៉ាតឺម៉ង់
+$professorsGrouped = $professors->groupBy(function ($item) {
+    return $item->department->name_km ?? 'មិនទាន់មានដេប៉ាតឺម៉ង់';
+});
 
     // // Fetch paginated Students
     // $students = User::where('role', 'student')
@@ -106,7 +112,7 @@ $studentsGrouped = $students->groupBy([
     }
 ]);
 
-    return view('admin.users.index', compact('admins', 'professors', 'students','studentsGrouped'));
+    return view('admin.users.index', compact('admins', 'professors', 'students','studentsGrouped','professorsGrouped'));
 }
 
 

@@ -53,7 +53,7 @@ class CourseOfferingController extends Controller
         
         $courseOfferings = $query->orderBy('academic_year', 'desc')
                                  ->orderBy('semester', 'desc')
-                                 ->paginate(10)
+                                 ->paginate(50)
                                  ->appends($request->query());
 
         $programs = Program::orderBy('name_km')->get();
@@ -64,6 +64,8 @@ class CourseOfferingController extends Controller
             ->where('role', 'professor')
             ->orderBy('name')
             ->get(['id', 'name']);
+            // In index method
+
 
         return view('admin.course-offerings.index', compact('courseOfferings', 'programs', 'academicYears', 'lecturers'));
     }

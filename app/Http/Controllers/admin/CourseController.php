@@ -20,10 +20,28 @@ class CourseController extends Controller
      */
     public function index()
     {
+        // $room = Room::all();
+        // $courses = Course::with('department', 'program')->paginate(10);
         $room = Room::all();
-        $courses = Course::with('department', 'program')->paginate(10);
-        return view('admin.courses.index', compact('courses','room'));
+
+        // ទាញយកទិន្នន័យមុខវិជ្ជាទាំងអស់ជាមួយ Department និង Program
+        $coursesData = Course::with(['department', 'program'])
+            ->orderBy('department_id')
+            ->get();
+
+        // ធ្វើការបែងចែកជាក្រុមធំតាម Department និងក្រុមតូចតាម Program
+        $coursesGrouped = $coursesData->groupBy([
+            function ($item) {
+                return $item->department->name_km ?? 'មិនទាន់មានដេប៉ាតឺម៉ង់';
+            },
+            function ($item) {
+                return $item->program->name_km ?? 'មិនទាន់មានកម្មវិធីសិក្សា';
+            }
+        ]);
+
+        return view('admin.courses.index', compact('coursesGrouped', 'room'));
     }
+
 
     /**
      * Show the form for creating a new resource.
