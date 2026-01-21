@@ -59,26 +59,54 @@ class UserController extends Controller
                       ->orderBy('name')
                       ->paginate(10, ['*'], 'professorsPage');
 
-    // Fetch paginated Students
-    $students = User::where('role', 'student')
-                    ->with('profile', 'program')
-                    ->when($search, function($query, $search) {
-                        $query->where(function ($q) use ($search) {
-                            $q->where('name', 'LIKE', "%{$search}%")
-                              ->orWhere('email', 'LIKE', "%{$search}%")
-                              ->orWhereHas('profile', function ($q2) use ($search) {
-                                  $q2->where('full_name_km', 'LIKE', "%{$search}%");
-                              })
-                              ->orWhereHas('program', function ($q3) use ($search) {
-                                  $q3->where('name_km', 'LIKE', "%{$search}%")
-                                     ->orWhere('name_en', 'LIKE', "%{$search}%");
-                              });
-                        });
-                    })
-                    ->orderBy('name')
-                    ->paginate(10, ['*'], 'studentsPage');
+    // // Fetch paginated Students
+    // $students = User::where('role', 'student')
+    //                 ->with('profile', 'program')
+    //                 ->when($search, function($query, $search) {
+    //                     $query->where(function ($q) use ($search) {
+    //                         $q->where('name', 'LIKE', "%{$search}%")
+    //                           ->orWhere('email', 'LIKE', "%{$search}%")
+    //                           ->orWhereHas('profile', function ($q2) use ($search) {
+    //                               $q2->where('full_name_km', 'LIKE', "%{$search}%");
+    //                           })
+    //                           ->orWhereHas('program', function ($q3) use ($search) {
+    //                               $q3->where('name_km', 'LIKE', "%{$search}%")
+    //                                  ->orWhere('name_en', 'LIKE', "%{$search}%");
+    //                           });
+    //                     });
+    //                 })
+    //                 ->orderBy('name')
+    //                 ->paginate(10, ['*'], 'studentsPage');
+    // Fetch Students and group them by Generation and Program
+$students = User::where('role', 'student')
+    ->with(['profile', 'program'])
+    ->when($search, function($query, $search) {
+        $query->where(function ($q) use ($search) {
+            $q->where('name', 'LIKE', "%{$search}%")
+              ->orWhere('email', 'LIKE', "%{$search}%")
+              ->orWhereHas('profile', function ($q2) use ($search) {
+                  $q2->where('full_name_km', 'LIKE', "%{$search}%");
+              })
+              ->orWhereHas('program', function ($q3) use ($search) {
+                  $q3->where('name_km', 'LIKE', "%{$search}%")
+                     ->orWhere('name_en', 'LIKE', "%{$search}%");
+              });
+        });
+    })
+    ->orderBy('generation', 'desc') // បង្ហាញជំនាន់ចុងក្រោយមុនគេ
+    ->orderBy('name', 'asc')        // រៀបតាមឈ្មោះក្នុងជំនាន់នីមួយៗ
+    ->get(); // យើងប្រើ get() ដើម្បីអាចធ្វើការ Group ក្នុង Collection បាន
+    // $categories = Category::paginate(10);
 
-    return view('admin.users.index', compact('admins', 'professors', 'students'));
+// ធ្វើការបែងចែកជា گروپ ធំ (Generation) និង گروپ តូច (Program)
+$studentsGrouped = $students->groupBy([
+    'generation', 
+    function ($item) {
+        return $item->program->name_km ?? 'មិនទាន់មានកម្មវិធីសិក្សា';
+    }
+]);
+
+    return view('admin.users.index', compact('admins', 'professors', 'students','studentsGrouped'));
 }
 
 

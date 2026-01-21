@@ -1,8 +1,4 @@
-<!--
-    This is an updated version of a Laravel Blade template for a user management dashboard.
-    It includes a modern confirmation modal for delete actions, replacing the native browser confirm() dialog.
-    The styling is done with Tailwind CSS, and interactivity is handled by Alpine.js.
--->
+
 <x-app-layout>
     <x-slot name="header">
         <div class="px-4 md:px-6 lg:px-8">
@@ -376,31 +372,63 @@ activeTab: $persist('admins').as('user_manage_tab'),
     @endif
 </div>
 
-                        <!-- Students Tab Content -->
-<div x-show="activeTab === 'students'" class="space-y-3">
-    @if ($students->isEmpty())
-        <div class="bg-gray-100 p-6 rounded-xl text-center text-gray-500 shadow-inner">
-            <p class="text-base font-medium">{{ __('មិនទាន់មាននិស្សិតណាមួយនៅឡើយទេ។') }}</p>
+ <div x-show="activeTab === 'students'" class="space-y-4">
+    @if ($studentsGrouped->isEmpty())
+        <div class="bg-gray-100 p-8 rounded-2xl text-center text-gray-500 shadow-inner border-2 border-dashed border-gray-200">
+            <i class="fas fa-user-slash text-4xl mb-3 text-gray-300"></i>
+            <p class="text-lg font-medium">{{ __('មិនទាន់មាននិស្សិតណាមួយនៅឡើយទេ។') }}</p>
         </div>
     @else
-        {{-- 1. DESKTOP VERSION --}}
-        <div id="screen-students" class="hidden md:block overflow-x-auto rounded-2xl shadow-sm border border-gray-200">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">{{ __('រូបភាព') }}</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">{{ __('ឈ្មោះអ្នកប្រើ') }}</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">{{ __('អ៊ីម៉ែល') }}</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">{{ __('ឈ្មោះពេញ') }}</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">{{ __('កម្មវិធីសិក្សា') }}</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">{{ __('ជំនាន់') }}</th>
-                        <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">{{ __('សកម្មភាព') }}</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-100 text-sm">
-                    @foreach ($students as $student)
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-6 py-3">
+        {{-- Loop តាមជំនាន់ (Generation) --}}
+        @foreach ($studentsGrouped as $generation => $programs)
+            <div x-data="{ openGen: {{ $loop->first ? 'true' : 'false' }} }" class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden transition-all duration-300">
+                
+                <button @click="openGen = !openGen" 
+                        class="w-full flex items-center justify-between px-6 py-4 bg-gray-50 hover:bg-gray-100 transition-colors border-b border-gray-100">
+                    <div class="flex items-center">
+                        <div class="h-11 w-11 bg-gradient-to-br from-green-500 to-green-700 text-white rounded-xl flex items-center justify-center shadow-lg shadow-green-100 mr-4 font-black text-sm uppercase">
+                            G{{ $generation ?? '?' }}
+                        </div>
+                        <div class="text-left">
+                            <h3 class="text-lg font-bold text-gray-800 tracking-tight">{{ __('ជំនាន់ទី') }} {{ $generation ?? 'មិនកំណត់' }}</h3>
+                            <p class="text-xs font-medium text-gray-500">{{ $programs->flatten()->count() }} {{ __('និស្សិតសរុប') }}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span class="hidden sm:inline-block text-[10px] font-bold text-gray-400 uppercase tracking-widest" x-text="openGen ? '{{ __('បិទវិញ') }}' : '{{ __('មើលបញ្ជី') }}'"></span>
+                        <i class="fas fa-chevron-down text-gray-400 transition-transform duration-500" :class="openGen ? 'rotate-180' : ''"></i>
+                    </div>
+                </button>
+
+                <div x-show="openGen" x-collapse>
+                    <div class="p-6 space-y-10">
+                        @foreach ($programs as $programName => $studentList)
+                            <div class="relative">
+                                <div class="flex items-center justify-between mb-4 border-b border-gray-50 pb-2">
+                                    <div class="flex items-center">
+                                        <div class="w-1.5 h-5 bg-green-500 rounded-full mr-3"></div>
+                                        <h4 class="text-sm font-extrabold text-gray-700 uppercase tracking-wider">{{ $programName }}</h4>
+                                    </div>
+                                    <span class="bg-green-50 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-md border border-green-100">
+                                        {{ $studentList->count() }} នាក់
+                                    </span>
+                                </div>
+
+                                {{-- 1. DESKTOP VERSION --}}
+                                <div class="hidden md:block overflow-x-auto rounded-xl border border-gray-100 shadow-sm">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50/50">
+                                            <tr>
+                                                <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">{{ __('រូបភាព') }}</th>
+                                                <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">{{ __('ឈ្មោះអ្នកប្រើ / ពេញ') }}</th>
+                                                <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">{{ __('អ៊ីម៉ែល') }}</th>
+                                                <th class="px-6 py-3 text-right text-[10px] font-bold text-gray-400 uppercase tracking-widest">{{ __('សកម្មភាព') }}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-100">
+                                            @foreach ($studentList as $student)
+                                                <tr class="hover:bg-gray-50 transition-colors">
+                                                    <td class="px-6 py-3 whitespace-nowrap">
 @if ($student->studentProfile && $student->studentProfile->profile_picture_url)
     {{-- ប្តូរមកប្រើ URL ពី ImgBB ដោយផ្ទាល់ ដើម្បីជៀសវាងកំហុស 403 --}}
     <img src="{{ $student->studentProfile->profile_picture_url }}" 
@@ -411,80 +439,68 @@ activeTab: $persist('admins').as('user_manage_tab'),
         {{ strtoupper(substr($student->name, 0, 1)) }}
     </div>
 @endif
-                            </td>
-                            <td class="px-6 py-3 font-semibold text-gray-900">{{ $student->name }}</td>
-                            <td class="px-6 py-3 text-gray-600">{{ $student->email }}</td>
-                            <td class="px-6 py-3 text-gray-600">{{ $student->studentProfile->full_name_km ?? 'N/A' }}</td>
-                            <td class="px-6 py-3 text-gray-600">{{ $student->program->name_km ?? 'N/A' }}</td>
-                            <td class="px-6 py-3 text-gray-600">{{ $student->generation ?? 'N/A' }}</td>
-                            <td class="px-6 py-3 text-right font-bold space-x-3">
-                                <a href="{{ route('admin.show-user', $student->id) }}" class="text-green-600 hover:underline">{{ __('មើល') }}</a>
-                                <a href="{{ route('admin.edit-user', $student->id) }}" class="text-blue-600 hover:underline">{{ __('កែប្រែ') }}</a>
-                                <button type="button" @click="confirmDelete('delete-student-{{ $student->id }}', '{{ __('និស្សិត') }}')" class="text-red-500 hover:underline">{{ __('លុប') }}</button>
-                                <form id="delete-student-{{ $student->id }}" action="{{ route('admin.delete-user', $student->id) }}" method="POST" class="hidden">@csrf @method('DELETE')</form>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+                                                    <td class="px-6 py-3">
+                                                        <div class="text-sm font-bold text-gray-900 uppercase tracking-tighter">{{ $student->name }}</div>
+                                                        <div class="text-[11px] text-gray-500 font-medium">{{ $student->studentProfile->full_name_km ?? 'N/A' }}</div>
+                                                    </td>
+                                                    <td class="px-6 py-3 text-sm text-gray-600 font-medium">{{ $student->email ?? '---' }}</td>
+                                                    <td class="px-6 py-3 text-right space-x-1">
+                                                        <a href="{{ route('admin.show-user', $student->id) }}" class="inline-flex items-center justify-center p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all" title="{{ __('មើល') }}">
+                                                            <i class="fas fa-eye text-sm"></i>
+                                                        </a>
+                                                        <a href="{{ route('admin.edit-user', $student->id) }}" class="inline-flex items-center justify-center p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="{{ __('កែប្រែ') }}">
+                                                            <i class="fas fa-edit text-sm"></i>
+                                                        </a>
+                                                        <button type="button" @click="confirmDelete('del-std-{{ $student->id }}', '{{ __('និស្សិត') }}')" class="inline-flex items-center justify-center p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all" title="{{ __('លុប') }}">
+                                                            <i class="fas fa-trash text-sm"></i>
+                                                        </button>
+                                                        <form id="del-std-{{ $student->id }}" action="{{ route('admin.delete-user', $student->id) }}" method="POST" class="hidden">@csrf @method('DELETE')</form>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
 
-        {{-- 2. MOBILE VERSION (Semi-Table / Card Style) --}}
-        <div id="mobile-students" class="md:hidden space-y-3">
-            @foreach ($students as $student)
-                <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-                    <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-50">
-                        <div class="flex items-center space-x-3 min-w-0">
-                            {{-- Check for Profile Pic or use First Letter --}}
-@if ($student->studentProfile && $student->studentProfile->profile_picture_url)
-    {{-- ប្រើប្រាស់ URL ពី ImgBB ដោយផ្ទាល់ ដើម្បីជៀសវាងបញ្ហា 403 Forbidden --}}
-    <img src="{{ $student->studentProfile->profile_picture_url }}" 
-         class="h-12 w-12 rounded-full object-cover border border-gray-100"
-         alt="{{ $student->name }}">
-@else
-    <div class="h-12 w-12 rounded-full bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center text-white font-black text-xl shadow-md flex-shrink-0">
-        {{ strtoupper(substr($student->name, 0, 1)) }}
-    </div>
-@endif
-                            <div class="min-w-0">
-                                <h4 class="text-base font-black text-gray-900 truncate tracking-tight uppercase">{{ $student->name }}</h4>
-                                <p class="text-xs text-gray-500 truncate">{{ $student->email }}</p>
+                                {{-- 2. MOBILE VERSION --}}
+                                <div class="md:hidden space-y-3">
+                                    @foreach ($studentList as $student)
+                                        <div class="bg-gray-50/50 border border-gray-100 rounded-xl p-4 shadow-sm hover:border-green-200 transition-colors">
+                                            <div class="flex items-center justify-between mb-3">
+                                                <div class="flex items-center space-x-3">
+                                                    @if ($student->studentProfile && $student->studentProfile->profile_picture_url)
+                                                        <img src="{{ $student->studentProfile->profile_picture_url }}" class="h-12 w-12 rounded-full object-cover border-2 border-white shadow-sm">
+                                                    @else
+                                                        <div class="h-12 w-12 rounded-full bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center text-white font-black text-lg shadow-sm">
+                                                            {{ strtoupper(substr($student->name, 0, 1)) }}
+                                                        </div>
+                                                    @endif
+                                                    <div class="min-w-0">
+                                                        <h5 class="text-sm font-black text-gray-900 uppercase truncate">{{ $student->name }}</h5>
+                                                        <p class="text-[10px] text-gray-500 truncate font-medium">{{ $student->email }}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+                                                <span class="text-[10px] font-bold text-gray-400 italic">{{ $student->studentProfile->full_name_km ?? 'N/A' }}</span>
+                                                <div class="flex space-x-4">
+                                                    <a href="{{ route('admin.show-user', $student->id) }}" class="text-green-600 text-xs font-bold uppercase tracking-widest">{{ __('មើល') }}</a>
+                                                    <a href="{{ route('admin.edit-user', $student->id) }}" class="text-blue-600 text-xs font-bold uppercase tracking-widest">{{ __('កែ') }}</a>
+                                                    <button @click="confirmDelete('del-mob-{{ $student->id }}', 'Student')" class="text-red-500 text-xs font-bold uppercase tracking-widest">{{ __('លុប') }}</button>
+                                                </div>
+                                            </div>
+                                            <form id="del-mob-{{ $student->id }}" action="{{ route('admin.delete-user', $student->id) }}" method="POST" class="hidden">@csrf @method('DELETE')</form>
+                                        </div>
+                                    @endforeach
+                                </div>
                             </div>
-                        </div>
-                        <div class="text-right flex-shrink-0">
-                            <span class="inline-block bg-green-50 text-green-700 text-[10px] font-bold px-2 py-1 rounded-lg border border-green-100 uppercase">
-                                G{{ $student->generation ?? '?' }}
-                            </span>
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-center justify-between">
-                        <div class="text-[11px] text-gray-500 font-medium italic">
-                            {{ $student->program->name_km ?? 'N/A' }}
-                        </div>
-                        <div class="flex space-x-4 text-xs font-bold">
-                            <a href="{{ route('admin.show-user', $student->id) }}" class="text-green-600 flex items-center tracking-wide">
-                                <i class="fas fa-eye mr-1 text-[10px]"></i> {{ __('មើល') }}
-                            </a>
-                            <a href="{{ route('admin.edit-user', $student->id) }}" class="text-blue-600 flex items-center tracking-wide">
-                                <i class="fas fa-edit mr-1 text-[10px]"></i> {{ __('កែ') }}
-                            </a>
-                            <button @click="confirmDelete('del-std-mob-{{ $student->id }}', 'Student')" class="text-red-500 flex items-center tracking-wide">
-                                <i class="fas fa-trash mr-1 text-[10px]"></i> {{ __('លុប') }}
-                            </button>
-                        </div>
-                        <form id="del-std-mob-{{ $student->id }}" action="{{ route('admin.delete-user', $student->id) }}" method="POST" class="hidden">@csrf @method('DELETE')</form>
+                        @endforeach
                     </div>
                 </div>
-            @endforeach
-        </div>
-
-        <div class="mt-5">
-            {{ $students->links('pagination::tailwind', ['pageName' => 'studentsPage']) }}
-        </div>
+            </div>
+        @endforeach
     @endif
 </div>
-
                     <!-- Delete Confirmation Modal -->
 <div x-show="showDeleteModal" 
      class="fixed inset-0 z-50 overflow-y-auto" 
