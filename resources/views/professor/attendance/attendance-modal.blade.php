@@ -22,8 +22,9 @@
         <div class="fixed inset-0 z-[60] flex items-start md:items-start justify-center bg-slate-950/95 backdrop-blur-sm transition-opacity duration-300">
             
             {{-- 2. Main Modal Container --}}
+            {{-- Note: wire:poll.10s would match your new countdown --}}
             <div class="bg-white md:rounded-[2rem] shadow-2xl w-full md:max-w-7xl mx-auto flex flex-col lg:flex-row h-[100dvh] md:h-[90vh] overflow-hidden relative border border-white/10"
-                 wire:poll.3s> 
+                 wire:poll.10s> 
 
                 {{-- Close Button (Absolute) --}}
                 <button wire:click="close" class="absolute top-4 right-4 lg:top-6 lg:right-6 z-[70] p-2 rounded-full bg-black/20 hover:bg-red-500 hover:text-white text-white/70 backdrop-blur-md transition-all">
@@ -60,15 +61,15 @@
                             </div>
                         </div>
 
-                        {{-- Countdown Timer --}}
-                        <div class="mt-4 lg:mt-8 w-48 lg:w-full" x-data="{ timeLeft: 15 }" x-init="setInterval(() => { timeLeft = timeLeft > 1 ? timeLeft - 1 : 15 }, 1000)">
+                        {{-- Countdown Timer: Updated to 10s --}}
+                        <div class="mt-4 lg:mt-8 w-48 lg:w-full" x-data="{ timeLeft: 10 }" x-init="setInterval(() => { timeLeft = timeLeft > 1 ? timeLeft - 1 : 10 }, 1000)">
                             <div class="flex items-center justify-between text-slate-400 text-[10px] lg:text-sm font-medium mb-1.5 px-1">
                                 <span>{{ __('QR ប្តូរថ្មី') }}</span>
-                                <span class="font-mono text-white font-bold"><span x-text="timeLeft">15</span>s</span>
+                                <span class="font-mono text-white font-bold"><span x-text="timeLeft">10</span>s</span>
                             </div>
                             <div class="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
                                 <div class="h-full bg-gradient-to-r from-blue-400 to-indigo-500 transition-all duration-1000 ease-linear"
-                                     :style="'width: ' + (timeLeft / 15 * 100) + '%'"></div>
+                                     :style="'width: ' + (timeLeft / 10 * 100) + '%'"></div>
                             </div>
                         </div>
                     </div>
