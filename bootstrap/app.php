@@ -3,7 +3,9 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use App\Http\Middleware\CheckUserRole; // <<<--- បន្ទាត់នេះគឺសំខាន់ និងត្រូវតែមាននៅទីនេះ!
+use App\Http\Middleware\CheckUserRole;
+use Illuminate\Http\Request; // <<<--- បន្ថែមបន្ទាត់នេះ
+use Symfony\Component\HttpKernel\Exception\HttpException; // <<<--- បន្ថែមបន្ទាត់នេះ
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -12,20 +14,17 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // បន្ថែម Route Middleware aliases របស់អ្នកនៅទីនេះ
         $middleware->alias([
-            'role' => CheckUserRole::class, // ចុះឈ្មោះ 'role' middleware របស់អ្នក
+            'role' => CheckUserRole::class,
         ]);
-
-        // អ្នកក៏អាចបន្ថែម Global middleware ឬ middleware groups នៅទីនេះផងដែរ
-        // $middleware->web(append: [
-        //     \App->Http->Middleware->TrustProxies::class,
-        //     \Illuminate->Http->Middleware->HandleCors::class,
-        // ]);
-        // $middleware->api(append: [
-        //     \Illuminate->Routing->Middleware->ThrottleRequests::class.':api',
-        // ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        // Register your exception handlers here
+        // បន្ថែម Logic Redirect នៅទីនេះ
+        $exceptions->render(function (HttpException $e, Request $request) {
+            // បើជួប Error 419 (Session Expired) ឬ 403 (No Permission)
+            if (in_array($e->getStatusCode(), [419, 403])) {
+                return redirect()->route('login')
+                    ->with('error', 'Session របស់អ្នកហួសកំណត់ ឬអ្នកមិនមានសិទ្ធិចូលទំព័រនេះទេ។ សូមចូលប្រព័ន្ធម្ដងទៀត!');
+            }
+        });
     })->create();

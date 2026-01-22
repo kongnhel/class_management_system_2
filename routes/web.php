@@ -73,6 +73,11 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+Route::middleware(['web'])->group(function () {
+    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [LoginController::class, 'login']);
+});
+
 /*
 |--------------------------------------------------------------------------
 | Authenticated & Verified Routes (Shared for all authenticated users)
