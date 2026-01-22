@@ -45,8 +45,46 @@
                         <p class="text-sm text-slate-400 font-medium mt-1">{{ __('រក្សាទុកព័ត៌មានផ្ទាល់ខ្លួនរបស់អ្នកឱ្យទាន់សម័យ') }}</p>
                     </div>
 
-{{-- Modern Floating Toast --}}
+{{-- Technology 2050 "Neural-Matrix" Toast - Khmer Edition --}}
 @if (session('success') || session('error'))
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,100..700;1,100..700&display=swap');
+    
+    .khmer-font {
+        font-family: 'Kantumruy Pro', sans-serif;
+    }
+
+    /* Quantum Flicker Entry */
+    @keyframes quantum-flicker {
+        0% { opacity: 0; filter: brightness(2) contrast(2); transform: scaleY(0.005) scaleX(1.1); }
+        10% { opacity: 0.8; transform: scaleY(1.1) scaleX(0.9); }
+        20% { opacity: 0.3; transform: scaleY(0.9) scaleX(1.1); }
+        100% { opacity: 1; filter: brightness(1) contrast(1); transform: scale(1); }
+    }
+
+    /* Corner Bracket Tracking */
+    @keyframes corner-track {
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(-2px, -2px); }
+    }
+
+    /* Floating Data Bits */
+    @keyframes data-flow {
+        0% { transform: translateY(0); opacity: 0; }
+        50% { opacity: 0.5; }
+        100% { transform: translateY(-20px); opacity: 0; }
+    }
+
+    .animate-quantum {
+        animation: quantum-flicker 0.4s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+    }
+
+    .bit-segment {
+        mask-image: linear-gradient(to right, black 70%, transparent 70%);
+        mask-size: 8px 100%;
+    }
+</style>
+
 <div 
     x-data="{ 
         show: false, 
@@ -54,68 +92,105 @@
         startTimer() {
             this.show = true;
             let interval = setInterval(() => {
-                this.progress -= 1;
+                this.progress -= 0.5;
                 if (this.progress <= 0) {
                     this.show = false;
                     clearInterval(interval);
                 }
-            }, 50); // 5 seconds total (50ms * 100)
+            }, 25); 
         }
     }" 
     x-init="startTimer()"
     x-show="show" 
-    x-transition:enter="transition ease-out duration-500"
-    x-transition:enter-start="translate-y-12 opacity-0 sm:translate-y-0 sm:translate-x-12"
-    x-transition:enter-end="translate-y-0 opacity-100 sm:translate-x-0"
-    x-transition:leave="transition ease-in duration-300"
-    x-transition:leave-start="opacity-100"
-    x-transition:leave-end="opacity-0"
-    class="fixed top-6 right-6 z-[9999] w-full max-w-sm"
+    x-transition:enter="animate-quantum"
+    x-transition:leave="transition ease-in duration-300 opacity-0 scale-95 translate-y-5"
+    class="fixed bottom-10 right-10 z-[9999] w-full max-w-[400px] select-none"
 >
-    <div class="relative overflow-hidden bg-white/80 backdrop-blur-xl border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-2xl p-4 ring-1 ring-black/5">
-        <div class="flex items-start gap-4">
+    {{-- Neural Core Container --}}
+    <div class="relative group">
+        
+        {{-- Floating Corner Accents --}}
+        <div class="absolute -top-2 -left-2 w-6 h-6 border-t-2 border-l-2 {{ session('success') ? 'border-emerald-400' : 'border-rose-400' }} animate-[corner-track_2s_infinite]"></div>
+        <div class="absolute -bottom-2 -right-2 w-6 h-6 border-b-2 border-r-2 {{ session('success') ? 'border-emerald-400' : 'border-rose-400' }} animate-[corner-track_2s_infinite_reverse]"></div>
+
+        {{-- Main Holographic Card --}}
+        <div class="relative overflow-hidden bg-[#020403]/90 backdrop-blur-3xl border {{ session('success') ? 'border-emerald-500/40 shadow-[0_0_50px_-10px_rgba(16,185,129,0.3)]' : 'border-rose-500/40 shadow-[0_0_50px_-10px_rgba(244,63,94,0.3)]' }} rounded-sm">
             
-            {{-- Modern Icon Logic --}}
-            <div class="flex-shrink-0">
-                @if(session('success'))
-                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-500/10 text-green-600">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
-                        </svg>
+            {{-- Background Noise & Data Layer --}}
+            <div class="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+            
+            <div class="relative z-10 p-6">
+                <div class="flex items-center gap-5">
+                    
+                    {{-- Rotating Energy Core Icon --}}
+                    <div class="flex-shrink-0 relative">
+                        <div class="absolute inset-0 scale-150 blur-xl opacity-30 animate-pulse {{ session('success') ? 'bg-emerald-400' : 'bg-rose-400' }}"></div>
+                        
+                        <div class="relative h-14 w-14 flex items-center justify-center">
+                            {{-- Rotating Outer Ring --}}
+                            <div class="absolute inset-0 border-2 border-dashed rounded-full animate-[spin_8s_linear_infinite] {{ session('success') ? 'border-emerald-500/30' : 'border-rose-500/30' }}"></div>
+                            
+                            {{-- Inner Core --}}
+                            <div class="h-10 w-10 flex items-center justify-center rounded-lg rotate-45 border {{ session('success') ? 'border-emerald-400 bg-emerald-950/40' : 'border-rose-400 bg-rose-950/40' }}">
+                                <div class="-rotate-45">
+                                    @if(session('success'))
+                                        <svg class="h-6 w-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    @else
+                                        <svg class="h-6 w-6 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                @else
-                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-red-600">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
+
+                    {{-- Data Stream Text --}}
+                    <div class="flex-1 min-w-0 khmer-font">
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <div class="h-1 w-1 rounded-full animate-ping {{ session('success') ? 'bg-emerald-400' : 'bg-rose-400' }}"></div>
+                            <span class="text-[9px] font-black uppercase tracking-[0.4em] font-mono {{ session('success') ? 'text-emerald-400' : 'text-rose-400' }}">
+                                {{ session('success') ? 'Protocol: Authenticated' : 'Protocol: Breach' }}
+                            </span>
+                        </div>
+                        
+                        <div class="space-y-0.5">
+                            <h4 class="text-white font-bold tracking-wider text-lg leading-tight">
+                                {{ session('success') ? __('ជោគជ័យ!') : __('បរាជ័យ!') }}
+                            </h4>
+                            <p class="text-xs text-slate-400 leading-relaxed opacity-80 font-medium">
+                                {{ session('success') ?? session('error') }}
+                            </p>
+                        </div>
                     </div>
-                @endif
+
+                    {{-- Mech Close button --}}
+                    <button @click="show = false" class="group/btn relative self-start p-1 border border-white/5 hover:border-white/20 transition-all">
+                        <svg class="h-4 w-4 text-slate-500 group-hover/btn:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        <div class="absolute -top-0.5 -right-0.5 w-1 h-1 bg-white/20"></div>
+                    </button>
+                </div>
             </div>
 
-            {{-- Text Content --}}
-            <div class="flex-1 pt-0.5">
-                <p class="text-sm font-bold text-gray-900 leading-tight">
-                    {{ session('success') ? __('ជោគជ័យ!') : __('បរាជ័យ!') }}
-                </p>
-                <p class="mt-1 text-sm text-gray-600 leading-relaxed">
-                    {{ session('success') ?? session('error') }}
-                </p>
+            {{-- Bit-Segmented Progress Bar --}}
+            <div class="h-1.5 w-full bg-white/5 flex">
+                <div 
+                    class="h-full relative bit-segment transition-all duration-300 ease-out {{ session('success') ? 'bg-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.8)]' : 'bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.8)]' }}"
+                    :style="`width: ${progress}%`"
+                >
+                    {{-- Pulse wave --}}
+                    <div class="absolute inset-0 bg-white/20 animate-[shimmer_2s_infinite]"></div>
+                </div>
             </div>
 
-            {{-- Manual Close --}}
-            <button @click="show = false" class="text-gray-400 hover:text-gray-600 transition-colors">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-        </div>
+            {{-- Hidden Decorative Metadata --}}
+            <div class="px-4 py-1 flex justify-between bg-white/[0.02] border-t border-white/5 font-mono text-[8px] text-slate-600 tracking-tighter">
+                <span>ENCRYPTION_LEVEL: OMEGA</span>
+                <span x-text="'NODE_INDEX: ' + Math.floor(progress)"></span>
+            </div>
 
-        {{-- Progress Bar (The "Modern" Touch) --}}
-        <div class="absolute bottom-0 left-0 h-1 bg-gray-100 w-full">
-            <div 
-                class="h-full transition-all duration-75 ease-linear {{ session('success') ? 'bg-green-500' : 'bg-red-500' }}"
-                :style="`width: ${progress}%`"
-            ></div>
         </div>
     </div>
 </div>
