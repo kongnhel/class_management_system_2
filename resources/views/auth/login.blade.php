@@ -186,7 +186,7 @@
                         </span>
                         <input id="email" type="email" name="email" :value="old('email')" required autofocus
                             class="block w-full pl-12 pr-4 py-4 rounded-2xl border-white/10 bg-white/5 text-white placeholder-gray-600 transition-all duration-300 focus-green outline-none"
-                            placeholder="student@nmu.edu.kh" />
+                            placeholder="student@gmail.com" />
                     </div>
                     <x-input-error :messages="$errors->get('email')" class="mt-2 text-xs" />
                 </div>
