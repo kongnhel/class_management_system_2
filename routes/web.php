@@ -41,7 +41,7 @@ use Illuminate\Http\Request;
 
 
 // my-grades
-
+// admin.course-offerings.destroy
 
 
 // myCourseOfferings
