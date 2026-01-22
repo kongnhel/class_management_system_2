@@ -41,7 +41,6 @@ FILESYSTEM_DISK=public
 # DB_PORT=25568
 # DB_DATABASE=defaultdb
 # DB_USERNAME=avnadmin
-# DB_PASSWORD=AVNS_axOQ_qNFzDYoFCBiJdl
 # DB_SSLMODE=REQUIRED
 
 # # បន្ថែមផ្លូវទៅកាន់ឯកសារ SSL ដែលអ្នកបានដាក់
