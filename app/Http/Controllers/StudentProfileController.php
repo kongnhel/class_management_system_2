@@ -101,14 +101,7 @@ if ($request->hasFile('profile_picture')) {
         Log::error('ImageKit Upload Error: ' . $e->getMessage());
     }
 } 
-// --- ករណីសិស្សចុចលុបរូបភាពចេញ ---
-elseif ($request->has('remove_profile_picture') && $request->input('remove_profile_picture') === '1') {
-    if ($userProfile->profile_picture_file_id) {
-        $this->deleteImageFromImageKit($userProfile->profile_picture_file_id);
-    }
-    $userProfile->profile_picture_url = null;
-    $userProfile->profile_picture_file_id = null;
-}
+
 
         // ===========================================
         // ធ្វើបច្ចុប្បន្នភាពព័ត៌មាន Profile
