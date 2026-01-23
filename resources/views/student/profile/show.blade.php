@@ -104,7 +104,7 @@
     x-show="show" 
     x-transition:enter="animate-quantum"
     x-transition:leave="transition ease-in duration-300 opacity-0 scale-95 translate-y-5"
-    class="fixed bottom-10 right-10 z-[9999] w-full max-w-[400px] select-none"
+    class="fixed top-5 right-10 z-[9999] w-full max-w-[400px] select-none"
 >
     {{-- Neural Core Container --}}
     <div class="relative group">
