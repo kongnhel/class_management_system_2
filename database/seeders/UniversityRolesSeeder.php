@@ -14,20 +14,19 @@ class UniversityRolesSeeder extends Seeder
      */
     public function run(): void
     {
-        // បង្កើត Admin User
-        // User::create([
-        //     'name' => 'University Admin',
-        //     'email' => 'admin@gmail.com',
-        //     'password' => Hash::make('Admin1234!@#$'), // Password គឺ 'password'
-        //     'role' => 'admin',
-        //     'email_verified_at' => Carbon::now(), // Verify email immediately for testing
-        // ]);
+        User::create([
+            'name' => 'University Admin',
+            'email' => 'admin@gmail.com',
+            'password' => Hash::make('Admin1234!@#$'), // Password គឺ 'password'
+            'role' => 'admin',
+            'email_verified_at' => Carbon::now(), // Verify email immediately for testing
+        ]);
 
-        // បង្កើត Professor User
+        // // បង្កើត Professor User
         User::create([
             'name' => 'វ៉ាង សុវណ្ណ',
-            'email' => 'professorsovann@gmail.com',
-            'password' => Hash::make('Professor1234!@#$'), // Password គឺ 'password'
+            'email' => 'psovann@gmail.com',
+            'password' => Hash::make('Psovann1234!@#$'), // Password គឺ 'password'
             'role' => 'professor',
             'email_verified_at' => Carbon::now(),
         ]);

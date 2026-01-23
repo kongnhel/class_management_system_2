@@ -351,7 +351,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('leader.attendance.store');
         Route::get('/leader/attendance-report/{courseOffering}', [StudentAttendanceController::class, 'leaderAttendanceReport'])
             ->name('leader.report');
-        Route::post('/student/update-telegram', [App\Http\Controllers\StudentController::class, 'updateTelegram'])
+        Route::post('/student/update-telegram', [StudentController::class, 'updateTelegram'])
             ->name('update_telegram');
     Route::get('/student/scan', function () {
         return view('student.scan');

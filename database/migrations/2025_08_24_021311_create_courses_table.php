@@ -23,7 +23,7 @@ return new class extends Migration
                   ->constrained('programs') // Assumes 'programs' table exists
                   ->onDelete('no action'); // Using 'no action' for SQL Server compatibility
 
-            $table->string('code')->unique(); // E.g., CS101
+            // $table->string('code')->unique(); // E.g., CS101
             $table->string('title_km');
             $table->string('title_en');
             $table->integer('credits');
