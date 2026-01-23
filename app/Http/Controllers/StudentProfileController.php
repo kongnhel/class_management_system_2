@@ -72,18 +72,18 @@ class StudentProfileController extends Controller
         // ===========================================
         // បង្ហោះរូបភាពទៅកាន់ ImgBB
         // ===========================================
-if ($request->hasFile('profile_picture')) {
+// បង្ហោះរូបភាពទៅកាន់ ImageKit
+if ($request->hasFile('profile_picture')) { 
     try {
         $image = $request->file('profile_picture');
-
-        // --- ជំហានទី ១: លុបរូបភាពចាស់ពី ImageKit (បើមាន) ---
-        if ($userProfile->profile_picture_file_id) {
-            $this->deleteImageFromImageKit($userProfile->profile_picture_file_id);
-        }
-
-        // --- ជំហានទី ២: បង្ហោះរូបភាពថ្មីទៅ ImageKit ---
+        
+        // បញ្ជូនរូបភាពទៅកាន់ ImageKit API
         $response = Http::withBasicAuth(env('IMAGEKIT_PRIVATE_KEY'), '')
-            ->attach('file', file_get_contents($image->getRealPath()), $image->getClientOriginalName())
+            ->attach(
+                'file', 
+                file_get_contents($image->getRealPath()), 
+                $image->getClientOriginalName()
+            )
             ->post('https://upload.imagekit.io/api/v1/files/upload', [
                 'fileName' => 'student_' . time(),
                 'useUniqueFileName' => 'true',
@@ -91,17 +91,20 @@ if ($request->hasFile('profile_picture')) {
             ]);
 
         if ($response->successful()) {
-            $data = $response->json();
-            $userProfile->profile_picture_url = $data['url'];
-            // រក្សាទុក fileId ដើម្បីទុកសម្រាប់លុបនៅថ្ងៃក្រោយ
-            $userProfile->profile_picture_file_id = $data['fileId']; 
+            // រក្សាទុក URL ថ្មីចូលក្នុង Database ភ្លាមៗ
+            $userProfile->profile_picture_url = $response->json()['url'];
+        } else {
+            Log::error('ImageKit Upload Error: ' . $response->body());
         }
-
+        
     } catch (\Exception $e) {
-        Log::error('ImageKit Upload Error: ' . $e->getMessage());
+        Log::error('Upload Error: ' . $e->getMessage());
     }
 } 
-
+// ករណីលុបរូបភាពចេញ (គ្រាន់តែផ្ដាច់ Link ក្នុង DB)
+elseif ($request->has('remove_profile_picture') && $request->input('remove_profile_picture') === '1') {
+    $userProfile->profile_picture_url = null;
+}
 
         // ===========================================
         // ធ្វើបច្ចុប្បន្នភាពព័ត៌មាន Profile
