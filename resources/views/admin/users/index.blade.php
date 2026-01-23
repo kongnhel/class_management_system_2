@@ -225,8 +225,8 @@ activeTab: $persist('admins').as('user_manage_tab'),
                     <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-50">
                         <div class="flex items-center space-x-3 min-w-0">
 @if ($admin->profile && $admin->profile->profile_picture_url)
-    {{-- ប្តូរមកប្រើ URL ផ្ទាល់ពី ImgBB --}}
-    <img src="{{ $admin->profile->profile_picture_url }}" 
+    {{-- ប្តូរមកប្រើ URL ពី ImageKit ជាមួយការកំណត់ទំហំអូតូ --}}
+    <img src="{{ $admin->profile->profile_picture_url }}?tr=w-100,h-100,fo-face" 
          class="h-12 w-12 rounded-full object-cover border border-gray-100"
          alt="{{ $admin->name }}">
 @else
@@ -315,15 +315,18 @@ activeTab: $persist('admins').as('user_manage_tab'),
                                 <tbody class="bg-white divide-y divide-gray-100">
                                     @foreach ($professorList as $professor)
                                         <tr class="hover:bg-gray-50 transition-colors">
-                                            <td class="px-6 py-3 whitespace-nowrap">
-                                                @if ($professor->profile && $professor->profile->profile_picture_url)
-                                                    <img src="{{ $professor->profile->profile_picture_url }}" class="h-10 w-10 rounded-full object-cover border border-gray-100 shadow-sm">
-                                                @else
-                                                    <div class="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
-                                                        {{ strtoupper(substr($professor->name, 0, 1)) }}
-                                                    </div>
-                                                @endif
-                                            </td>
+<td class="px-6 py-3 whitespace-nowrap">
+    @if ($professor->profile && $professor->profile->profile_picture_url)
+        {{-- បន្ថែម ?tr=w-100,h-100,fo-face ដើម្បីឱ្យ ImageKit ជួយ Crop យកចំផ្ទៃមុខ និងកាត់បន្ថយទំហំ File --}}
+        <img src="{{ $professor->profile->profile_picture_url }}?tr=w-100,h-100,fo-face" 
+             class="h-10 w-10 rounded-full object-cover border border-gray-100 shadow-sm"
+             alt="{{ $professor->name }}">
+    @else
+        <div class="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
+            {{ strtoupper(substr($professor->name, 0, 1)) }}
+        </div>
+    @endif
+</td>
                                             <td class="px-6 py-3">
                                                 <div class="text-sm font-bold text-gray-900 uppercase tracking-tighter">{{ $professor->name }}</div>
                                                 <div class="text-[11px] text-gray-500 font-medium">{{ $professor->profile->full_name_km ?? 'N/A' }}</div>
@@ -352,19 +355,22 @@ activeTab: $persist('admins').as('user_manage_tab'),
                             @foreach ($professorList as $professor)
                                 <div class="bg-gray-50/50 border border-gray-100 rounded-xl p-4 shadow-sm hover:border-blue-200 transition-colors">
                                     <div class="flex items-center justify-between mb-3">
-                                        <div class="flex items-center space-x-3">
-                                            @if ($professor->profile && $professor->profile->profile_picture_url)
-                                                <img src="{{ $professor->profile->profile_picture_url }}" class="h-12 w-12 rounded-full object-cover border-2 border-white shadow-sm">
-                                            @else
-                                                <div class="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-black text-lg shadow-sm">
-                                                    {{ strtoupper(substr($professor->name, 0, 1)) }}
-                                                </div>
-                                            @endif
-                                            <div class="min-w-0">
-                                                <h5 class="text-sm font-black text-gray-900 uppercase truncate">{{ $professor->name }}</h5>
-                                                <p class="text-[10px] text-gray-500 truncate font-medium">{{ $professor->email }}</p>
-                                            </div>
-                                        </div>
+<div class="flex items-center space-x-3">
+    @if ($professor->profile && $professor->profile->profile_picture_url)
+        {{-- បន្ថែម ?tr=w-150,h-150,fo-face ដើម្បីឱ្យរូបភាពច្បាស់ និងចំផ្ទៃមុខល្អ --}}
+        <img src="{{ $professor->profile->profile_picture_url }}?tr=w-150,h-150,fo-face" 
+             class="h-12 w-12 rounded-full object-cover border-2 border-white shadow-sm"
+             alt="{{ $professor->name }}">
+    @else
+        <div class="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-black text-lg shadow-sm">
+            {{ strtoupper(substr($professor->name, 0, 1)) }}
+        </div>
+    @endif
+    <div class="min-w-0">
+        <h5 class="text-sm font-black text-gray-900 uppercase truncate">{{ $professor->name }}</h5>
+        <p class="text-[10px] text-gray-500 truncate font-medium">{{ $professor->email }}</p>
+    </div>
+</div>
                                     </div>
                                     <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
                                         <span class="text-[10px] font-bold text-gray-400 italic">{{ $professor->profile->full_name_km ?? 'N/A' }}</span>
@@ -443,8 +449,8 @@ activeTab: $persist('admins').as('user_manage_tab'),
                                                 <tr class="hover:bg-gray-50 transition-colors">
                                                     <td class="px-6 py-3 whitespace-nowrap">
 @if ($student->studentProfile && $student->studentProfile->profile_picture_url)
-    {{-- ប្តូរមកប្រើ URL ពី ImgBB ដោយផ្ទាល់ ដើម្បីជៀសវាងកំហុស 403 --}}
-    <img src="{{ $student->studentProfile->profile_picture_url }}" 
+    {{-- ប្តូរមកប្រើ URL ពី ImageKit ជាមួយការកំណត់ទំហំ និង Smart Face Crop --}}
+    <img src="{{ $student->studentProfile->profile_picture_url }}?tr=w-100,h-100,fo-face" 
          class="h-10 w-10 rounded-full object-cover border border-gray-100"
          alt="{{ $student->name }}">
 @else
@@ -481,13 +487,16 @@ activeTab: $persist('admins').as('user_manage_tab'),
                                         <div class="bg-gray-50/50 border border-gray-100 rounded-xl p-4 shadow-sm hover:border-green-200 transition-colors">
                                             <div class="flex items-center justify-between mb-3">
                                                 <div class="flex items-center space-x-3">
-                                                    @if ($student->studentProfile && $student->studentProfile->profile_picture_url)
-                                                        <img src="{{ $student->studentProfile->profile_picture_url }}" class="h-12 w-12 rounded-full object-cover border-2 border-white shadow-sm">
-                                                    @else
-                                                        <div class="h-12 w-12 rounded-full bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center text-white font-black text-lg shadow-sm">
-                                                            {{ strtoupper(substr($student->name, 0, 1)) }}
-                                                        </div>
-                                                    @endif
+@if ($student->studentProfile && $student->studentProfile->profile_picture_url)
+    {{-- បន្ថែម ?tr=w-150,h-150,fo-face ដើម្បីឱ្យរូបភាពបង្ហាញចំផ្ទៃមុខ និងមានទំហំសមស្រប --}}
+    <img src="{{ $student->studentProfile->profile_picture_url }}?tr=w-150,h-150,fo-face" 
+         class="h-12 w-12 rounded-full object-cover border-2 border-white shadow-sm"
+         alt="{{ $student->name }}">
+@else
+    <div class="h-12 w-12 rounded-full bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center text-white font-black text-lg shadow-sm">
+        {{ strtoupper(substr($student->name, 0, 1)) }}
+    </div>
+@endif
                                                     <div class="min-w-0">
                                                         <h5 class="text-sm font-black text-gray-900 uppercase truncate">{{ $student->name }}</h5>
                                                         <p class="text-[10px] text-gray-500 truncate font-medium">{{ $student->email }}</p>

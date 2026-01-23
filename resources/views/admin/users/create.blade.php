@@ -181,47 +181,68 @@
                                 <i class="fas fa-user-circle mr-2 text-green-600"></i> {{ __('ព័ត៌មានផ្ទាល់ខ្លួន') }}
                             </h4>
 
-                            <div class="flex flex-col md:flex-row gap-10">
-                                <div class="flex flex-col items-center space-y-4">
-                                    <div class="relative group">
-                                        <div class="h-32 w-32 rounded-2xl bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden relative">
-                                            <template x-if="profilePicturePreview">
-                                                <img :src="profilePicturePreview" class="h-full w-full object-cover">
-                                            </template>
-                                            <template x-if="!profilePicturePreview">
-                                                <i class="fas fa-camera text-3xl text-gray-300"></i>
-                                            </template>
-                                        </div>
-                                        <label class="absolute -bottom-2 -right-2 bg-green-600 text-white p-2 rounded-lg cursor-pointer hover:bg-green-700 shadow-lg transition">
-                                            <i class="fas fa-pen text-xs"></i>
-                                            <input type="file" name="profile_picture" class="hidden" @change="profilePicturePreview = URL.createObjectURL($event.target.files[0])">
-                                        </label>
-                                    </div>
-                                    <p class="text-xs text-gray-500">{{ __('រូបភាព Profile (4x6)') }}</p>
-                                </div>
+                           <div class="flex flex-col md:flex-row gap-10" x-data="{ profilePicturePreview: '{{ $userProfile->profile_picture_url ?? '' }}' }">
+    <div class="flex flex-col items-center space-y-4">
+        <div class="relative group">
+            <div class="h-40 w-32 rounded-2xl bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden relative shadow-inner">
+                <template x-if="profilePicturePreview">
+                    <img :src="profilePicturePreview.includes('ik.imagekit.io') ? profilePicturePreview + '?tr=w-300,h-400,fo-face' : profilePicturePreview" 
+                         class="h-full w-full object-cover">
+                </template>
+                
+                <template x-if="!profilePicturePreview">
+                    <div class="text-center">
+                        <i class="fas fa-camera text-3xl text-gray-300"></i>
+                        <p class="text-[10px] text-gray-400 mt-1 uppercase font-bold">Upload</p>
+                    </div>
+                </template>
+            </div>
 
-                                <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <x-input-label for="full_name_km" class="font-semibold text-gray-700">{{ __('ឈ្មោះពេញ (ខ្មែរ)') }}</x-input-label>
-                                        <x-text-input id="full_name_km" name="full_name_km" class="block w-full rounded-xl mt-1" />
-                                    </div>
-                                    <div>
-                                        <x-input-label for="full_name_en" class="font-semibold text-gray-700">{{ __('ឈ្មោះពេញ (អង់គ្លេស)') }}</x-input-label>
-                                        <x-text-input id="full_name_en" name="full_name_en" class="block w-full rounded-xl mt-1" />
-                                    </div>
-                                    <div>
-                                        <x-input-label for="gender" class="font-semibold text-gray-700">{{ __('ភេទ') }}</x-input-label>
-                                        <select id="gender" name="gender" class="block w-full rounded-xl mt-1 border-gray-300">
-                                            <option value="male">{{ __('ប្រុស') }}</option>
-                                            <option value="female">{{ __('ស្រី') }}</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <x-input-label for="phone_number" class="font-semibold text-gray-700">{{ __('លេខទូរស័ព្ទ') }}</x-input-label>
-                                        <x-text-input id="phone_number" name="phone_number" class="block w-full rounded-xl mt-1" placeholder="012 345 678" />
-                                    </div>
-                                </div>
-                            </div>
+            <label class="absolute -bottom-2 -right-2 bg-green-600 text-white p-2.5 rounded-xl cursor-pointer hover:bg-green-700 shadow-lg transition-all hover:scale-110 active:scale-95">
+                <i class="fas fa-pen text-xs"></i>
+                <input type="file" name="profile_picture" class="hidden" 
+                    @change="
+                        const file = $event.target.files[0];
+                        if (file) {
+                            if (file.size > 2 * 1024 * 1024) {
+                                alert('រូបភាពធំពេក! សូមជ្រើសរើសរូបភាពដែលមានទំហំតូចជាង ២MB');
+                                $event.target.value = '';
+                                profilePicturePreview = '{{ $userProfile->profile_picture_url ?? '' }}';
+                            } else {
+                                profilePicturePreview = URL.createObjectURL(file);
+                            }
+                        }
+                    ">
+            </label>
+        </div>
+        <p class="text-xs text-gray-500 font-medium">{{ __('រូបភាព Profile (4x6)') }}</p>
+    </div>
+
+    <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="space-y-1">
+            <x-input-label for="full_name_km" class="font-bold text-gray-700 ml-1">{{ __('ឈ្មោះពេញ (ខ្មែរ)') }}</x-input-label>
+            <x-text-input id="full_name_km" name="full_name_km" value="{{ old('full_name_km', $userProfile->full_name_km ?? '') }}" class="block w-full rounded-xl border-gray-300 focus:ring-green-500" placeholder="បញ្ចូលឈ្មោះខ្មែរ" />
+        </div>
+        
+        <div class="space-y-1">
+            <x-input-label for="full_name_en" class="font-bold text-gray-700 ml-1">{{ __('ឈ្មោះពេញ (អង់គ្លេស)') }}</x-input-label>
+            <x-text-input id="full_name_en" name="full_name_en" value="{{ old('full_name_en', $userProfile->full_name_en ?? '') }}" class="block w-full rounded-xl border-gray-300 focus:ring-green-500 uppercase" placeholder="FULL NAME IN ENGLISH" />
+        </div>
+
+        <div class="space-y-1">
+            <x-input-label for="gender" class="font-bold text-gray-700 ml-1">{{ __('ភេទ') }}</x-input-label>
+            <select id="gender" name="gender" class="block w-full rounded-xl mt-1 border-gray-300 focus:border-green-500 focus:ring-green-500 shadow-sm">
+                <option value="male" {{ (old('gender', $userProfile->gender ?? '') == 'male') ? 'selected' : '' }}>{{ __('ប្រុស') }}</option>
+                <option value="female" {{ (old('gender', $userProfile->gender ?? '') == 'female') ? 'selected' : '' }}>{{ __('ស្រី') }}</option>
+            </select>
+        </div>
+
+        <div class="space-y-1">
+            <x-input-label for="phone_number" class="font-bold text-gray-700 ml-1">{{ __('លេខទូរស័ព្ទ') }}</x-input-label>
+            <x-text-input id="phone_number" name="phone_number" value="{{ old('phone_number', $userProfile->phone_number ?? '') }}" class="block w-full rounded-xl mt-1 border-gray-300 focus:ring-green-500" placeholder="012 345 678" />
+        </div>
+    </div>
+</div>
                         </div>
 
                         <div class="pt-6">

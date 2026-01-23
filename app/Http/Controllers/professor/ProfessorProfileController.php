@@ -64,29 +64,36 @@ public function updateProfile(Request $request) {
     // ២. ទាញយក ឬបង្កើត Profile ថ្មី
     $userProfile = $user->userProfile()->firstOrNew(['user_id' => $user->id]);
     
-    // ៣. បង្ហោះរូបភាពទៅកាន់ ImgBB
-    if ($request->hasFile('profile_picture')) { 
-        try {
-            $image = $request->file('profile_picture');
-            
-            // ប្រើប្រាស់ Http Facade ដើម្បីបញ្ជូនរូបភាពទៅកាន់ ImgBB API
-            $response = Http::asMultipart()->post('https://api.imgbb.com/1/upload', [
-                'key' => env('IMGBB_API_KEY'), // ប្រាកដថាអ្នកមាន key ក្នុង .env
-                'image' => base64_encode(file_get_contents($image->getRealPath())),
+// ៣. បង្ហោះរូបភាពទៅកាន់ ImageKit
+if ($request->hasFile('profile_picture')) { 
+    try {
+        $image = $request->file('profile_picture');
+        
+        // បញ្ជូនរូបភាពទៅកាន់ ImageKit API
+        // ចំណាំ៖ ImageKit តម្រូវឱ្យប្រើ Private Key ក្នុង Basic Auth (Username = Private Key, Password = ទទេ)
+        $response = Http::withBasicAuth(env('IMAGEKIT_PRIVATE_KEY'), '')
+            ->attach(
+                'file', 
+                file_get_contents($image->getRealPath()), 
+                $image->getClientOriginalName()
+            )
+            ->post('https://upload.imagekit.io/api/v1/files/upload', [
+                'fileName' => 'student_' . time() . '_' . auth()->id(), // ដាក់ឈ្មោះឱ្យប្លែកគ្នា
+                'useUniqueFileName' => 'true',
+                'folder' => '/student_profiles', // បែងចែក Folder ឱ្យមានរបៀប
             ]);
 
-            if ($response->successful()) {
-                // រក្សាទុក URL ពេញលេញដែលទទួលបានពី ImgBB
-                $userProfile->profile_picture_url = $response->json()['data']['url'];
-            } else {
-                \Log::error('ImgBB Upload Error: ' . $response->body());
-            }
-            
-        } catch (\Exception $e) {
-            \Log::error('Upload Error: ' . $e->getMessage());
+        if ($response->successful()) {
+            // រក្សាទុក URL ពេញលេញដែលទទួលបានពី ImageKit
+            $userProfile->profile_picture_url = $response->json()['url'];
+        } else {
+            Log::error('ImageKit Upload Error: ' . $response->body());
         }
+        
+    } catch (\Exception $e) {
+        Log::error('Upload Error: ' . $e->getMessage());
     }
-    
+}
     // ៤. រក្សាទុកទិន្នន័យផ្សេងៗចូលក្នុង Database
     $userProfile->fill($request->except(['profile_picture']));
     $userProfile->save();

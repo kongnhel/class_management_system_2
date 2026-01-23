@@ -96,13 +96,18 @@
                                             <div class="relative flex-shrink-0">
                                                 <div class="w-9 h-9 md:w-12 md:h-12 rounded-lg md:rounded-2xl overflow-hidden flex items-center justify-center bg-white border-2 {{ $isLeader ? 'border-amber-400 ring-2 ring-amber-50' : 'border-slate-100' }}">
 
-                                                    @if($profilePictureUrl)
-                                                        <img src="{{ $profilePictureUrl }}" class="w-full h-full object-cover">
-                                                    @else
-                                                        <span class="text-[10px] md:text-sm font-black text-blue-600 bg-blue-50 w-full h-full flex items-center justify-center">
-                                                            {{ Str::substr($student->studentProfile->full_name_km ?? $student->name, 0, 1) }}
-                                                        </span>
-                                                    @endif
+<div class="w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm">
+    @if($profilePictureUrl)
+        {{-- បន្ថែម Parameter ?tr=w-100,h-100,fo-face ដើម្បីឱ្យ ImageKit កាត់យករូបចំផ្ទៃមុខអូតូ --}}
+        <img src="{{ $profilePictureUrl }}?tr=w-100,h-100,fo-face" 
+             class="w-full h-full object-cover"
+             alt="Profile">
+    @else
+        <span class="text-[10px] md:text-sm font-black text-blue-600 bg-blue-50 w-full h-full flex items-center justify-center">
+            {{ Str::substr($student->studentProfile->full_name_km ?? $student->name, 0, 1) }}
+        </span>
+    @endif
+</div>
                                                                     {{-- @if($profileUrl) 
                     <img src="{{ $profileUrl }}" class="h-full w-full object-cover" alt="{{ $user->name }}">
                 @else 

@@ -75,22 +75,29 @@ class RoomController extends Controller
 
 $data = $request->except('wifi_qr_code');
 
-    if ($request->hasFile('wifi_qr_code')) {
-        $file = $request->file('wifi_qr_code');
-        
-        // ផ្ញើរូបភាពទៅ ImgBB API
-        $response = Http::asMultipart()->post('https://api.imgbb.com/1/upload', [
-            'key' => env('IMGBB_API_KEY'),
-            'image' => base64_encode(file_get_contents($file->getRealPath())),
+if ($request->hasFile('wifi_qr_code')) {
+    $file = $request->file('wifi_qr_code');
+    
+    // ផ្ញើរូបភាពទៅ ImageKit API
+    $response = Http::withBasicAuth(env('IMAGEKIT_PRIVATE_KEY'), '') // ប្រើ Private Key ជា Username
+        ->attach(
+            'file', 
+            file_get_contents($file->getRealPath()), 
+            $file->getClientOriginalName()
+        )
+        ->post('https://upload.imagekit.io/api/v1/files/upload', [
+            'fileName' => 'wifi_qr_' . time(),
+            'useUniqueFileName' => 'true',
+            'folder' => '/room_wifi', // បែងចែក Folder សម្រាប់ QR Code
         ]);
 
-        if ($response->successful()) {
-            // យក URL ដែល ImgBB ផ្ដល់ឱ្យមកក្នុង Database
-            $data['wifi_qr_code'] = $response->json()['data']['url'];
-        } else {
-            return back()->withErrors(['wifi_qr_code' => 'ការ Upload ទៅ ImgBB បរាជ័យ']);
-        }
+    if ($response->successful()) {
+        // រក្សាទុក URL ពេញលេញដែលទទួលបានពី ImageKit
+        $data['wifi_qr_code'] = $response->json()['url'];
+    } else {
+        return back()->withErrors(['wifi_qr_code' => 'ការ Upload ទៅ ImageKit បរាជ័យ៖ ' . $response->body()]);
     }
+}
 
     $room = Room::create($data);
 
@@ -129,18 +136,29 @@ public function edit(Room $room)
 
 $data = $request->except('wifi_qr_code');
 
-    if ($request->hasFile('wifi_qr_code')) {
-        $file = $request->file('wifi_qr_code');
-        
-        $response = Http::asMultipart()->post('https://api.imgbb.com/1/upload', [
-            'key' => env('IMGBB_API_KEY'),
-            'image' => base64_encode(file_get_contents($file->getRealPath())),
+if ($request->hasFile('wifi_qr_code')) {
+    $file = $request->file('wifi_qr_code');
+    
+    // ផ្ញើរូបភាពទៅ ImageKit API
+    $response = Http::withBasicAuth(env('IMAGEKIT_PRIVATE_KEY'), '') // ប្រើ Private Key ជា Username
+        ->attach(
+            'file', 
+            file_get_contents($file->getRealPath()), 
+            $file->getClientOriginalName()
+        )
+        ->post('https://upload.imagekit.io/api/v1/files/upload', [
+            'fileName' => 'wifi_qr_' . time(),
+            'useUniqueFileName' => 'true',
+            'folder' => '/room_wifi', // បែងចែក Folder សម្រាប់ QR Code
         ]);
 
-        if ($response->successful()) {
-            $data['wifi_qr_code'] = $response->json()['data']['url'];
-        }
+    if ($response->successful()) {
+        // រក្សាទុក URL ពេញលេញដែលទទួលបានពី ImageKit
+        $data['wifi_qr_code'] = $response->json()['url'];
+    } else {
+        return back()->withErrors(['wifi_qr_code' => 'ការ Upload ទៅ ImageKit បរាជ័យ៖ ' . $response->body()]);
     }
+}
 
     $room->update($data);
 

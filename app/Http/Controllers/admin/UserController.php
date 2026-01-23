@@ -259,21 +259,39 @@ public function searchUsers(Request $request)
             //     $path = $request->file('profile_picture')->store('profile_pictures', 'public');
             //     $profile->profile_picture_url = $path;
             // }
+// if ($request->hasFile('profile_picture')) {
+//     $image = $request->file('profile_picture');
+    
+//     // ផ្ញើរូបភាពទៅ ImgBB
+//     $response = Http::asMultipart()->post('https://api.imgbb.com/1/upload', [
+//         'key' => env('IMGBB_API_KEY'),
+//         'image' => base64_encode(file_get_contents($image->getRealPath())),
+//     ]);
+
+//     if ($response->successful()) {
+//         // រក្សាទុក URL ពេញលេញពី ImgBB
+//         $profile->profile_picture_url = $response->json()['data']['url'];
+//     }
+// }
 if ($request->hasFile('profile_picture')) {
     $image = $request->file('profile_picture');
     
-    // ផ្ញើរូបភាពទៅ ImgBB
-    $response = Http::asMultipart()->post('https://api.imgbb.com/1/upload', [
-        'key' => env('IMGBB_API_KEY'),
-        'image' => base64_encode(file_get_contents($image->getRealPath())),
-    ]);
+    // រៀបចំការផ្ញើទៅ ImageKit
+    $response = Http::withBasicAuth(env('IMAGEKIT_PRIVATE_KEY'), '') // ប្រើ Private Key ជា Username និងទុក Password ទទេ
+        ->attach('file', file_get_contents($image), $image->getClientOriginalName())
+        ->post('https://upload.imagekit.io/api/v1/files/upload', [
+            'fileName' => 'profile_' . time(),
+            'useUniqueFileName' => 'true',
+            'folder' => '/profiles', // បែងចែក Folder ឱ្យមានរបៀប
+        ]);
 
     if ($response->successful()) {
-        // រក្សាទុក URL ពេញលេញពី ImgBB
-        $profile->profile_picture_url = $response->json()['data']['url'];
+        // រក្សាទុក URL ដែលទទួលបានពី ImageKit
+        // ImageKit ផ្ដល់ឱ្យទាំង 'url' (Full URL) និង 'filePath' (សម្រាប់យកទៅកែទំហំតាមក្រោយ)
+        $profile->profile_picture_url = $response->json()['url'];
+        $profile->save();
     }
 }
-
             // Save the profile to the correct relationship
             if ($request->role === 'student') {
                  $user->studentProfile()->save($profile);
@@ -371,21 +389,40 @@ $messages = [
 
         $profile->fill($request->only(['full_name_km', 'full_name_en', 'gender', 'date_of_birth', 'phone_number', 'address']));
 
-        // ៣. Handle ImgBB Upload
+        // // ៣. Handle ImgBB Upload
+        // if ($request->hasFile('profile_picture')) {
+        //     $file = $request->file('profile_picture');
+        //     $response = Http::asMultipart()->post('https://api.imgbb.com/1/upload', [
+        //         'key' => env('IMGBB_API_KEY'),
+        //         'image' => base64_encode(file_get_contents($file->getRealPath())),
+        //     ]);
+
+        //     if ($response->successful()) {
+        //         // រក្សាទុក Full URL ពី ImgBB
+        //         $profile->profile_picture_url = $response->json()['data']['url'];
+        //     }
+        // }
+
+        // $profile->save();
         if ($request->hasFile('profile_picture')) {
-            $file = $request->file('profile_picture');
-            $response = Http::asMultipart()->post('https://api.imgbb.com/1/upload', [
-                'key' => env('IMGBB_API_KEY'),
-                'image' => base64_encode(file_get_contents($file->getRealPath())),
-            ]);
+    $image = $request->file('profile_picture');
+    
+    // រៀបចំការផ្ញើទៅ ImageKit
+    $response = Http::withBasicAuth(env('IMAGEKIT_PRIVATE_KEY'), '') // ប្រើ Private Key ជា Username និងទុក Password ទទេ
+        ->attach('file', file_get_contents($image), $image->getClientOriginalName())
+        ->post('https://upload.imagekit.io/api/v1/files/upload', [
+            'fileName' => 'profile_' . time(),
+            'useUniqueFileName' => 'true',
+            'folder' => '/profiles', // បែងចែក Folder ឱ្យមានរបៀប
+        ]);
 
-            if ($response->successful()) {
-                // រក្សាទុក Full URL ពី ImgBB
-                $profile->profile_picture_url = $response->json()['data']['url'];
-            }
-        }
-
+    if ($response->successful()) {
+        // រក្សាទុក URL ដែលទទួលបានពី ImageKit
+        // ImageKit ផ្ដល់ឱ្យទាំង 'url' (Full URL) និង 'filePath' (សម្រាប់យកទៅកែទំហំតាមក្រោយ)
+        $profile->profile_picture_url = $response->json()['url'];
         $profile->save();
+    }
+}
 
         return redirect()->route('admin.manage-users')->with('success', 'ព័ត៌មានត្រូវបានធ្វើបច្ចុប្បន្នភាព។');
     }

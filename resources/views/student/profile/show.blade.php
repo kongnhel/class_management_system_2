@@ -16,16 +16,19 @@
                         <div class="relative group">
                             {{-- Profile Picture Container --}}
                             <div id="profile-picture-container" class="w-32 h-32 md:w-36 md:h-36 rounded-[2.5rem] bg-white p-1.5 shadow-2xl cursor-pointer overflow-hidden transition-transform active:scale-95">
-                                <div class="w-full h-full rounded-[2rem] overflow-hidden bg-slate-100 flex items-center justify-center">
-                                    {{-- បង្ហាញរូបភាពពី ImgBB ដោយផ្ទាល់ (លុប asset('storage/') ចេញ) --}}
-                                    @if ($profileUrl)
-                                        <img src="{{ $profileUrl }}" alt="{{ $user->name }}" class="object-cover w-full h-full" id="profile-picture-preview">
-                                    @else
-                                        <div id="profile-picture-placeholder" class="text-indigo-500 text-4xl font-black">
-                                            {{ Str::upper(Str::substr($user->name, 0, 1)) }}
-                                        </div>
-                                    @endif
-                                </div>
+<div class="w-full h-full rounded-[2rem] overflow-hidden bg-slate-100 flex items-center justify-center">
+    @if ($profileUrl)
+        {{-- ប្រើ URL ពី ImageKit រួចថែម Parameter សម្រាប់កាត់រូបភាពចំផ្ទៃមុខ (Smart Face Crop) --}}
+        <img src="{{ $profileUrl }}?tr=w-400,h-400,fo-face" 
+             alt="{{ $user->name }}" 
+             class="object-cover w-full h-full" 
+             id="profile-picture-preview">
+    @else
+        <div id="profile-picture-placeholder" class="text-indigo-500 text-4xl font-black">
+            {{ Str::upper(Str::substr($user->name, 0, 1)) }}
+        </div>
+    @endif
+</div>
                                 {{-- Overlay icon --}}
                                 <div class="absolute inset-1.5 bg-black/40 rounded-[2rem] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                     <i class="fas fa-camera text-white text-xl"></i>

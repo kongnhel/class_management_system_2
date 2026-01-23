@@ -72,27 +72,43 @@ class StudentProfileController extends Controller
         // ===========================================
         // បង្ហោះរូបភាពទៅកាន់ ImgBB
         // ===========================================
-        if ($request->hasFile('profile_picture')) {
-            try {
-                $image = $request->file('profile_picture');
-                
-                // បញ្ជូនរូបភាពទៅកាន់ ImgBB API
-                $response = Http::asMultipart()->post('https://api.imgbb.com/1/upload', [
-                    'key' => env('IMGBB_API_KEY'), 
-                    'image' => base64_encode(file_get_contents($image->getRealPath())),
-                ]);
+if ($request->hasFile('profile_picture')) {
+    try {
+        $image = $request->file('profile_picture');
 
-                if ($response->successful()) {
-                    // រក្សាទុក URL ពេញលេញពី Cloud
-                    $userProfile->profile_picture_url = $response->json()['data']['url'];
-                }
-            } catch (\Exception $e) {
-                \Log::error('ImgBB Upload Error: ' . $e->getMessage());
-            }
-        } elseif ($request->has('remove_profile_picture') && $request->input('remove_profile_picture') === '1') {
-            // លុបរូបភាព (កំណត់ត្រឹមតែ URL ក្នុង DB ឱ្យទៅជា null)
-            $userProfile->profile_picture_url = null;
+        // --- ជំហានទី ១: លុបរូបភាពចាស់ពី ImageKit (បើមាន) ---
+        if ($userProfile->profile_picture_file_id) {
+            $this->deleteImageFromImageKit($userProfile->profile_picture_file_id);
         }
+
+        // --- ជំហានទី ២: បង្ហោះរូបភាពថ្មីទៅ ImageKit ---
+        $response = Http::withBasicAuth(env('IMAGEKIT_PRIVATE_KEY'), '')
+            ->attach('file', file_get_contents($image->getRealPath()), $image->getClientOriginalName())
+            ->post('https://upload.imagekit.io/api/v1/files/upload', [
+                'fileName' => 'student_' . time(),
+                'useUniqueFileName' => 'true',
+                'folder' => '/student_profiles',
+            ]);
+
+        if ($response->successful()) {
+            $data = $response->json();
+            $userProfile->profile_picture_url = $data['url'];
+            // រក្សាទុក fileId ដើម្បីទុកសម្រាប់លុបនៅថ្ងៃក្រោយ
+            $userProfile->profile_picture_file_id = $data['fileId']; 
+        }
+
+    } catch (\Exception $e) {
+        Log::error('ImageKit Upload Error: ' . $e->getMessage());
+    }
+} 
+// --- ករណីសិស្សចុចលុបរូបភាពចេញ ---
+elseif ($request->has('remove_profile_picture') && $request->input('remove_profile_picture') === '1') {
+    if ($userProfile->profile_picture_file_id) {
+        $this->deleteImageFromImageKit($userProfile->profile_picture_file_id);
+    }
+    $userProfile->profile_picture_url = null;
+    $userProfile->profile_picture_file_id = null;
+}
 
         // ===========================================
         // ធ្វើបច្ចុប្បន្នភាពព័ត៌មាន Profile

@@ -7,7 +7,7 @@
                 <div class="flex flex-col md:flex-row items-center justify-between mb-10 pb-4 border-b border-gray-200">
                     <div>
                         <h2 class="font-extrabold text-4xl text-gray-900 leading-tight">
-                            {{ __('គ្រប់គ្រងកម្មវិធីសិក្សា') }}
+                            {{ __('គ្រប់គ្រងកម្មវិធីសិក្សា (ជំនាញ)') }}
                         </h2>
                         <p class="mt-2 text-lg text-gray-500">{{ __('បញ្ជីឈ្មោះកម្មវិធីសិក្សាទាំងអស់នៅក្នុងប្រព័ន្ធ') }}</p>
                     </div>

@@ -41,24 +41,25 @@
                         {{-- Profile Picture Section --}}
                         <div class="col-span-1 md:col-span-2 flex flex-col items-center justify-center space-y-3 mb-4">
                             <div class="relative w-28 h-28 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-green-400 shadow-lg group cursor-pointer" id="profile-picture-container">
-                                @if ($userProfile->profile_picture_url)
-                                    <img 
-                                        src="{{ $userProfile->profile_picture_url }}" 
-                                        alt="{{ $user->name }}" 
-                                        class="object-cover w-full h-full transition-all duration-300"
-                                        id="profile-picture-preview"
-                                    >
-                                @else
-                                    <div id="profile-picture-placeholder"
-                                         class="w-full h-full bg-green-100 flex items-center justify-center text-green-600 text-4xl md:text-6xl font-black">
-                                        {{ Str::upper(Str::substr($user->name, 0, 1)) }}
-                                    </div>
-                                @endif
+    @if ($userProfile->profile_picture_url)
+        <img 
+            {{-- បន្ថែម ?tr=w-400,h-400,fo-face ដើម្បីឱ្យ ImageKit កាត់រូបភាពចំផ្ទៃមុខអូតូ --}}
+            src="{{ $userProfile->profile_picture_url }}?tr=w-400,h-400,fo-face" 
+            alt="{{ $user->name }}" 
+            class="object-cover w-full h-full transition-all duration-300"
+            id="profile-picture-preview"
+        >
+    @else
+        <div id="profile-picture-placeholder"
+             class="w-full h-full bg-green-100 flex items-center justify-center text-green-600 text-4xl md:text-6xl font-black">
+            {{ Str::upper(Str::substr($user->name, 0, 1)) }}
+        </div>
+    @endif
 
-                                <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <i class="fas fa-camera text-white text-xl md:text-2xl"></i>
-                                </div>
-                            </div>
+    <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <i class="fas fa-camera text-white text-xl md:text-2xl"></i>
+    </div>
+</div>
                             {{-- សំខាន់៖ ឈ្មោះ input ត្រូវតែ "profile_picture" ឱ្យត្រូវតាម Controller --}}
                             <input id="profile_picture" name="profile_picture" type="file" class="hidden" accept="image/*" />
                             <p class="text-[10px] md:text-xs text-gray-400 font-medium">{{ __('ចុចលើរូបដើម្បីផ្លាស់ប្តូរ') }}</p>

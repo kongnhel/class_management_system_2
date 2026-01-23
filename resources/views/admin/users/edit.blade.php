@@ -190,36 +190,38 @@
                     <div class="border-t border-gray-200/50 pt-8 mt-8">
                         <h4 class="text-2xl font-bold text-gray-800 mb-6">{{ __('ព័ត៌មាន Profile') }}</h4>
                         
-                                <div class="flex flex-col items-center space-y-4">
-                                    <div class="relative group">
-                                        <div class="h-32 w-32 rounded-2xl bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden relative">
-                                            <template x-if="profilePicturePreview">
-                                                <img :src="profilePicturePreview" class="h-full w-full object-cover">
-                                            </template>
-                                            <template x-if="!profilePicturePreview">
-                                                <i class="fas fa-camera text-3xl text-gray-300"></i>
-                                            </template>
-                                        </div>
-                                        <label class="absolute -bottom-2 -right-2 bg-green-600 text-white p-2 rounded-lg cursor-pointer hover:bg-green-700 shadow-lg transition">
-                                            <i class="fas fa-pen text-xs"></i>
-<input type="file" name="profile_picture" class="hidden" 
-    @change="
-        const file = $event.target.files[0];
-        if (file) {
-            // Check ទំហំ (2MB = 2 * 1024 * 1024 bytes)
-            if (file.size > 2 * 1024 * 1024) {
-                alert('រូបភាពធំពេក! សូមជ្រើសរើសរូបភាពដែលមានទំហំតូចជាង ២MB');
-                $event.target.value = ''; // លុប file ចេញពី input
-                profilePicturePreview = ''; // លុបរូបភាព Preview ចោល
-            } else {
-                // បង្ហាញរូបភាព Preview ប្រសិនបើទំហំត្រឹមត្រូវ
-                profilePicturePreview = URL.createObjectURL(file);
-            }
-        }
-    ">                  </label>
-                                    </div>
-                                    <p class="text-xs text-gray-500">{{ __('រូបភាព Profile (4x6)') }}</p>
-                                </div>
+<div class="flex flex-col items-center space-y-4" x-data="{ profilePicturePreview: '{{ $userProfile->profile_picture_url ?? '' }}' }">
+    <div class="relative group">
+        <div class="h-32 w-32 rounded-2xl bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden relative">
+            <template x-if="profilePicturePreview">
+                <img :src="profilePicturePreview.includes('ik.imagekit.io') ? profilePicturePreview + '?tr=w-300,h-300,fo-face' : profilePicturePreview" 
+                     class="h-full w-full object-cover">
+            </template>
+            
+            <template x-if="!profilePicturePreview">
+                <i class="fas fa-camera text-3xl text-gray-300"></i>
+            </template>
+        </div>
+
+        <label class="absolute -bottom-2 -right-2 bg-green-600 text-white p-2 rounded-lg cursor-pointer hover:bg-green-700 shadow-lg transition">
+            <i class="fas fa-pen text-xs"></i>
+            <input type="file" name="profile_picture" class="hidden" 
+                @change="
+                    const file = $event.target.files[0];
+                    if (file) {
+                        if (file.size > 2 * 1024 * 1024) {
+                            alert('រូបភាពធំពេក! សូមជ្រើសរើសរូបភាពដែលមានទំហំតូចជាង ២MB');
+                            $event.target.value = '';
+                            profilePicturePreview = '{{ $userProfile->profile_picture_url ?? '' }}';
+                        } else {
+                            profilePicturePreview = URL.createObjectURL(file);
+                        }
+                    }
+                ">
+        </label>
+    </div>
+    <p class="text-xs text-gray-500">{{ __('រូបភាព Profile (4x6)') }}</p>
+</div>
                             <div class="mt-4">
                                  <label for="remove_profile_picture" class="flex items-center">
                                     <x-checkbox id="remove_profile_picture" name="remove_profile_picture" value="1" />
