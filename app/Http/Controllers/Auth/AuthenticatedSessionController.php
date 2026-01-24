@@ -16,17 +16,78 @@ class AuthenticatedSessionController extends Controller
     /**
      * Display the login view.
      */
-    public function create(): View
+//     public function create(): View
+//     {
+//         // បង្កើត Token សម្ងាត់សម្រាប់ QR Code
+//         $token = (string) Str::uuid();
+        
+//         // រក្សាទុកក្នុង Cache ២ នាទី
+//         Cache::put('login_token_' . $token, true, now()->addMinutes(2));
+
+//         // បង្កើតរូបភាព QR Code (ជា SVG)
+//         $qrCode = QrCode::size(200)
+//             ->color(16, 185, 129) // ពណ៌ Emerald Green ដូច Logo បង
+//             ->margin(1)
+//             ->generate($token);
+
+//         return view('auth.login', [
+//             'qrCode' => $qrCode,
+//             'token' => $token
+//         ]);
+//     }
+
+//     /**
+//      * Handle an incoming authentication request.
+//      */
+//     // public function store(LoginRequest $request): RedirectResponse
+//     // {
+//     //     $request->authenticate();
+
+//     //     $request->session()->regenerate();
+
+//     //     return redirect()->intended(route('dashboard', absolute: false));
+//     // }
+
+//     public function store(LoginRequest $request): RedirectResponse
+// {
+//     try {
+//         $request->authenticate();
+//     } catch (ValidationException $e) {
+//         return back()
+//             ->withErrors($e->errors())
+//             ->withInput($request->only('email'));
+//     }
+
+//     $request->session()->regenerate();
+
+//     return redirect()->intended(route('dashboard', absolute: false));
+// }
+
+//     /**
+//      * Destroy an authenticated session.
+//      */
+//     public function destroy(Request $request): RedirectResponse
+//     {
+//         Auth::guard('web')->logout();
+
+//         $request->session()->invalidate();
+
+//         $request->session()->regenerateToken();
+
+//         return redirect('/');
+//     }
+
+public function create(): View
     {
         // បង្កើត Token សម្ងាត់សម្រាប់ QR Code
         $token = (string) Str::uuid();
         
-        // រក្សាទុកក្នុង Cache ២ នាទី
+        // រក្សាទុកក្នុង Cache ២ នាទី ដើម្បីឱ្យ Computer ចាំស្ដាប់
         Cache::put('login_token_' . $token, true, now()->addMinutes(2));
 
-        // បង្កើតរូបភាព QR Code (ជា SVG)
+        // បង្កើតរូបភាព QR Code (ជា SVG) ពណ៌បៃតង NMU
         $qrCode = QrCode::size(200)
-            ->color(16, 185, 129) // ពណ៌ Emerald Green ដូច Logo បង
+            ->color(16, 185, 129)
             ->margin(1)
             ->generate($token);
 
@@ -37,34 +98,21 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
-     * Handle an incoming authentication request.
+     * ចាត់ចែងការ Login តាមរយៈ Email និង Password
      */
-    // public function store(LoginRequest $request): RedirectResponse
-    // {
-    //     $request->authenticate();
-
-    //     $request->session()->regenerate();
-
-    //     return redirect()->intended(route('dashboard', absolute: false));
-    // }
-
     public function store(LoginRequest $request): RedirectResponse
-{
-    try {
+    {
+        // Laravel នឹងផ្ទៀងផ្ទាត់ និងបង្ហាញ Error អូតូ បើវាយ Email/Password ខុស
         $request->authenticate();
-    } catch (ValidationException $e) {
-        return back()
-            ->withErrors($e->errors())
-            ->withInput($request->only('email'));
+
+        $request->session()->regenerate();
+
+        // Redirect ទៅកាន់ Dashboard តាម Role របស់អ្នកប្រើប្រាស់
+        return redirect()->intended(route('dashboard', absolute: false));
     }
 
-    $request->session()->regenerate();
-
-    return redirect()->intended(route('dashboard', absolute: false));
-}
-
     /**
-     * Destroy an authenticated session.
+     * ចាកចេញពីប្រព័ន្ធ
      */
     public function destroy(Request $request): RedirectResponse
     {
