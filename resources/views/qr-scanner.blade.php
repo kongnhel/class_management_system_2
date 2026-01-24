@@ -25,26 +25,28 @@
             html5QrcodeScanner.clear();
 
             // ផ្ញើទិន្នន័យទៅ API ក្នុង Laravel
-            fetch('/api/qr/authorize', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    // បញ្ជាក់៖ ដោយសារយើង Login លើ Browser ស្រាប់ វានឹងប្រើ Session អូតូ
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}' 
-                },
-                body: JSON.stringify({ token: decodedText })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    alert("Login ជោគជ័យ! Computer របស់អ្នកកំពុងបើក Dashboard");
-                    window.location.href = "{{ route('dashboard') }}";
-                } else {
-                    alert("កំហុស៖ " + data.message);
-                    location.reload(); // បើខុស ឱ្យវាស្កែនម្ដងទៀត
-                }
-            });
+fetch('/qr-authorize', { // ប្រើ URL ខ្លីបែបនេះ វានឹងរត់ទៅតាម Domain HTTPS អូតូ
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        // ត្រូវតែបន្ថែមបន្ទាត់នេះ ដើម្បីផ្ទៀងផ្ទាត់សុវត្ថិភាពលើ HTTPS
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+    },
+    body: JSON.stringify({ token: decodedText })
+})
+.then(response => {
+    if (response.status === 401) {
+        alert("Session ផុតកំណត់! សូម Login លើទូរស័ព្ទម្ដងទៀត។");
+        window.location.reload();
+    }
+    return response.json();
+})
+.then(data => {
+    if (data.status === 'success') {
+        alert("បញ្ជាក់អត្តសញ្ញាណជោគជ័យ!");
+    }
+});
         }
 
         let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });

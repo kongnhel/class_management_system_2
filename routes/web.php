@@ -111,6 +111,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/profile/update-picture', [ProfileController::class, 'updateProfilePicture'])->name('profile.update-picture');
 });
 
+
+// ប្រើ middleware 'auth' ដើម្បីឱ្យដឹងថាជា User ដែលបាន Login លើទូរស័ព្ទរួចហើយ
+Route::middleware(['auth'])->post('/qr-authorize', [App\Http\Controllers\Auth\QrLoginController::class, 'handleScan'])
+     ->name('qr.authorize');
 // showGradeEntryForm
     /*
     |--------------------------------------------------------------------------
