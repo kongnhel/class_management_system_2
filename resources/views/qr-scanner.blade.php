@@ -45,6 +45,8 @@ fetch('/qr-authorize', { // ប្រើ URL ខ្លីបែបនេះ វ�
 .then(data => {
     if (data.status === 'success') {
         alert("បញ្ជាក់អត្តសញ្ញាណជោគជ័យ!");
+        // បន្ថែមការ Redirect ទៅកាន់ Dashboard លើទូរស័ព្ទ
+        window.location.href = "{{ route('dashboard') }}";
     }
 });
         }
