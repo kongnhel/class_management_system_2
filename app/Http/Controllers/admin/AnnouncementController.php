@@ -39,16 +39,17 @@ class AnnouncementController extends Controller
     {
         $request->validate([
             'title_km' => 'required|string|max:255',
-            'title_en' => 'required|string|max:255',
+            'title_en' => 'nullable|string|max:255',
+            // 'title_en' => 'required|string|max:255',
             'content_km' => 'required|string',
-            'content_en' => 'required|string',
+            'content_en' => 'nullable|string',
             'target_role' => ['nullable', 'string', Rule::in(['all', 'student', 'professor', 'admin'])],
             'course_offering_id' => 'nullable|exists:course_offerings,id',
         ], [
             'title_km.required' => 'ចំណងជើងជាភាសាខ្មែរត្រូវតែបញ្ចូល។',
-            'title_en.required' => 'ចំណងជើងជាភាសាអង់គ្លេសត្រូវតែបញ្ចូល។',
+            // 'title_en.required' => 'ចំណងជើងជាភាសាអង់គ្លេសត្រូវតែបញ្ចូល។',
             'content_km.required' => 'ខ្លឹមសារជាភាសាខ្មែរត្រូវតែបញ្ចូល។',
-            'content_en.required' => 'ខ្លឹមសារជាភាសាអង់គ្លេសត្រូវតែបញ្ចូល។',
+            // 'content_en.required' => 'ខ្លឹមសារជាភាសាអង់គ្លេសត្រូវតែបញ្ចូល។',
             'course_offering_id.exists' => 'ការផ្តល់ជូនវគ្គសិក្សាមិនត្រឹមត្រូវទេ។',
         ]);
 // code 
@@ -91,9 +92,10 @@ class AnnouncementController extends Controller
     {
         $request->validate([
             'title_km' => 'required|string|max:255',
-            'title_en' => 'required|string|max:255',
+            // 'title_en' => 'required|string|max:255',
+            'title_en' => 'nullable|string|max:255',
             'content_km' => 'required|string',
-            'content_en' => 'required|string',
+            'content_en' => 'nullable|string',
             'target_role' => ['nullable', 'string', Rule::in(['all', 'student', 'professor', 'admin'])],
             'course_offering_id' => 'nullable|exists:course_offerings,id',
         ]);
