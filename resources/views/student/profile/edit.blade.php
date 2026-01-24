@@ -104,7 +104,7 @@
                                 <div class="relative mb-6 sm:mb-0 sm:mr-8 group">
                                     {{-- បង្ហាញរូបភាពពី URL ImgBB ដោយផ្ទាល់ --}}
                                     @if($profileUrl)
-                                        <img id="profile-picture-preview" src="{{ $profileUrl }}" alt="{{ $user->name }}" class="w-32 h-32 rounded-full object-cover border-4 border-indigo-400 shadow-xl transition-transform duration-300 transform group-hover:scale-105">
+                                        <img id="profile-picture-preview" src="{{ $profileUrl }}?tr=q-auto,f-auto" alt="{{ $user->name }}" class="w-32 h-32 rounded-full object-cover border-4 border-indigo-400 shadow-xl transition-transform duration-300 transform group-hover:scale-105">
                                     @else
                                         <div id="profile-picture-placeholder" class="w-32 h-32 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-5xl font-bold border-4 border-indigo-400 shadow-xl">
                                             {{ Str::upper(Str::substr($user->name, 0, 1)) }}

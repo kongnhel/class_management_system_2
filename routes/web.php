@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\QrLoginController;
+
 use App\Http\Controllers\admin\AdminController;
 use App\Http\Controllers\admin\UserController;
 use App\Http\Controllers\admin\FacultyController;
@@ -72,9 +75,17 @@ Route::get('/', function () {
 
     return redirect()->route('login');
 });
+// // កែប្រែ Route Login ដើម (Override the default Breeze login route)
+// Route::get('login', [AuthenticatedSessionController::class, 'create'])
+//                 ->name('login');
+
+// // Route សម្រាប់ទទួលការសម្រេចការ Login តាម QR
+// Route::get('/qr-login/finalize/{token}', [QrLoginController::class, 'finalizeLogin'])->name('qr.finalize');
+
 
 Route::middleware(['web'])->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+
     Route::post('/login', [LoginController::class, 'login']);
 });
 
@@ -376,5 +387,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/assessment/{id}/import-csv', [ProfessorGradeController::class, 'importCSV'])->name('grades.import');
 
 
+
+
+        // លើ Web (Desktop)
+    Route::get('/qr-login', [QrLoginController::class, 'showQrForm'])->name('qr.login');
+    Route::get('/qr-login/finalize/{token}', [QrLoginController::class, 'finalizeLogin'])->name('qr.finalize');
+
+    // លើ API (សម្រាប់ Mobile App Scan)
+    Route::post('/api/qr-scan', [QrLoginController::class, 'handleScan'])->middleware('auth:sanctum');
+
+Route::middleware(['auth'])->get('/qr-scanner', function () {
+    return view('qr-scanner');
+})->name('qr.scanner');
 
 require __DIR__.'/auth.php';

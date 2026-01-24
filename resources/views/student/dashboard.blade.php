@@ -25,6 +25,11 @@
                         </div>
                     @endif
 
+                    <a href="{{ route('qr.scanner') }}" class="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold text-sm">
+    <i class="fa-solid fa-camera"></i>
+    <span>ស្កែន QR ចូល Computer</span>
+</a>
+
                     <div class="w-full sm:w-auto bg-white text-gray-700 border border-gray-100 px-5 py-3 rounded-2xl font-bold shadow-sm flex items-center justify-center gap-2 text-sm">
                         <i class="fas fa-calendar-day text-indigo-500"></i>
                         {{ now()->format('d M, Y') }}

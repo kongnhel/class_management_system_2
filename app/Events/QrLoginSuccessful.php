@@ -1,0 +1,34 @@
+<?php
+
+namespace App\Events;
+
+use Illuminate\Broadcasting\Channel;
+use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Queue\SerializesModels;
+
+class QrLoginSuccessful implements ShouldBroadcast
+{
+    use Dispatchable, InteractsWithSockets, SerializesModels;
+
+    public $token;
+    public $userId;
+
+    public function __construct($token, $userId)
+    {
+        $this->token = $token;
+        $this->userId = $userId;
+    }
+
+    public function broadcastOn(): array
+    {
+        // បង្កើត Channel តាមរយៈ Token របស់ QR
+        return [new Channel('login-channel-' . $this->token)];
+    }
+
+    public function broadcastAs()
+    {
+        return 'login-success';
+    }
+}
