@@ -7,6 +7,7 @@ use App\Events\QrLoginSuccessful;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Auth;
 
@@ -45,7 +46,9 @@ class QrLoginController extends Controller
         if (Cache::has('login_token_' . $token)) {
             
             // រក្សាទុក User ID ភ្ជាប់ជាមួយ Token ក្នុង Cache
+            
             Cache::put('authorized_user_' . $token, $user->id, now()->addMinute());
+            broadcast(new \App\Events\QrLoginSuccessful($token, $user->id))->toOthers();
             
             // ប្រើ dispatch ដើម្បីបាញ់សញ្ញាទៅ Pusher ភ្លាមៗ (កុំប្រើ event() ធម្មតា)
             QrLoginSuccessful::dispatch($token, $user->id);
