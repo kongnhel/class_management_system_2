@@ -1,5 +1,5 @@
 <x-guest-layout>
-    {{-- បន្ថែម CSRF Meta --}}
+    {{-- បន្ថែម CSRF Meta សម្រាប់ការពារបញ្ហាអត្តសញ្ញាណលើ HTTPS --}}
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <style>
@@ -16,8 +16,7 @@
         .tab-btn.active { background: rgba(16, 185, 129, 0.15); color: #10b981; border-color: rgba(16, 185, 129, 0.5); }
     </style>
     
-    {{-- បន្ថែម 'showPassword: false' ទៅក្នុង x-data --}}
-    <div class="portal-wrapper" x-data="{ loginMode: 'email', showPassword: false }">
+    <div class="portal-wrapper" x-data="{ loginMode: 'email' }">
         {{-- Toast Notification --}}
         @if (session('success') || session('error'))
             <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" class="fixed top-5 right-5 z-[100] bg-white p-4 rounded-2xl shadow-2xl border-l-4 {{ session('success') ? 'border-green-500' : 'border-red-500' }}">
@@ -72,22 +71,15 @@
                                 <a class="text-[10px] text-gray-500 hover:text-emerald-400 font-bold uppercase tracking-tighter" href="{{ route('password.request') }}">{{ __('ភ្លេចលេខសម្ងាត់?') }}</a>
                             @endif
                         </div>
-                        
-                        {{-- Password Input with Toggle --}}
                         <div class="relative group">
                             <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500 group-focus-within:text-emerald-400">
                                 <i class="fa-solid fa-lock"></i>
                             </span>
+                            <input id="password" type="password" name="password" required class="block w-full pl-12 pr-12 py-4 rounded-2xl border-white/10 bg-white/5 text-white focus-green outline-none" placeholder="••••••••" />
                             
-                            {{-- កែប្រែ 'type' ទៅតាម 'showPassword' state --}}
-                            <input id="password" :type="showPassword ? 'text' : 'password'" name="password" required 
-                                class="block w-full pl-12 pr-12 py-4 rounded-2xl border-white/10 bg-white/5 text-white focus-green outline-none" 
-                                placeholder="••••••••" />
-                            
-                            {{-- ប៊ូតុងភ្នែកសម្រាប់បើកមើល --}}
-                            <button type="button" @click="showPassword = !showPassword" 
-                                class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-emerald-400 transition-colors">
-                                <i class="fa-solid" :class="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                            {{-- ប៊ូតុង បង្ហាញ/លាក់ លេខសម្ងាត់ --}}
+                            <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-emerald-400 transition-colors">
+                                <i class="fa-solid fa-eye" id="eyeIcon"></i>
                             </button>
                         </div>
                         <x-input-error :messages="$errors->get('password')" class="mt-2 text-xs text-red-400" />
@@ -99,7 +91,7 @@
                 </form>
             </div>
 
-            {{-- ផ្នែក QR Code (រក្សាដដែល) --}}
+            {{-- ផ្នែក Login តាម QR Code --}}
             <div x-show="loginMode === 'qr'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-x-4">
                 <div class="text-center">
                     <h2 class="text-2xl font-black text-white mb-2">{{ __('ចូលតាម QR Code') }}</h2>
@@ -135,8 +127,27 @@
              <p class="text-gray-600 text-[10px] uppercase tracking-[0.5em] font-black">&copy; {{ date('Y') }} National Management University</p>
         </footer>
     </div>
+
+    {{-- Script សម្រាប់ Show/Hide Password --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const togglePassword = document.querySelector('#togglePassword');
+            const password = document.querySelector('#password');
+            const eyeIcon = document.querySelector('#eyeIcon');
+
+            togglePassword.addEventListener('click', function () {
+                // ប្តូរ type រវាង password និង text
+                const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+                password.setAttribute('type', type);
+                
+                // ប្តូរ icon ភ្នែក
+                eyeIcon.classList.toggle('fa-eye');
+                eyeIcon.classList.toggle('fa-eye-slash');
+            });
+        });
+    </script>
     
-    {{-- Pusher Script (រក្សាដដែល) --}}
+   {{-- Scripts for QR Real-time --}}
     @if(isset($token))
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <script>
@@ -159,4 +170,5 @@
         });
     </script>
     @endif
+
 </x-guest-layout>
