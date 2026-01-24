@@ -4,10 +4,11 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Events\QrLoginSuccessful;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
-
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Auth;
 
@@ -35,33 +36,27 @@ class QrLoginController extends Controller
      */
 public function handleScan(Request $request)
 {
-    $request->validate([
-        'token' => 'required|string',
-    ]);
+    try {
+        $token = $request->token;
+        $user = Auth::user();
 
-    $token = $request->token;
-    $user = Auth::user(); // អ្នកដែលកំពុងកាន់ទូរស័ព្ទស្កែន
+        if (Cache::has('login_token_' . $token)) {
+            Cache::put('authorized_user_' . $token, $user->id, now()->addMinute());
+            
+            // ប្រើវិធីនេះដើម្បីធានាសុវត្ថិភាពកូដ
+            // event(new QrLoginSuccessful($token, $user->id));
+            broadcast(new QrLoginSuccessful($token, $user->id));
 
-    // ពិនិត្យមើលថា Token នេះមានក្នុង Cache និងមិនទាន់ផុតកំណត់
-    if (Cache::has('login_token_' . $token)) {
-        
-        // រក្សាទុក User ID ភ្ជាប់ជាមួយ Token ក្នុង Cache រយៈពេល ១ នាទី
-        Cache::put('authorized_user_' . $token, $user->id, now()->addMinute());
-        
-        // ប្រើ dispatchSync ដើម្បីបង្ខំឱ្យវាផ្ញើសញ្ញាទៅកាន់ Pusher ភ្លាមៗ (កុំប្រើជាន់គ្នា)
-        \App\Events\QrLoginSuccessful::dispatchSync($token, $user->id);
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'បញ្ជាក់អត្តសញ្ញាណជោគជ័យ! Computer កំពុងចូលប្រព័ន្ធ...'
-        ]);
+            return response()->json(['status' => 'success']);
+        }
+    } catch (\Exception $e) {
+        // បើមាន Error វានឹងប្រាប់ក្នុង storage/logs/laravel.log
+        Log::error("QR Scan Error: " . $e->getMessage());
+        return response()->json(['status' => 'error', 'message' => 'Server Error'], 500);
     }
-
-    return response()->json([
-        'status' => 'error',
-        'message' => 'QR Code មិនត្រឹមត្រូវ ឬបានផុតកំណត់។'
-    ], 400);
 }
+
+
 
     /**
      * ៣. មុខងារបញ្ចប់ការ Login លើ Computer ក្រោយទទួលសញ្ញាបាន
