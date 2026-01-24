@@ -131,24 +131,40 @@
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <script>
         // ការកំណត់ Pusher ឱ្យគាំទ្រ HTTPS និងជៀសវាង WebSocket Closed
-        var pusher = new Pusher('{{ env('PUSHER_APP_KEY') }}', { 
-            cluster: '{{ env('PUSHER_APP_CLUSTER') }}',
-            forceTLS: true, // បង្ខំប្រើ SSL លើ Production
-            enabledTransports: ['ws', 'wss']
-        });
+        // var pusher = new Pusher('{{ env('PUSHER_APP_KEY') }}', { 
+        //     cluster: '{{ env('PUSHER_APP_CLUSTER') }}',
+        //     forceTLS: true, // បង្ខំប្រើ SSL លើ Production
+        //     enabledTransports: ['ws', 'wss']
+        // });
 
-        var channel = pusher.subscribe('login-channel-{{ $token }}');
+        // var channel = pusher.subscribe('login-channel-{{ $token }}');
 
-        channel.bind('login-success', function(data) {
-            // បង្ហាញស្ថានភាព និងប្តូរទំព័រភ្លាមៗ
-            const statusEl = document.getElementById('qr-status');
-            if (statusEl) statusEl.innerText = "ជោគជ័យ! កំពុងចូលប្រព័ន្ធ...";
+        // channel.bind('login-success', function(data) {
+        //     // បង្ហាញស្ថានភាព និងប្តូរទំព័រភ្លាមៗ
+        //     const statusEl = document.getElementById('qr-status');
+        //     if (statusEl) statusEl.innerText = "ជោគជ័យ! កំពុងចូលប្រព័ន្ធ...";
             
-            // Redirect ទៅកាន់ finalize route ដែលយើងបានរៀបចំ
-            window.location.href = "{{ route('qr.finalize', ['token' => $token]) }}";
-            window.location.reload();
-        });
+        //     // Redirect ទៅកាន់ finalize route ដែលយើងបានរៀបចំ
+        //     window.location.href = "{{ route('qr.finalize', ['token' => $token]) }}";
+        //     window.location.reload();
+        // });
+// ផ្នែក Script ក្នុង auth/login.blade.php
+var pusher = new Pusher('{{ env('PUSHER_APP_KEY') }}', { 
+    cluster: '{{ env('PUSHER_APP_CLUSTER') }}',
+    forceTLS: true,
+    enabledTransports: ['ws', 'wss']
+});
 
+var channel = pusher.subscribe('login-channel-{{ $token }}');
+
+channel.bind('login-success', function(data) {
+    // ប្តូរអត្ថបទបង្ហាញស្ថានភាព
+    const statusEl = document.getElementById('qr-status');
+    if (statusEl) statusEl.innerText = "ជោគជ័យ! កំពុងចូលប្រព័ន្ធ...";
+    
+    // បញ្ជូនទៅកាន់ Route តាមឈ្មោះដែលបងមានក្នុង web.php
+    window.location.href = "{{ route('qr.finalize', ['token' => $token]) }}";
+});
         // Debug Connection (អាចលុបវិញបានពេលដើរស្រួល)
         pusher.connection.bind('state_change', function(states) {
             console.log("Pusher State:", states.current);

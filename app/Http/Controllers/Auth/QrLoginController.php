@@ -79,4 +79,5 @@ class QrLoginController extends Controller
 
         return redirect()->route('login')->with('error', 'ការចូលប្រើប្រាស់ផុតកំណត់។');
     }
+    
 }

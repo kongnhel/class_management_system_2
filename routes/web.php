@@ -83,6 +83,9 @@ Route::get('/', function () {
 // Route::get('/qr-login/finalize/{token}', [QrLoginController::class, 'finalizeLogin'])->name('qr.finalize');
 
 
+        Route::get('/qr-login', [QrLoginController::class, 'showQrForm'])->name('qr.login');
+    Route::get('/qr-login/finalize/{token}', [QrLoginController::class, 'finalizeLogin'])->name('qr.finalize');
+
 Route::middleware(['web'])->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 
@@ -394,8 +397,7 @@ Route::middleware(['auth'])->post('/qr-authorize', [App\Http\Controllers\Auth\Qr
 
 
         // លើ Web (Desktop)
-    Route::get('/qr-login', [QrLoginController::class, 'showQrForm'])->name('qr.login');
-    Route::get('/qr-login/finalize/{token}', [QrLoginController::class, 'finalizeLogin'])->name('qr.finalize');
+
 
     // លើ API (សម្រាប់ Mobile App Scan)
     Route::post('/api/qr-scan', [QrLoginController::class, 'handleScan'])->middleware('auth:sanctum');
