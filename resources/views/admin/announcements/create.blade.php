@@ -72,7 +72,7 @@
                             </div>
                             <div>
                                 <label for="title_en" class="block text-sm font-semibold text-gray-700 mb-1">{{ __('ចំណងជើង (អង់គ្លេស)') }}</label>
-                                <input type="text" name="title_en" id="title_en" value="{{ old('title_en') }}" required class="form-input w-full rounded-xl border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out placeholder-gray-400" placeholder="{{ __('បញ្ចូលចំណងជើងជាភាសាអង់គ្លេស') }}">
+                                <input type="text" name="title_en" id="title_en" value="{{ old('title_en') }}"  class="form-input w-full rounded-xl border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out placeholder-gray-400" placeholder="{{ __('បញ្ចូលចំណងជើងជាភាសាអង់គ្លេស') }}">
                             </div>
                         </div>
 
@@ -83,7 +83,7 @@
                             </div>
                             <div>
                                 <label for="content_en" class="block text-sm font-semibold text-gray-700 mb-1">{{ __('ខ្លឹមសារ (អង់គ្លេស)') }}</label>
-                                <textarea name="content_en" id="content_en" rows="6" required class="form-textarea w-full rounded-xl border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out placeholder-gray-400" placeholder="{{ __('បញ្ចូលខ្លឹមសារជាភាសាអង់គ្លេស') }}">{{ old('content_en') }}</textarea>
+                                <textarea name="content_en" id="content_en" rows="6"  class="form-textarea w-full rounded-xl border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out placeholder-gray-400" placeholder="{{ __('បញ្ចូលខ្លឹមសារជាភាសាអង់គ្លេស') }}">{{ old('content_en') }}</textarea>
                             </div>
                         </div>
 
