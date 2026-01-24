@@ -1,5 +1,5 @@
 <x-guest-layout>
-    {{-- បន្ថែម CSRF Meta សម្រាប់ការពារបញ្ហាអត្តសញ្ញាណលើ HTTPS --}}
+    {{-- បន្ថែម CSRF Meta --}}
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <style>
@@ -16,7 +16,8 @@
         .tab-btn.active { background: rgba(16, 185, 129, 0.15); color: #10b981; border-color: rgba(16, 185, 129, 0.5); }
     </style>
     
-    <div class="portal-wrapper" x-data="{ loginMode: 'email' }">
+    {{-- បន្ថែម 'showPassword: false' ទៅក្នុង x-data --}}
+    <div class="portal-wrapper" x-data="{ loginMode: 'email', showPassword: false }">
         {{-- Toast Notification --}}
         @if (session('success') || session('error'))
             <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" class="fixed top-5 right-5 z-[100] bg-white p-4 rounded-2xl shadow-2xl border-l-4 {{ session('success') ? 'border-green-500' : 'border-red-500' }}">
@@ -71,13 +72,22 @@
                                 <a class="text-[10px] text-gray-500 hover:text-emerald-400 font-bold uppercase tracking-tighter" href="{{ route('password.request') }}">{{ __('ភ្លេចលេខសម្ងាត់?') }}</a>
                             @endif
                         </div>
+                        
+                        {{-- Password Input with Toggle --}}
                         <div class="relative group">
                             <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500 group-focus-within:text-emerald-400">
                                 <i class="fa-solid fa-lock"></i>
                             </span>
-                            <input id="password" type="password" name="password" required class="block w-full pl-12 pr-12 py-4 rounded-2xl border-white/10 bg-white/5 text-white focus-green outline-none" placeholder="••••••••" />
-                            <button type="button" class="togglePassword absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-emerald-400">
-                                <i class="fa-solid fa-eye"></i>
+                            
+                            {{-- កែប្រែ 'type' ទៅតាម 'showPassword' state --}}
+                            <input id="password" :type="showPassword ? 'text' : 'password'" name="password" required 
+                                class="block w-full pl-12 pr-12 py-4 rounded-2xl border-white/10 bg-white/5 text-white focus-green outline-none" 
+                                placeholder="••••••••" />
+                            
+                            {{-- ប៊ូតុងភ្នែកសម្រាប់បើកមើល --}}
+                            <button type="button" @click="showPassword = !showPassword" 
+                                class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-emerald-400 transition-colors">
+                                <i class="fa-solid" :class="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
                             </button>
                         </div>
                         <x-input-error :messages="$errors->get('password')" class="mt-2 text-xs text-red-400" />
@@ -89,7 +99,7 @@
                 </form>
             </div>
 
-            {{-- ផ្នែក Login តាម QR Code --}}
+            {{-- ផ្នែក QR Code (រក្សាដដែល) --}}
             <div x-show="loginMode === 'qr'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-x-4">
                 <div class="text-center">
                     <h2 class="text-2xl font-black text-white mb-2">{{ __('ចូលតាម QR Code') }}</h2>
@@ -126,62 +136,27 @@
         </footer>
     </div>
     
-   {{-- Scripts for QR Real-time --}}
-@if(isset($token))
-<script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
-<script>
-    // ការកំណត់ Pusher ឱ្យរឹងមាំលើ HTTPS
-    var pusher = new Pusher('{{ env('PUSHER_APP_KEY') }}', { 
-        cluster: '{{ env('PUSHER_APP_CLUSTER') }}',
-        forceTLS: true,
-        enabledTransports: ['ws', 'wss']
-    });
-
-    var channel = pusher.subscribe('login-channel-{{ $token }}');
-
-    // ស្ដាប់សញ្ញាជោគជ័យពី Server
-    channel.bind('login-success', function(data) {
-        console.log("ទទួលបានសញ្ញា Login ជោគជ័យ!");
-        
-        const statusEl = document.getElementById('qr-status');
-        if (statusEl) {
-            statusEl.innerText = "ជោគជ័យ! កំពុងចូលប្រព័ន្ធ...";
-            statusEl.classList.add('text-emerald-400', 'animate-pulse');
-        }
-        
-        // Redirect ទៅកាន់ finalize route ដើម្បីធ្វើការ Login ជាផ្លូវការ
-        // បងមិនចាំបាច់ប្រើ window.location.reload() ទេ ព្រោះ href នឹងប្តូរទំព័រឱ្យអូតូ
-        window.location.href = "{{ route('qr.finalize', ['token' => $token]) }}";
-    });
-
-    // តាមដានស្ថានភាពការតភ្ជាប់ (សម្រាប់ Debug)
-    pusher.connection.bind('state_change', function(states) {
-        console.log("Pusher Connection State:", states.current);
-    });
-    
-    pusher.connection.bind('error', function(err) {
-        console.error("Pusher Connection Error:", err);
-    });
-    
-</script>
-@endif
-<script>
-     document.addEventListener('DOMContentLoaded', function() {
-            const passwordInput = document.getElementById('password');
-            const toggleButton = document.getElementById('togglePassword');
-
-            if (passwordInput && toggleButton) {
-                toggleButton.addEventListener('click', function() {
-                    const isPassword = passwordInput.type === 'password';
-                    passwordInput.type = isPassword ? 'text' : 'password';
-                    
-                    const icon = this.querySelector('i');
-                    icon.className = isPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
-                    
-                    this.classList.add('scale-110');
-                    setTimeout(() => this.classList.remove('scale-110'), 150);
-                });
-            }
+    {{-- Pusher Script (រក្សាដដែល) --}}
+    @if(isset($token))
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+    <script>
+        var pusher = new Pusher('{{ env('PUSHER_APP_KEY') }}', { 
+            cluster: '{{ env('PUSHER_APP_CLUSTER') }}',
+            forceTLS: true,
+            enabledTransports: ['ws', 'wss']
         });
-</script>
+
+        var channel = pusher.subscribe('login-channel-{{ $token }}');
+
+        channel.bind('login-success', function(data) {
+            console.log("ទទួលបានសញ្ញា Login ជោគជ័យ!");
+            const statusEl = document.getElementById('qr-status');
+            if (statusEl) {
+                statusEl.innerText = "ជោគជ័យ! កំពុងចូលប្រព័ន្ធ...";
+                statusEl.classList.add('text-emerald-400', 'animate-pulse');
+            }
+            window.location.href = "{{ route('qr.finalize', ['token' => $token]) }}";
+        });
+    </script>
+    @endif
 </x-guest-layout>

@@ -39,6 +39,10 @@
                                 <span>{{ __('Telegram ភ្ជាប់រួចរាល់') }}</span>
                             </div>
                         @endif
+                                            <a href="{{ route('qr.scanner') }}" class="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold text-sm">
+    <i class="fa-solid fa-camera"></i>
+    <span>ស្កែន QR ចូល Computer</span>
+</a>
                         
                         <div class="inline-flex items-center justify-center gap-2 bg-gray-50 text-gray-700 border border-gray-200 px-6 py-3 rounded-2xl font-bold">
                             <i class="fas fa-calendar-alt text-gray-400"></i>

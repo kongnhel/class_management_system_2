@@ -13,7 +13,10 @@
             {{-- Optional: Date or Breadcrumb could go here --}}
         </div>
     </x-slot>
-
+                    <a href="{{ route('qr.scanner') }}" class="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold text-sm">
+    <i class="fa-solid fa-camera"></i>
+    <span>ស្កែន QR ចូល Computer</span>
+</a>
     <div class="py-10 bg-gray-50 min-h-screen">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
             {{-- Modern Floating Toast --}}
