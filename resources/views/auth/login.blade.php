@@ -146,6 +146,42 @@
             });
         });
     </script>
+
+    <script>
+    let currentToken = "{{ $token }}";
+    let refreshInterval = 120000; // ២ នាទី
+
+    function startQrRefresh() {
+        setInterval(() => {
+            fetch("{{ route('qr.refresh') }}")
+                .then(response => response.json())
+                .then(data => {
+                    // ប្តូររូប QR ក្នុង HTML
+                    document.querySelector('.qr-container').innerHTML = data.qrCode;
+                    
+                    // ឈប់ស្ដាប់ Channel ចាស់ រួចទៅស្ដាប់ Channel ថ្មី
+                    pusher.unsubscribe('login-channel-' + currentToken);
+                    currentToken = data.token;
+                    
+                    let newChannel = pusher.subscribe('login-channel-' + currentToken);
+                    bindChannelEvents(newChannel); // ហៅមុខងារស្ដាប់សញ្ញាឡើងវិញ
+                    
+                    console.log("QR Code ត្រូវបានប្តូរថ្មី!");
+                });
+        }, refreshInterval);
+    }
+
+    function bindChannelEvents(channel) {
+    const finalizeUrl = "{{ route('qr.finalize', ['token' => '__TOKEN__']) }}";
+
+    channel.bind('login-success', function(data) {
+        window.location.href = finalizeUrl.replace('__TOKEN__', currentToken);
+    });
+    }
+
+    // ចាប់ផ្តើមដំណើរការ
+    startQrRefresh();
+</script>
     
    {{-- Scripts for QR Real-time --}}
     @if(isset($token))

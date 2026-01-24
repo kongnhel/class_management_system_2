@@ -118,6 +118,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // ប្រើ middleware 'auth' ដើម្បីឱ្យដឹងថាជា User ដែលបាន Login លើទូរស័ព្ទរួចហើយ
 Route::middleware(['auth'])->post('/qr-authorize', [App\Http\Controllers\Auth\QrLoginController::class, 'handleScan'])
      ->name('qr.authorize');
+     Route::get('/qr-refresh', [App\Http\Controllers\Auth\QrLoginController::class, 'refreshQr'])->name('qr.refresh');
 // showGradeEntryForm
     /*
     |--------------------------------------------------------------------------

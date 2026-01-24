@@ -11,12 +11,13 @@
                 <p class="mt-1 text-sm text-gray-500 ml-12">{{ __('ទិដ្ឋភាពទូទៅនៃប្រព័ន្ធ និងស្ថិតិ') }}</p>
             </div>
             {{-- Optional: Date or Breadcrumb could go here --}}
-        </div>
-    </x-slot>
-                    <a href="{{ route('qr.scanner') }}" class="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold text-sm">
+                                <a href="{{ route('qr.scanner') }}" class="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold text-sm">
     <i class="fa-solid fa-camera"></i>
     <span>ស្កែន QR ចូល Computer</span>
 </a>
+        </div>
+    </x-slot>
+
     <div class="py-10 bg-gray-50 min-h-screen">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
             {{-- Modern Floating Toast --}}

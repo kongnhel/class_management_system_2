@@ -75,5 +75,21 @@ public function handleScan(Request $request)
 
         return redirect()->route('login')->with('error', 'ការចូលប្រើប្រាស់ផុតកំណត់។');
     }
+
+    public function refreshQr()
+{
+    $token = (string) \Illuminate\Support\Str::uuid();
+    \Illuminate\Support\Facades\Cache::put('login_token_' . $token, true, now()->addMinutes(2));
+
+    $qrCode = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(200)
+        ->color(16, 185, 129)
+        ->margin(1)
+        ->generate($token);
+
+    return response()->json([
+        'qrCode' => $qrCode->toHtml(),
+        'token' => $token
+    ]);
+}
     
 }
