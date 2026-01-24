@@ -38,7 +38,7 @@
                             <div class="w-32 h-32 md:w-56 md:h-56 rounded-[2rem] md:rounded-[2.5rem] overflow-hidden border-4 md:border-8 border-white shadow-2xl transition-transform duration-500 group-hover:rotate-3">
 @if ($userProfile->profile_picture_url)
     <img 
-        src="{{ $userProfile->profile_picture_url }}?tr=w-600,h-600,fo-face" 
+        src="{{ $userProfile->profile_picture_url }}?tr=w-600,h-600,fo-face tr=q-auto,f-auto" 
         class="object-cover w-full h-full"
         alt="{{ $user->name }}"
     >

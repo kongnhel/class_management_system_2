@@ -44,8 +44,8 @@
     @if ($userProfile->profile_picture_url)
         <img 
             {{-- បន្ថែម ?tr=w-400,h-400,fo-face ដើម្បីឱ្យ ImageKit កាត់រូបភាពចំផ្ទៃមុខអូតូ --}}
-            src="{{ $userProfile->profile_picture_url }}?tr=w-400,h-400,fo-face" 
-            alt="{{ $user->name }}" 
+            src="{{ $userProfile->profile_picture_url }}?tr=w-400,h-400,fo-face tr=q-auto,f-auto" 
+            alt="{{ $user->name }}"  
             class="object-cover w-full h-full transition-all duration-300"
             id="profile-picture-preview"
         >
