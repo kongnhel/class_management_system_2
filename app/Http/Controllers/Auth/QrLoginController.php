@@ -12,56 +12,71 @@ use Illuminate\Support\Facades\Auth;
 
 class QrLoginController extends Controller
 {
-    // ១. បង្ហាញទំព័រដែលមាន QR Code (លើ Desktop)
+    /**
+     * ១. បង្ហាញទំព័រដែលមាន QR Code (លើ Desktop)
+     * ចំណាំ៖ ប្រសិនបើបងប្រើ AuthenticatedSessionController រួចហើយ បងអាចមិនបាច់ប្រើ Method នេះក៏បាន
+     */
     public function showQrForm()
     {
         $token = (string) Str::uuid();
-        // រក្សាទុក Token ក្នុង Cache រយៈពេល ២ នាទី (សម្រាប់សុវត្ថិភាព)
         Cache::put('login_token_' . $token, true, now()->addMinutes(2));
 
-        $qrCode = QrCode::size(250)->generate($token);
-        return view('auth.qr-login', compact('qrCode', 'token'));
+        $qrCode = QrCode::size(250)
+            ->color(16, 185, 129)
+            ->margin(1)
+            ->generate($token);
+
+        return view('auth.login', compact('qrCode', 'token'));
     }
 
-    // ២. API សម្រាប់ទូរស័ព្ទហៅមក (ក្រោយពេល Scan)
-public function handleScan(Request $request)
+    /**
+     * ២. ទទួលការ Scan ពីទូរស័ព្ទ (HTTPS Web Scan)
+     */
+    public function handleScan(Request $request)
     {
         $request->validate([
             'token' => 'required|string',
         ]);
 
         $token = $request->token;
-        $user = Auth::user(); // ទាញយក User ដែលកំពុងស្កែន
+        $user = Auth::user(); // អ្នកដែលកំពុងកាន់ទូរស័ព្ទស្កែន
 
-        // ១. ពិនិត្យមើលថា Token នេះមានក្នុង Cache និងមិនទាន់ផុតកំណត់មែនទេ?
+        // ពិនិត្យមើលថា Token នេះមានក្នុង Cache និងមិនទាន់ផុតកំណត់
         if (Cache::has('login_token_' . $token)) {
             
-            // ២. រក្សាទុក User ID ភ្ជាប់ជាមួយ Token នេះក្នុង Cache រយៈពេល ១ នាទី
+            // រក្សាទុក User ID ភ្ជាប់ជាមួយ Token ក្នុង Cache
             Cache::put('authorized_user_' . $token, $user->id, now()->addMinute());
             
-            // ៣. ផ្ញើសញ្ញា (Event) ទៅកាន់ Computer តាមរយៈ Pusher
-            event(new QrLoginSuccessful($token, $user->id));
+            // ប្រើ dispatch ដើម្បីបាញ់សញ្ញាទៅ Pusher ភ្លាមៗ (កុំប្រើ event() ធម្មតា)
+            QrLoginSuccessful::dispatch($token, $user->id);
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'ការបញ្ជាក់អត្តសញ្ញាណជោគជ័យ! Computer របស់អ្នកនឹង Login ក្នុងពេលបន្តិចទៀត។'
+                'message' => 'បញ្ជាក់អត្តសញ្ញាណជោគជ័យ!'
             ]);
         }
 
         return response()->json([
             'status' => 'error',
-            'message' => 'QR Code មិនត្រឹមត្រូវ ឬបានផុតកំណត់ហើយ។'
+            'message' => 'QR Code មិនត្រឹមត្រូវ ឬបានផុតកំណត់។'
         ], 400);
     }
 
-    // ៣. មុខងារ Login លើ Computer ក្រោយទទួលសញ្ញាបាន
+    /**
+     * ៣. មុខងារបញ្ចប់ការ Login លើ Computer ក្រោយទទួលសញ្ញាបាន
+     */
     public function finalizeLogin($token)
     {
+        // ទាញយក ID ចេញពី Cache រួចលុបវាចោលភ្លាម (Pull) ដើម្បីសុវត្ថិភាព
         $userId = Cache::pull('authorized_user_' . $token);
+
         if ($userId) {
             Auth::loginUsingId($userId);
-            return redirect()->intended('/dashboard');
+            
+            // Redirect ទៅកាន់ Dashboard តាមស្តង់ដារ Laravel 12
+            return redirect()->intended(route('dashboard', absolute: false));
         }
-        return redirect()->route('login')->with('error', 'Login បរាជ័យ');
+
+        return redirect()->route('login')->with('error', 'ការចូលប្រើប្រាស់ផុតកំណត់។');
     }
 }

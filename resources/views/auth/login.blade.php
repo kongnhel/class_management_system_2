@@ -146,6 +146,7 @@
             
             // Redirect ទៅកាន់ finalize route ដែលយើងបានរៀបចំ
             window.location.href = "{{ route('qr.finalize', ['token' => $token]) }}";
+            window.location.reload();
         });
 
         // Debug Connection (អាចលុបវិញបានពេលដើរស្រួល)
