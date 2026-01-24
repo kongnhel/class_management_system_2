@@ -33,37 +33,35 @@ class QrLoginController extends Controller
     /**
      * ២. ទទួលការ Scan ពីទូរស័ព្ទ (HTTPS Web Scan)
      */
-    public function handleScan(Request $request)
-    {
-        $request->validate([
-            'token' => 'required|string',
-        ]);
+public function handleScan(Request $request)
+{
+    $request->validate([
+        'token' => 'required|string',
+    ]);
 
-        $token = $request->token;
-        $user = Auth::user(); // អ្នកដែលកំពុងកាន់ទូរស័ព្ទស្កែន
+    $token = $request->token;
+    $user = Auth::user(); // អ្នកដែលកំពុងកាន់ទូរស័ព្ទស្កែន
 
-        // ពិនិត្យមើលថា Token នេះមានក្នុង Cache និងមិនទាន់ផុតកំណត់
-        if (Cache::has('login_token_' . $token)) {
-            
-            // រក្សាទុក User ID ភ្ជាប់ជាមួយ Token ក្នុង Cache
-            
-            Cache::put('authorized_user_' . $token, $user->id, now()->addMinute());
-            broadcast(new \App\Events\QrLoginSuccessful($token, $user->id))->toOthers();
-            
-            // ប្រើ dispatch ដើម្បីបាញ់សញ្ញាទៅ Pusher ភ្លាមៗ (កុំប្រើ event() ធម្មតា)
-            QrLoginSuccessful::dispatch($token, $user->id);
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'បញ្ជាក់អត្តសញ្ញាណជោគជ័យ!'
-            ]);
-        }
+    // ពិនិត្យមើលថា Token នេះមានក្នុង Cache និងមិនទាន់ផុតកំណត់
+    if (Cache::has('login_token_' . $token)) {
+        
+        // រក្សាទុក User ID ភ្ជាប់ជាមួយ Token ក្នុង Cache រយៈពេល ១ នាទី
+        Cache::put('authorized_user_' . $token, $user->id, now()->addMinute());
+        
+        // ប្រើ dispatchSync ដើម្បីបង្ខំឱ្យវាផ្ញើសញ្ញាទៅកាន់ Pusher ភ្លាមៗ (កុំប្រើជាន់គ្នា)
+        \App\Events\QrLoginSuccessful::dispatchSync($token, $user->id);
 
         return response()->json([
-            'status' => 'error',
-            'message' => 'QR Code មិនត្រឹមត្រូវ ឬបានផុតកំណត់។'
-        ], 400);
+            'status' => 'success',
+            'message' => 'បញ្ជាក់អត្តសញ្ញាណជោគជ័យ! Computer កំពុងចូលប្រព័ន្ធ...'
+        ]);
     }
+
+    return response()->json([
+        'status' => 'error',
+        'message' => 'QR Code មិនត្រឹមត្រូវ ឬបានផុតកំណត់។'
+    ], 400);
+}
 
     /**
      * ៣. មុខងារបញ្ចប់ការ Login លើ Computer ក្រោយទទួលសញ្ញាបាន
