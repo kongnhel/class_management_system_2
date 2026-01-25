@@ -58,7 +58,7 @@
                     </div>
 
                     <button type="submit" class="w-full rounded-2xl bg-emerald-600 py-5 font-black text-white hover:bg-emerald-500 transition-all uppercase tracking-widest">ចូលប្រើប្រព័ន្ធ</button>
-
+                    <div style="opacity: 1; transform: none;"><div class="grid grid-cols-[1fr_max-content_1fr] items-center dark:text-gray-500 my-2 my-1!"><div class="h-px bg-[var(--border-heavy)]"></div><div class="mx-6 text-[13px] font-medium uppercase">OR</div><div class="h-px bg-[var(--border-heavy)]"></div></div></div>
                     <button type="button" onclick="loginWithGoogle()" class="w-full rounded-2xl bg-white py-4 font-bold text-gray-800 flex items-center justify-center gap-3 mt-4 transition-all">
                         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5"> ចូលជាមួយ Google
                     </button>
