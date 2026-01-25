@@ -139,4 +139,35 @@
             });
         };
     </script>
+
+    {{-- បន្ថែម Script នេះដើម្បីឱ្យវាស្ដាប់ការស្កែនពី Pusher --}}
+@if(isset($token))
+<script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+<script>
+    let currentToken = "{{ $token }}";
+
+    // ការកំណត់ Pusher
+    var pusher = new Pusher('{{ env('PUSHER_APP_KEY') }}', { 
+        cluster: '{{ env('PUSHER_APP_CLUSTER') }}',
+        forceTLS: true
+    });
+
+    // បង្កើត Function សម្រាប់ប្តូរទំព័រពេលស្កែនជាប់
+    function bindChannelEvents(channel) {
+        channel.bind('login-success', function(data) {
+            const statusEl = document.getElementById('qr-status');
+            if (statusEl) {
+                statusEl.innerText = "ជោគជ័យ! កំពុងចូលប្រព័ន្ធ...";
+                statusEl.classList.add('text-emerald-400', 'animate-pulse');
+            }
+            // Redirect ទៅកាន់ finalize route ដើម្បីបញ្ចប់ការ Login
+            window.location.href = "/qr-login/finalize/" + currentToken;
+        });
+    }
+
+    // ចាប់ផ្តើមស្ដាប់ Channel
+    let initialChannel = pusher.subscribe('login-channel-' + currentToken);
+    bindChannelEvents(initialChannel);
+</script>
+@endif
 </x-guest-layout>
