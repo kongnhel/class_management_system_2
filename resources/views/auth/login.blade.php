@@ -154,12 +154,12 @@
 
         // កូដ Config ពី Firebase Console របស់បង
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyC5QgFzC-Kuudj7mWxLPf58xmoe_feXF3o",
+            authDomain: "classmanagementsystem-cd57f.firebaseapp.com",
+            projectId: "classmanagementsystem-cd57f",
+            storageBucket: "classmanagementsystem-cd57f.firebasestorage.app",
+            messagingSenderId: "171013327760",
+            appId: "1:171013327760:web:d00df5782c6c78f4c64115"
         };
 
         const app = initializeApp(firebaseConfig);
