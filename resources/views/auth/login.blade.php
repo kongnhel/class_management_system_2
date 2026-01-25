@@ -183,9 +183,14 @@
                             name: user.displayName
                         })
                     }).then(res => res.json())
-                      .then(data => {
-                          if(data.status === 'success') window.location.href = "/dashboard";
-                      });
+.then(data => {
+    if(data.status === 'success') {
+        window.location.href = "/dashboard";
+    } else {
+        // បើគាត់មិនទាន់បាន Link គណនីទេ ឱ្យលោតប្រាប់គាត់
+        alert("គណនី Google នេះមិនទាន់បានភ្ជាប់ជាមួយគណនីសិស្ស NMU ឡើយ។ សូម Login តាម Email រួចទៅភ្ជាប់ក្នុង Dashboard!");
+    }
+});
                 })
                 .catch((error) => console.error("Google Auth Error:", error));
         };

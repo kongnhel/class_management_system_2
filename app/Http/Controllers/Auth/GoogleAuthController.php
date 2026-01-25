@@ -43,4 +43,17 @@ class GoogleAuthController extends Controller
 
         return response()->json(['status' => 'success']);
     }
+
+    public function linkAccount(Request $request)
+{
+    $user = Auth::user(); // យក User ដែលកំពុង Login ស្រាប់
+    
+    // Update ព័ត៌មាន Google ចូលទៅក្នុង Account គាត់
+    $user->update([
+        'google_id' => $request->uid,
+        'avatar' => $request->photoURL, // យករូបភាព Profile មកជាមួយ
+    ]);
+
+    return response()->json(['status' => 'linked']);
+}
 }

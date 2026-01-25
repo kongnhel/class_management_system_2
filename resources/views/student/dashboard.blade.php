@@ -9,6 +9,20 @@
                         ជំរាបសួរ និស្សិត <span class="text-indigo-600">{{ $user->name }}</span>! 👋
                     </h3>
                     <p class="text-gray-500 font-medium mt-1">{{ __('សូមពិនិត្យមើលបច្ចុប្បន្នភាពនៃការសិក្សារបស់អ្នកនៅថ្ងៃនេះ') }}</p>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+    <h3 class="font-bold text-gray-800">សុវត្ថិភាពគណនី</h3>
+    <p class="text-sm text-gray-500 mb-4">ភ្ជាប់ជាមួយ Google ដើម្បីចូលប្រើប្រាស់បានលឿនជាងមុន។</p>
+    
+    @if(!auth()->user()->google_id)
+        <button onclick="linkWithGoogle()" class="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100">
+            <img src="google-icon.svg" class="w-4 h-4"> ភ្ជាប់ជាមួយ Google
+        </button>
+    @else
+        <span class="text-emerald-500 font-bold flex items-center gap-2">
+            <i class="fa-solid fa-circle-check"></i> បានភ្ជាប់រួចរាល់
+        </span>
+    @endif
+</div>
                 </div>
                 
                 <div class="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
@@ -29,6 +43,7 @@
     <i class="fa-solid fa-camera"></i>
     <span>ស្កែន QR ចូល Computer</span>
 </a>
+
 
                     <div class="w-full sm:w-auto bg-white text-gray-700 border border-gray-100 px-5 py-3 rounded-2xl font-bold shadow-sm flex items-center justify-center gap-2 text-sm">
                         <i class="fas fa-calendar-day text-indigo-500"></i>

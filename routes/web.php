@@ -365,6 +365,9 @@ Route::middleware(['auth'])->post('/qr-authorize', [App\Http\Controllers\Auth\Qr
         Route::patch('/notifications/read-all', [notificationController::class, 'markAllAsRead'])->name('notifications.readAll');
         Route::get('/my-attendance', [StudentAttendanceController::class, 'myAttendance'])->name('my-attendance');
 
+
+        Route::post('/user/link-google', [GoogleAuthController::class, 'linkAccount'])->name('user.link-google');
+
         Route::get('/class-leader/course/{courseOffering}/attendance', [StudentAttendanceController::class, 'leaderAttendance'])
         ->name('leader.attendance');
         Route::post('/class-leader/course/{courseOffering}/attendance', [StudentAttendanceController::class, 'storeLeaderAttendance'])
