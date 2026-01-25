@@ -30,14 +30,17 @@ class CourseController extends Controller
             ->get();
 
         // ធ្វើការបែងចែកជាក្រុមធំតាម Department និងក្រុមតូចតាម Program
-        $coursesGrouped = $coursesData->groupBy([
-            function ($item) {
-                return $item->department->name_km ?? 'មិនទាន់មានដេប៉ាតឺម៉ង់';
-            },
-            function ($item) {
-                return $item->program->name_km ?? 'មិនទាន់មានកម្មវិធីសិក្សា';
-            }
-        ]);
+$coursesGrouped = $coursesData->groupBy([
+        function ($item) {
+            // បែងចែកតាមឈ្មោះកម្មវិធីសិក្សា (Program)
+            return $item->program->name_km ?? 'មិនទាន់មានកម្មវិធីសិក្សា';
+        },
+        function ($item) {
+            // បែងចែកតាមជំនាន់ (Generation)
+            // ចំណាំ៖ បើ Column generation នៅក្នុង Table courses ផ្ទាល់ បងប្រើ $item->generation
+            return $item->generation ? 'ជំនាន់ទី ' . $item->generation : 'មិនទាន់កំណត់ជំនាន់';
+        },
+    ]);
 
         return view('admin.courses.index', compact('coursesGrouped', 'room'));
     }
