@@ -20,7 +20,7 @@
     </style>
     
     {{-- បន្ថែម 'showPassword: false' ទៅក្នុង x-data --}}
-    <div class="portal-wrapper" x-data="{ loginMode: 'email', showPassword: false }">
+<div class="portal-wrapper" x-data="{ loginMode: 'email', showPassword: false }">
         
         {{-- Toast Notification --}}
         @if (session('success') || session('error'))
@@ -102,11 +102,10 @@
                         <span class="flex-shrink mx-4 text-gray-500 text-[10px] font-bold uppercase tracking-widest">ឬ</span>
                         <div class="flex-grow border-t border-white/10"></div>
                     </div>
-
-                    <button type="button" onclick="loginWithGoogle()" class="w-full rounded-2xl bg-white px-8 py-4 font-bold text-gray-800 hover:bg-gray-100 flex items-center justify-center gap-3 shadow-xl transition-all">
-                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5">
-                        {{ __('ចូលប្រើជាមួយ Google') }}
-                    </button>
+<button type="button" onclick="loginWithGoogle()" class="w-full rounded-2xl bg-white px-8 py-4 font-bold text-gray-800 hover:bg-gray-100 flex items-center justify-center gap-3 shadow-xl transition-all">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5">
+            {{ __('ចូលប្រើជាមួយ Google') }}
+        </button>
                 </form>
             </div>
 
@@ -148,7 +147,7 @@
     </div>
 
     {{-- Firebase SDK & Logic --}}
-    <script type="module">
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
@@ -162,37 +161,24 @@
             appId: "1:171013327760:web:d00df5782c6c78f4c64115"
         };
 
-        const app = initializeApp(firebaseConfig);
+       const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
         window.loginWithGoogle = () => {
-            signInWithPopup(auth, provider)
-                .then((result) => {
-                    const user = result.user;
-                    // ផ្ញើទិន្នន័យទៅ Laravel ដើម្បី Login/Register
-                    fetch('{{ route("auth.google.callback") }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        },
-                        body: JSON.stringify({
-                            uid: user.uid,
-                            email: user.email,
-                            name: user.displayName
-                        })
-                    }).then(res => res.json())
-.then(data => {
-    if(data.status === 'success') {
-        window.location.href = "/dashboard";
-    } else {
-        // បើគាត់មិនទាន់បាន Link គណនីទេ ឱ្យលោតប្រាប់គាត់
-        alert("គណនី Google នេះមិនទាន់បានភ្ជាប់ជាមួយគណនីសិស្ស NMU ឡើយ។ សូម Login តាម Email រួចទៅភ្ជាប់ក្នុង Dashboard!");
-    }
-});
+            signInWithPopup(auth, provider).then((result) => {
+                const user = result.user;
+                fetch('{{ route("auth.google.callback") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: JSON.stringify({ uid: user.uid, email: user.email })
                 })
-                .catch((error) => console.error("Google Auth Error:", error));
+                .then(res => res.json())
+                .then(data => {
+                    if(data.status === 'success') window.location.href = "/dashboard";
+                    else alert(data.message); // បង្ហាញ Error បើរកមិនឃើញ Account
+                });
+            }).catch(err => console.error(err));
         };
     </script>
 

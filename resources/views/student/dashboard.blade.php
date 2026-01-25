@@ -19,18 +19,20 @@
                             <div class="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-blue-600">
                                 <i class="fa-brands fa-google text-2xl"></i>
                             </div>
-                            <div>
-                                <h3 class="font-bold text-gray-800 text-sm">សុវត្ថិភាពគណនី</h3>
-                                @if(!auth()->user()->google_id)
-                                    <button onclick="linkWithGoogle()" id="btn-link-google" class="mt-1 flex items-center gap-2 text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors">
-                                        <i class="fa-solid fa-link"></i> ភ្ជាប់ជាមួយ Google ឥឡូវនេះ
-                                    </button>
-                                @else
-                                    <span class="mt-1 text-emerald-500 text-xs font-bold flex items-center gap-2">
-                                        <i class="fa-solid fa-circle-check"></i> បានភ្ជាប់រួចរាល់
-                                    </span>
-                                @endif
-                            </div>
+<div>
+        <h3 class="font-bold text-gray-800">សុវត្ថិភាពគណនី</h3>
+        <p class="text-sm text-gray-500 mb-4">ភ្ជាប់ជាមួយ Google ដើម្បីចូលប្រើប្រាស់បានលឿនជាងមុន។</p>
+        
+        @if(!auth()->user()->google_id)
+            <button onclick="handleLinkGoogle()" id="btn-link" class="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100">
+                <i class="fa-brands fa-google"></i> ភ្ជាប់ជាមួយ Google ឥឡូវនេះ
+            </button>
+        @else
+            <span class="text-emerald-500 font-bold flex items-center gap-2">
+                <i class="fa-solid fa-circle-check"></i> បានភ្ជាប់រួចរាល់
+            </span>
+        @endif
+    </div>
                         </div>
                     </div>
                 </div>
@@ -238,7 +240,7 @@
     </div>
 
     {{-- 🚀 Firebase SDK for Link Account --}}
-    <script type="module">
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
@@ -246,44 +248,20 @@
             apiKey: "AIzaSyC5QgFzC-Kuudj7mWxLPf58xmoe_feXF3o",
             authDomain: "classmanagementsystem-cd57f.firebaseapp.com",
             projectId: "classmanagementsystem-cd57f",
-            storageBucket: "classmanagementsystem-cd57f.firebasestorage.app",
-            messagingSenderId: "171013327760",
-            appId: "1:171013327760:web:d00df5782c6c78f4c64115"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
-        window.linkWithGoogle = () => {
-            const btn = document.getElementById('btn-link-google');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> កំពុងភ្ជាប់...';
-
-            signInWithPopup(auth, provider)
-                .then((result) => {
-                    const user = result.user;
-                    fetch('{{ route("user.link-google") }}', { // ត្រូវប្រាកដថាបង្កើត Route នេះក្នុង web.php
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        },
-                        body: JSON.stringify({
-                            uid: user.uid,
-                            email: user.email,
-                            photoURL: user.photoURL
-                        })
-                    }).then(res => res.json())
-                      .then(data => {
-                          if(data.status === 'linked') {
-                              location.reload(); // Refresh ដើម្បីបង្ហាញ Status "បានភ្ជាប់រួចរាល់"
-                          }
-                      });
-                })
-                .catch((error) => {
-                    console.error("Link Error:", error);
-                    btn.innerHTML = '<i class="fa-solid fa-link"></i> ព្យាយាមម្ដងទៀត';
-                });
+        window.handleLinkGoogle = () => {
+            signInWithPopup(auth, provider).then((result) => {
+                fetch('{{ route("user.link-google") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: JSON.stringify({ uid: result.user.uid })
+                }).then(() => location.reload()); // Refresh ដើម្បីប្តូរ Status
+            });
         };
     </script>
 
