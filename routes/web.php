@@ -366,8 +366,6 @@ Route::middleware(['auth'])->post('/qr-authorize', [App\Http\Controllers\Auth\Qr
         Route::get('/my-attendance', [StudentAttendanceController::class, 'myAttendance'])->name('my-attendance');
 
 
-        Route::post('/user/link-google', [GoogleAuthController::class, 'linkAccount'])->name('user.link-google');
-
         Route::get('/class-leader/course/{courseOffering}/attendance', [StudentAttendanceController::class, 'leaderAttendance'])
         ->name('leader.attendance');
         Route::post('/class-leader/course/{courseOffering}/attendance', [StudentAttendanceController::class, 'storeLeaderAttendance'])
@@ -415,5 +413,8 @@ Route::middleware(['auth'])->get('/qr-scanner', function () {
 
 Route::post('/auth/google/callback', [GoogleAuthController::class, 'handleCallback'])
     ->name('auth.google.callback');
+
+Route::post('/user/link-google', [App\Http\Controllers\Auth\GoogleAuthController::class, 'linkAccount'])->name('user.link-google');
+
 
 require __DIR__.'/auth.php';

@@ -12,37 +12,32 @@ use Illuminate\Http\Request;
 
 class GoogleAuthController extends Controller
 {
-    public function handleCallback(Request $request)
-    {
-        // ទទួលបានទិន្នន័យពី Firebase/Google
-        $googleEmail = $request->email;
-        $googleId = $request->uid;
-        $name = $request->name;
+public function handleCallback(Request $request)
+{
+    $googleEmail = $request->email;
+    $googleId = $request->uid;
 
-        // ស្វែងរកសិស្សតាមអ៊ីម៉ែល ឬ Google ID
-        $user = User::where('email', $googleEmail)->first();
+    // ១. ស្វែងរក User ក្នុងប្រព័ន្ធតាម Email
+    $user = User::where('email', $googleEmail)->first();
 
-        if (!$user) {
-            // បើអត់ទាន់មានគណនីទេ => ចុះឈ្មោះឱ្យអូតូ (Auto-Register)
-            $user = User::create([
-                'name' => $name,
-                'email' => $googleEmail,
-                'google_id' => $googleId,
-                'password' => Hash::make(Str::random(24)), // បង្កើតលេខសម្ងាត់ចៃដន្យ
-                'email_verified_at' => now(), // ចាត់ទុកថាបញ្ជាក់អ៊ីម៉ែលរួច
-            ]);
-        } else {
-            // បើមានគណនីហើយ => គ្រាន់តែ Update Google ID បើមិនទាន់មាន
-            if (!$user->google_id) {
-                $user->update(['google_id' => $googleId]);
-            }
-        }
-
-        // ធ្វើការ Login ចូលទៅក្នុង Laravel Session
-        Auth::login($user);
-
-        return response()->json(['status' => 'success']);
+    if (!$user) {
+        // ប្រសិនបើរកមិនឃើញ Email ក្នុង Table users ទេ មានន័យថាគាត់មិនទាន់បាន Register តាម Student ID ឡើយ
+        return response()->json([
+            'status' => 'error',
+            'message' => 'គណនី Google នេះមិនទាន់បានចុះឈ្មោះក្នុងប្រព័ន្ធ NMU ឡើយ។ សូមចុះឈ្មោះដោយប្រើលេខសម្គាល់និស្សិតជាមុនសិន!'
+        ], 403);
     }
+
+    // ២. បើមានគណនីហើយ ត្រូវ Update Google ID បើមិនទាន់មាន
+    if (!$user->google_id) {
+        $user->update(['google_id' => $googleId]);
+    }
+
+    // ៣. ធ្វើការ Login ឱ្យសិស្ស
+    Auth::login($user);
+
+    return response()->json(['status' => 'success']);
+}
 
     public function linkAccount(Request $request)
 {
