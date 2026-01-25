@@ -48,7 +48,7 @@ public function handleCallback(Request $request)
     {
         // យក User ដែលកំពុង Login ស្រាប់តាមរយៈ Session
         $user = Auth::user(); 
-\Log::info('Google UID Received: ' . $request->uid);
+// \Log::info('Google UID Received: ' . $request->uid);
         if ($user) {
             // ធ្វើការបច្ចុប្បន្នភាព និងរក្សាទុកក្នុង MySQL
             $user->update([

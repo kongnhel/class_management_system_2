@@ -4,6 +4,28 @@
             {{ __('ផ្ទាំងគ្រប់គ្រងរបស់លោកគ្រូ/អ្នកគ្រូ') }}
         </h2>
         <p class="mt-1 text-lg text-gray-500">{{ __('ទិដ្ឋភាពទូទៅនៃព័ត៌មានសំខាន់ៗ') }}</p>
+                            {{-- 🛡️ Google Link Status Card --}}
+                    <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 inline-block w-full sm:w-auto">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-blue-600">
+                                <i class="fa-brands fa-google text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800 text-sm">សុវត្ថិភាពគណនី</h3>
+                                <p class="text-[10px] text-gray-500 mb-2">ភ្ជាប់ជាមួយ Google ដើម្បីចូលបានលឿន</p>
+                                
+                                @if(!auth()->user()->google_id)
+                                    <button onclick="linkWithGoogle()" id="btn-link-google" class="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 text-xs font-bold transition-all">
+                                        <i class="fa-solid fa-link"></i> ភ្ជាប់ជាមួយ Google ឥឡូវនេះ
+                                    </button>
+                                @else
+                                    <span class="text-emerald-500 font-bold flex items-center gap-2 text-xs">
+                                        <i class="fa-solid fa-circle-check"></i> បានភ្ជាប់រួចរាល់
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
     </x-slot>
 
     <div class="bg-gray-50 min-h-screen font-['Battambang']">
@@ -360,4 +382,62 @@
 
     {{-- Livewire Modal --}}
     @livewire('teacher.attendance-modal')
+
+
+
+
+
+
+    {{-- 🚀 ផ្នែក Firebase SDK សម្រាប់ Dashboard --}}
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyC5QgFzC-Kuudj7mWxLPf58xmoe_feXF3o",
+        authDomain: "classmanagementsystem-cd57f.firebaseapp.com",
+        projectId: "classmanagementsystem-cd57f",
+        storageBucket: "classmanagementsystem-cd57f.firebasestorage.app",
+        messagingSenderId: "171013327760",
+        appId: "1:171013327760:web:d00df5782c6c78f4c64115"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    // បង្កើត Function ឱ្យត្រូវនឹងឈ្មោះ onclick="linkWithGoogle()" ក្នុងប៊ូតុងបង
+    window.linkWithGoogle = () => {
+        signInWithPopup(auth, provider)
+            .then((result) => {
+                const user = result.user;
+                
+                // ផ្ញើទិន្នន័យទៅរក្សាទុកក្នុង Database របស់ Laravel
+                fetch('{{ route("user.link-google") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        uid: user.uid,
+                        photoURL: user.photoURL
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.status === 'linked') {
+                        // បើរក្សាទុកក្នុង Database ជាប់ វានឹង Refresh ទំព័រ រួចបាត់ប៊ូតុងភ្ជាប់
+                        window.location.reload();
+                    }
+                });
+            })
+            .catch((error) => {
+                console.error("Firebase Error:", error.code);
+                if(error.code === 'auth/unauthorized-domain') {
+                    alert("Error: បងត្រូវបន្ថែម domain 127.0.0.1 ក្នុង Firebase Console ជាមុនសិន!");
+                }
+            });
+    };
+</script>
 </x-app-layout>
