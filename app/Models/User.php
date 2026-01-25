@@ -27,6 +27,8 @@ class User extends Authenticatable
         'program_id',      // Added for students
         'generation',  
             // Added for students
+        'google_id',
+        'avatar',
 
     ];
 

@@ -2,6 +2,9 @@
     {{-- Meta for CSRF --}}
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    {{-- Font Awesome --}}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
     <div class="bg-[#f8fafc] min-h-screen font-['Battambang'] antialiased">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             
@@ -19,20 +22,20 @@
                             <div class="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-blue-600">
                                 <i class="fa-brands fa-google text-2xl"></i>
                             </div>
-<div>
-        <h3 class="font-bold text-gray-800">សុវត្ថិភាពគណនី</h3>
-        <p class="text-sm text-gray-500 mb-4">ភ្ជាប់ជាមួយ Google ដើម្បីចូលប្រើប្រាស់បានលឿនជាងមុន។</p>
-        
-        @if(!auth()->user()->google_id)
-            <button onclick="handleLinkGoogle()" id="btn-link" class="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100">
-                <i class="fa-brands fa-google"></i> ភ្ជាប់ជាមួយ Google ឥឡូវនេះ
-            </button>
-        @else
-            <span class="text-emerald-500 font-bold flex items-center gap-2">
-                <i class="fa-solid fa-circle-check"></i> បានភ្ជាប់រួចរាល់
-            </span>
-        @endif
-    </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800 text-sm">សុវត្ថិភាពគណនី</h3>
+                                <p class="text-[10px] text-gray-500 mb-2">ភ្ជាប់ជាមួយ Google ដើម្បីចូលបានលឿន</p>
+                                
+                                @if(!auth()->user()->google_id)
+                                    <button onclick="linkWithGoogle()" id="btn-link-google" class="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 text-xs font-bold transition-all">
+                                        <i class="fa-solid fa-link"></i> ភ្ជាប់ជាមួយ Google ឥឡូវនេះ
+                                    </button>
+                                @else
+                                    <span class="text-emerald-500 font-bold flex items-center gap-2 text-xs">
+                                        <i class="fa-solid fa-circle-check"></i> បានភ្ជាប់រួចរាល់
+                                    </span>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -40,7 +43,7 @@
                 <div class="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
                     @if(!auth()->user()->telegram_chat_id)
                         <button type="button" onclick="document.getElementById('telegramEntryModal').classList.remove('hidden')" 
-                            class="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#0088cc] hover:bg-[#0077b5] text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-blue-100 transition-all transform hover:scale-105 active:scale-95 text-sm">
+                            class="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#0088cc] hover:bg-[#0077b5] text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-blue-100 transition-all transform hover:scale-105 text-sm">
                             <i class="fab fa-telegram-plane text-lg"></i>
                             <span>ភ្ជាប់ជាមួយ Telegram</span>
                         </button>
@@ -51,7 +54,7 @@
                         </div>
                     @endif
 
-                    <a href="{{ route('qr.scanner') }}" class="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-emerald-100 transition-all text-sm">
+                    <a href="{{ route('qr.scanner') }}" class="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-2xl font-bold shadow-lg text-sm transition-all">
                         <i class="fa-solid fa-camera"></i>
                         <span>ស្កែន QR ចូល PC</span>
                     </a>
@@ -120,13 +123,16 @@
                 @endforeach
             </div>
 
+    
+
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {{-- ផ្នែកខាងឆ្វេង --}}
                 <div class="lg:col-span-2 space-y-12">
+                    {{-- កាលវិភាគថ្ងៃនេះ --}}
                     <section>
                         <div class="flex items-center gap-3 mb-6">
                             <div class="h-8 w-1.5 bg-purple-600 rounded-full"></div>
-                            <h4 class="text-2xl font-black text-gray-800">{{ __('កាលវិភាគថ្ងៃនេះ') }} <span class="text-gray-400 font-medium text-lg">({{ __($todayName) }})</span></h4>
+                            <h4 class="text-2xl font-black text-gray-800">{{ __('កាលវិភាគថ្ងៃនេះ') }}</h4>
                         </div>
                         <div class="grid gap-4">
                             @forelse($upcomingSchedules as $schedule)
@@ -146,43 +152,151 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <i class="fas fa-chevron-right text-gray-200 group-hover:text-purple-300 transition-all sm:block hidden transform group-hover:translate-x-1"></i>
                                 </div>
                             @empty
                                 <div class="bg-gray-50 rounded-[2.5rem] p-10 text-center border-2 border-dashed border-gray-200 text-gray-400 italic">{{ __('មិនមានកាលវិភាគសម្រាប់ថ្ងៃនេះទេ') }}</div>
                             @endforelse
                         </div>
                     </section>
-
+                                {{-- មុខវិជ្ជាដែលកំពុងសិក្សា (Enrolled Courses) --}}
                     <section>
                         <div class="flex items-center gap-3 mb-6">
                             <div class="h-8 w-1.5 bg-blue-600 rounded-full"></div>
                             <h4 class="text-2xl font-black text-gray-800">{{ __('មុខវិជ្ជាដែលកំពុងសិក្សា') }}</h4>
                         </div>
+                        
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             @foreach($enrolledCourses as $course)
-                                @php $myEnrollment = $course->studentCourseEnrollments->first(); $isLeader = $myEnrollment ? $myEnrollment->is_class_leader : false; @endphp
-                                <div class="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm relative group overflow-hidden">
-                                    <div class="absolute top-6 right-6">
-                                        <span class="px-3 py-1 rounded-full text-xs font-bold {{ $course->today_status == 'present' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400' }}">
-                                            {{ $course->today_status == 'present' ? 'វត្តមាន' : 'មិនទាន់កត់ត្រា' }}
-                                        </span>
-                                    </div>
-                                    <h3 class="font-black text-gray-800 text-lg mb-4">{{ $course->course->title_en ?? $course->course->name }}</h3>
-                                    <div class="flex items-center gap-3 mb-6">
-                                        <div class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400"><i class="fas fa-user-tie"></i></div>
-                                        <p class="text-sm font-bold text-gray-700">{{ $course->lecturer->name }}</p>
-                                    </div>
-                                    <div class="space-y-2">
-                                        <a href="{{ route('student.scan') }}" class="w-full block py-3 text-center rounded-xl font-bold bg-blue-600 text-white shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all">ស្កែនវត្តមាន</a>
-                                        @if($isLeader)
-                                            <a href="{{ route('student.leader.attendance', $course->id) }}" class="w-full block py-3 text-center rounded-xl font-bold bg-slate-800 text-white text-xs hover:bg-slate-700 transition-all tracking-wide">គ្រប់គ្រងវត្តមាន (ប្រធានថ្នាក់)</a>
+                                @php
+                                    // រកមើលថាសិស្សជាប្រធានថ្នាក់ឬអត់
+                                    // ដោយសារយើង load relation 'studentCourseEnrollments' ដែល filter តែសិស្សម្នាក់នេះ
+                                    // ដូច្នេះយកធាតុទី 1 មកឆែក
+                                    $myEnrollment = $course->studentCourseEnrollments->first(); 
+                                    $isLeader = $myEnrollment ? $myEnrollment->is_class_leader : false;
+                                @endphp
+
+                                <div class="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm hover:border-blue-200 transition-all relative group overflow-hidden">
+                                    
+                                    {{-- 🔥 STATUS BADGE (បង្ហាញនៅជ្រុង) 🔥 --}}
+                                    <div class="absolute top-6 right-6 z-10">
+                                        @if($course->today_status == 'present')
+                                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200 flex items-center gap-1 shadow-sm">
+                                                <i class="fas fa-check-circle"></i> {{ __('វត្តមាន') }}
+                                            </span>
+                                        @elseif($course->today_status == 'absent')
+                                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200 shadow-sm">
+                                                {{ __('អវត្តមាន') }}
+                                            </span>
+                                        @elseif($course->today_status == 'late')
+                                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 border border-yellow-200 shadow-sm">
+                                                {{ __('យឺត') }}
+                                            </span>
+                                        @else
+                                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-gray-50 text-gray-400 border border-gray-100">
+                                                {{ __('មិនទាន់កត់ត្រា') }}
+                                            </span>
                                         @endif
+                                    </div>
+
+                                    <div class="flex flex-col justify-between h-full">
+                                        <div class="mb-6 max-w-[70%]">
+                                            <h3 class="font-black text-gray-800 leading-tight text-lg mb-1">
+                                                {{ $course->course->title_en ?? $course->course->name }}
+                                            </h3>
+                                            <p class="text-[10px] text-blue-500 uppercase font-black tracking-widest">
+                                                {{ $course->academic_year }} • ឆមាស {{ $course->semester }}
+                                            </p>
+                                        </div>
+                                        
+                                        <div class="flex items-center gap-3 mb-6">
+                                            <div class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 border border-gray-100">
+                                                <i class="fas fa-user-tie"></i>
+                                            </div>
+                                            <div>
+                                                <p class="text-[10px] text-gray-400 font-bold uppercase">{{ __('សាស្ត្រាចារ្យ') }}</p>
+                                                <p class="text-sm font-bold text-gray-700">{{ $course->lecturer->name }}</p>
+                                            </div>
+                                        </div>
+
+                                        {{-- ប៊ូតុងចូលស្កែន ឬ មើលវត្តមាន --}}
+                                        <div class="flex flex-col gap-2">
+                                            @if($course->today_status == 'present')
+                                                <button disabled class="w-full py-3 rounded-xl font-bold bg-green-50 text-green-600 cursor-default flex items-center justify-center gap-2">
+                                                    <i class="fas fa-check"></i> {{ __('បានស្កែនរួចរាល់') }}
+                                                </button>
+                                            @else
+                                                <a href="{{ route('student.scan') }}" class="w-full py-3 rounded-xl font-bold bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all flex items-center justify-center gap-2">
+                                                    <i class="fas fa-qrcode"></i> {{ __('ស្កែនវត្តមាន') }}
+                                                </a>
+                                            @endif
+
+                                            @if($isLeader)
+                                                <a href="{{ route('student.leader.attendance', $course->id) }}" 
+                                                   class="w-full bg-slate-800 text-white px-4 py-3 rounded-xl text-xs font-bold hover:bg-slate-700 transition-all flex items-center justify-center gap-2">
+                                                    <i class="fas fa-clipboard-check"></i> {{ __('គ្រប់គ្រងវត្តមាន (ប្រធានថ្នាក់)') }}
+                                                </a>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             @endforeach
                         </div>
                     </section>
+
+
+                                    {{-- កម្មវិធីសិក្សា (Curriculum) --}}
+                    <section>
+                         <div class="flex items-center gap-3 mb-6">
+                            <div class="h-8 w-1.5 bg-emerald-600 rounded-full"></div>
+                            <h4 class="text-2xl font-black text-gray-800">{{ __('កម្មវិធីសិក្សា') }}</h4>
+                        </div>
+                         @if ($studentProgram)
+                            <div class="bg-gradient-to-r from-emerald-600 to-teal-500 rounded-[2.5rem] p-8 text-white shadow-xl shadow-emerald-100 flex flex-col md:flex-row justify-between items-center gap-6">
+                                <div>
+                                    <p class="text-emerald-100 text-xs font-bold uppercase tracking-[0.2em] mb-2">{{ __('កម្មវិធីសិក្សាបច្ចុប្បន្ន') }}</p>
+                                    <h5 class="text-2xl font-black">{{ $studentProgram->name_km }}</h5>
+                                </div>
+                                <div class="bg-white/20 px-6 py-3 rounded-2xl backdrop-blur-md border border-white/30 text-center">
+                                    <p class="text-xs opacity-90">ជំនាន់</p>
+                                    <p class="text-xl font-black">{{ $user->generation }}</p>
+                                </div>
+                            </div>
+                        @endif
+                    </section>
+                                            @if ($studentProgram)
+    
+
+                            @if ($availableCoursesInProgram->isNotEmpty())
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    @foreach ($availableCoursesInProgram as $courseOffering)
+                                        <div class="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
+                                            <div class="mb-6">
+                                                <h6 class="font-black text-gray-800 mb-2 text-lg leading-tight">{{ $courseOffering->course->title_km ?? $courseOffering->course->title_en }}</h6>
+                                                <div class="flex items-center gap-2">
+                                                    <span class="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-1 rounded-md">{{ $courseOffering->course->code }}</span>
+                                                    <span class="text-xs text-gray-400">|</span>
+                                                    <span class="text-xs text-gray-500 italic">{{ $courseOffering->lecturer->name }}</span>
+                                                </div>
+                                            </div>
+                                            <form action="{{ route('student.enroll_self') }}" method="POST">
+                                                @csrf
+                                                <input type="hidden" name="course_offering_id" value="{{ $courseOffering->id }}">
+                                                <button class="w-full bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 group">
+                                                    <i class="fas fa-plus-circle transition-transform group-hover:rotate-90"></i> {{ __('ចុះឈ្មោះចូលរៀន') }}
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        @else
+                            <div class="bg-white p-12 rounded-[2.5rem] border border-dashed border-gray-300 text-center">
+                                <div class="w-16 h-16 bg-gray-50 text-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i class="fas fa-graduation-cap text-3xl"></i>
+                                </div>
+                                <p class="text-gray-500 font-bold">{{ __('មិនទាន់មានកម្មវិធីសិក្សា? សូមទាក់ទងរដ្ឋបាល។') }}</p>
+                            </div>
+                        @endif
                 </div>
 
                 {{-- ផ្នែកខាងស្តាំ --}}
@@ -227,7 +341,7 @@
             <form action="{{ route('student.update_telegram') }}" method="POST">
                 @csrf
                 <div class="mb-6 text-xs text-slate-500 leading-relaxed bg-slate-50 p-4 rounded-2xl">
-                    <p>១. ផ្ញើសារទៅ <a href="https://t.me/userinfobot" target="_blank" class="text-blue-600 font-bold">@userinfobot</a> ដើម្បីយក ID</p>
+                    <p>១. ផ្ញើសារទៅ <a href="https://t.me/userinfobot" target="_blank" class="text-blue-600 font-bold">@userinfobot</a></p>
                     <p class="mt-1">២. ចុច START លើ <a href="https://t.me/kong_grade_bot" target="_blank" class="text-blue-600 font-bold">@kong_grade_bot</a></p>
                 </div>
                 <input type="number" name="telegram_chat_id" required placeholder="បញ្ចូលលេខ Chat ID" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl mb-4 focus:ring-4 focus:ring-blue-500/10 outline-none">
@@ -239,31 +353,58 @@
         </div>
     </div>
 
-    {{-- 🚀 Firebase SDK for Link Account --}}
+{{-- 🚀 ផ្នែក Firebase SDK សម្រាប់ Dashboard --}}
 <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyC5QgFzC-Kuudj7mWxLPf58xmoe_feXF3o",
-            authDomain: "classmanagementsystem-cd57f.firebaseapp.com",
-            projectId: "classmanagementsystem-cd57f",
-        };
+    const firebaseConfig = {
+        apiKey: "AIzaSyC5QgFzC-Kuudj7mWxLPf58xmoe_feXF3o",
+        authDomain: "classmanagementsystem-cd57f.firebaseapp.com",
+        projectId: "classmanagementsystem-cd57f",
+        storageBucket: "classmanagementsystem-cd57f.firebasestorage.app",
+        messagingSenderId: "171013327760",
+        appId: "1:171013327760:web:d00df5782c6c78f4c64115"
+    };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const provider = new GoogleAuthProvider();
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
 
-        window.handleLinkGoogle = () => {
-            signInWithPopup(auth, provider).then((result) => {
+    // បង្កើត Function ឱ្យត្រូវនឹងឈ្មោះ onclick="linkWithGoogle()" ក្នុងប៊ូតុងបង
+    window.linkWithGoogle = () => {
+        signInWithPopup(auth, provider)
+            .then((result) => {
+                const user = result.user;
+                
+                // ផ្ញើទិន្នន័យទៅរក្សាទុកក្នុង Database របស់ Laravel
                 fetch('{{ route("user.link-google") }}', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                    body: JSON.stringify({ uid: result.user.uid })
-                }).then(() => location.reload()); // Refresh ដើម្បីប្តូរ Status
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        uid: user.uid,
+                        photoURL: user.photoURL
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.status === 'linked') {
+                        // បើរក្សាទុកក្នុង Database ជាប់ វានឹង Refresh ទំព័រ រួចបាត់ប៊ូតុងភ្ជាប់
+                        window.location.reload();
+                    }
+                });
+            })
+            .catch((error) => {
+                console.error("Firebase Error:", error.code);
+                if(error.code === 'auth/unauthorized-domain') {
+                    alert("Error: បងត្រូវបន្ថែម domain 127.0.0.1 ក្នុង Firebase Console ជាមុនសិន!");
+                }
             });
-        };
-    </script>
+    };
+</script>
 
     {{-- Notification Script --}}
     <script>
@@ -274,7 +415,10 @@
 
             fetch(url, {
                 method: 'PATCH',
-                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json' },
+                headers: { 
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 
+                    'Content-Type': 'application/json' 
+                },
                 body: JSON.stringify({ id: itemId })
             }).then(() => location.reload());
         }
