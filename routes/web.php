@@ -39,6 +39,7 @@ use Kreait\Laravel\Firebase\Facades\Firebase;
 use Kreait\Firebase\Factory;
 use App\Http\Controllers\TelegramController;
 
+use App\Http\Controllers\Auth\GoogleAuthController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Http\Request;
 
@@ -406,5 +407,10 @@ Route::middleware(['auth'])->post('/qr-authorize', [App\Http\Controllers\Auth\Qr
 Route::middleware(['auth'])->get('/qr-scanner', function () {
     return view('qr-scanner');
 })->name('qr.scanner');
+
+
+
+Route::post('/auth/google/callback', [GoogleAuthController::class, 'handleCallback'])
+    ->name('auth.google.callback');
 
 require __DIR__.'/auth.php';

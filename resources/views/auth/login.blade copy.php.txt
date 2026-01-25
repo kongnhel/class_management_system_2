@@ -76,8 +76,10 @@
                                 <i class="fa-solid fa-lock"></i>
                             </span>
                             <input id="password" type="password" name="password" required class="block w-full pl-12 pr-12 py-4 rounded-2xl border-white/10 bg-white/5 text-white focus-green outline-none" placeholder="••••••••" />
-                            <button type="button" class="togglePassword absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-emerald-400">
-                                <i class="fa-solid fa-eye"></i>
+                            
+                            {{-- ប៊ូតុង បង្ហាញ/លាក់ លេខសម្ងាត់ --}}
+                            <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-emerald-400 transition-colors">
+                                <i class="fa-solid fa-eye" id="eyeIcon"></i>
                             </button>
                         </div>
                         <x-input-error :messages="$errors->get('password')" class="mt-2 text-xs text-red-400" />
@@ -125,43 +127,84 @@
              <p class="text-gray-600 text-[10px] uppercase tracking-[0.5em] font-black">&copy; {{ date('Y') }} National Management University</p>
         </footer>
     </div>
+
+    {{-- Script សម្រាប់ Show/Hide Password --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const togglePassword = document.querySelector('#togglePassword');
+            const password = document.querySelector('#password');
+            const eyeIcon = document.querySelector('#eyeIcon');
+
+            togglePassword.addEventListener('click', function () {
+                // ប្តូរ type រវាង password និង text
+                const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+                password.setAttribute('type', type);
+                
+                // ប្តូរ icon ភ្នែក
+                eyeIcon.classList.toggle('fa-eye');
+                eyeIcon.classList.toggle('fa-eye-slash');
+            });
+        });
+    </script>
+
+    <script>
+    let currentToken = "{{ $token }}";
+    let refreshInterval = 120000; // ២ នាទី
+
+    function startQrRefresh() {
+        setInterval(() => {
+            fetch("{{ route('qr.refresh') }}")
+                .then(response => response.json())
+                .then(data => {
+                    // ប្តូររូប QR ក្នុង HTML
+                    document.querySelector('.qr-container').innerHTML = data.qrCode;
+                    
+                    // ឈប់ស្ដាប់ Channel ចាស់ រួចទៅស្ដាប់ Channel ថ្មី
+                    pusher.unsubscribe('login-channel-' + currentToken);
+                    currentToken = data.token;
+                    
+                    let newChannel = pusher.subscribe('login-channel-' + currentToken);
+                    bindChannelEvents(newChannel); // ហៅមុខងារស្ដាប់សញ្ញាឡើងវិញ
+                    
+                    console.log("QR Code ត្រូវបានប្តូរថ្មី!");
+                });
+        }, refreshInterval);
+    }
+
+    function bindChannelEvents(channel) {
+    const finalizeUrl = "{{ route('qr.finalize', ['token' => '__TOKEN__']) }}";
+
+    channel.bind('login-success', function(data) {
+        window.location.href = finalizeUrl.replace('__TOKEN__', currentToken);
+    });
+    }
+
+    // ចាប់ផ្តើមដំណើរការ
+    startQrRefresh();
+</script>
     
    {{-- Scripts for QR Real-time --}}
-@if(isset($token))
-<script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
-<script>
-    // ការកំណត់ Pusher ឱ្យរឹងមាំលើ HTTPS
-    var pusher = new Pusher('{{ env('PUSHER_APP_KEY') }}', { 
-        cluster: '{{ env('PUSHER_APP_CLUSTER') }}',
-        forceTLS: true,
-        enabledTransports: ['ws', 'wss']
-    });
+    @if(isset($token))
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+    <script>
+        var pusher = new Pusher('{{ env('PUSHER_APP_KEY') }}', { 
+            cluster: '{{ env('PUSHER_APP_CLUSTER') }}',
+            forceTLS: true,
+            enabledTransports: ['ws', 'wss']
+        });
 
-    var channel = pusher.subscribe('login-channel-{{ $token }}');
+        var channel = pusher.subscribe('login-channel-{{ $token }}');
 
-    // ស្ដាប់សញ្ញាជោគជ័យពី Server
-    channel.bind('login-success', function(data) {
-        console.log("ទទួលបានសញ្ញា Login ជោគជ័យ!");
-        
-        const statusEl = document.getElementById('qr-status');
-        if (statusEl) {
-            statusEl.innerText = "ជោគជ័យ! កំពុងចូលប្រព័ន្ធ...";
-            statusEl.classList.add('text-emerald-400', 'animate-pulse');
-        }
-        
-        // Redirect ទៅកាន់ finalize route ដើម្បីធ្វើការ Login ជាផ្លូវការ
-        // បងមិនចាំបាច់ប្រើ window.location.reload() ទេ ព្រោះ href នឹងប្តូរទំព័រឱ្យអូតូ
-        window.location.href = "{{ route('qr.finalize', ['token' => $token]) }}";
-    });
+        channel.bind('login-success', function(data) {
+            console.log("ទទួលបានសញ្ញា Login ជោគជ័យ!");
+            const statusEl = document.getElementById('qr-status');
+            if (statusEl) {
+                statusEl.innerText = "ជោគជ័យ! កំពុងចូលប្រព័ន្ធ...";
+                statusEl.classList.add('text-emerald-400', 'animate-pulse');
+            }
+            window.location.href = "{{ route('qr.finalize', ['token' => $token]) }}";
+        });
+    </script>
+    @endif
 
-    // តាមដានស្ថានភាពការតភ្ជាប់ (សម្រាប់ Debug)
-    pusher.connection.bind('state_change', function(states) {
-        console.log("Pusher Connection State:", states.current);
-    });
-    
-    pusher.connection.bind('error', function(err) {
-        console.error("Pusher Connection Error:", err);
-    });
-</script>
-@endif
 </x-guest-layout>
