@@ -243,63 +243,46 @@ public function searchUsers(Request $request)
         ]);
 
 
-        // --- Conditional Profile Creation Logic ---
-        $profileData = $request->only(['user_id', 'full_name_km', 'full_name_en', 'gender', 'date_of_birth', 'phone_number', 'address']);
+$profileData = $request->only(['full_name_km', 'full_name_en', 'gender', 'date_of_birth', 'phone_number', 'address']);
+
+// បង្កើត Profile តែក្នុងករណីមានទិន្នន័យ ឬមានរូបភាព
+if (count(array_filter($profileData)) > 0 || $request->hasFile('profile_picture')) {
+    
+    if ($request->role === 'student') {
+        $profile = new StudentProfile($profileData);
+        $profile->generation = $request->generation; 
+    } else { 
+        $profile = new UserProfile($profileData);
+    }
+
+    // ត្រូវកំណត់ user_id ឱ្យបានមុនគេបង្អស់
+    $profile->user_id = $user->id; 
+
+    // Handle the profile picture upload
+    if ($request->hasFile('profile_picture')) {
+        $image = $request->file('profile_picture');
         
-        // Only create a profile if some data was actually entered
-        if (count(array_filter($profileData)) > 0 || $request->hasFile('profile_picture')) {
-            if ($request->role === 'student') {
-                $profile = new StudentProfile($profileData);
-                $profile->generation = $request->generation; 
-            } else { // For 'admin' or 'professor'
-                $profile = new UserProfile($profileData);
-            }
+        $response = Http::withBasicAuth(env('IMAGEKIT_PRIVATE_KEY'), '') 
+            ->attach('file', file_get_contents($image), $image->getClientOriginalName())
+            ->post('https://upload.imagekit.io/api/v1/files/upload', [
+                'fileName' => 'profile_' . time(),
+                'useUniqueFileName' => 'true',
+                'folder' => '/profiles',
+            ]);
 
-            // Handle the profile picture upload
-            // if ($request->hasFile('profile_picture')) {
-            //     $path = $request->file('profile_picture')->store('profile_pictures', 'public');
-            //     $profile->profile_picture_url = $path;
-            // }
-// if ($request->hasFile('profile_picture')) {
-//     $image = $request->file('profile_picture');
-    
-//     // ផ្ញើរូបភាពទៅ ImgBB
-//     $response = Http::asMultipart()->post('https://api.imgbb.com/1/upload', [
-//         'key' => env('IMGBB_API_KEY'),
-//         'image' => base64_encode(file_get_contents($image->getRealPath())),
-//     ]);
+        if ($response->successful()) {
+            $profile->profile_picture_url = $response->json()['url'];
+            // កុំអាលហៅ $profile->save() នៅទីនេះ ទុកឱ្យ save តាម relationship ខាងក្រោម
+        }
+    }
 
-//     if ($response->successful()) {
-//         // រក្សាទុក URL ពេញលេញពី ImgBB
-//         $profile->profile_picture_url = $response->json()['data']['url'];
-//     }
-// }
-if ($request->hasFile('profile_picture')) {
-    $image = $request->file('profile_picture');
-    
-    // រៀបចំការផ្ញើទៅ ImageKit
-    $response = Http::withBasicAuth(env('IMAGEKIT_PRIVATE_KEY'), '') // ប្រើ Private Key ជា Username និងទុក Password ទទេ
-        ->attach('file', file_get_contents($image), $image->getClientOriginalName())
-        ->post('https://upload.imagekit.io/api/v1/files/upload', [
-            'fileName' => 'profile_' . time(),
-            'useUniqueFileName' => 'true',
-            'folder' => '/profiles', // បែងចែក Folder ឱ្យមានរបៀប
-        ]);
-
-    if ($response->successful()) {
-        // រក្សាទុក URL ដែលទទួលបានពី ImageKit
-        // ImageKit ផ្ដល់ឱ្យទាំង 'url' (Full URL) និង 'filePath' (សម្រាប់យកទៅកែទំហំតាមក្រោយ)
-        $profile->profile_picture_url = $response->json()['url'];
-        $profile->save();
+    // Save the profile to the correct relationship
+    if ($request->role === 'student') {
+         $user->studentProfile()->save($profile); // វានឹង save ចូល DB ដោយមាន user_id
+    } else {
+         $user->profile()->save($profile);
     }
 }
-            // Save the profile to the correct relationship
-            if ($request->role === 'student') {
-                 $user->studentProfile()->save($profile);
-            } else {
-                 $user->profile()->save($profile);
-            }
-        }
 
         return redirect()->route('admin.manage-users')->with('success', 'អ្នកបានបង្កើតអ្នកប្រើប្រាស់ថ្មីដោយជោគជ័យ។');
     }
