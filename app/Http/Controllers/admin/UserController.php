@@ -231,6 +231,7 @@ public function searchUsers(Request $request)
 
         // --- Create the core User model ---
         $user = User::create([
+
             'name' => $request->name,
             'role' => $request->role,
             'student_id_code' => ($request->role === 'student') ? $request->student_id_code : null,
@@ -243,7 +244,7 @@ public function searchUsers(Request $request)
 
 
         // --- Conditional Profile Creation Logic ---
-        $profileData = $request->only(['full_name_km', 'full_name_en', 'gender', 'date_of_birth', 'phone_number', 'address']);
+        $profileData = $request->only(['user_id', 'full_name_km', 'full_name_en', 'gender', 'date_of_birth', 'phone_number', 'address']);
         
         // Only create a profile if some data was actually entered
         if (count(array_filter($profileData)) > 0 || $request->hasFile('profile_picture')) {
