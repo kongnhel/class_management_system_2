@@ -15,7 +15,7 @@
                 <div class="flex flex-col md:flex-row items-center md:items-start mb-10 pb-10 border-b border-gray-200">
                     <div class="flex-shrink-0 mb-6 md:mb-0 md:mr-10 relative group">
                         @if($student->studentProfile && $student->studentProfile->profile_picture_url)
-                            <img src="{{ asset('storage/' . $student->studentProfile->profile_picture_url) }}" alt="{{ $student->name }}" class="w-36 h-36 rounded-full object-cover border-4 border-green-400 shadow-xl transition-transform duration-300 transform group-hover:scale-105">
+                            <img src="{{$student->studentProfile->profile_picture_url}}" alt="{{ $student->name }}" class="w-36 h-36 rounded-full object-cover border-4 border-green-400 shadow-xl transition-transform duration-300 transform group-hover:scale-105">
                         @else
                             <div class="w-36 h-36 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-5xl font-extrabold border-4 border-green-400 shadow-xl">
                                 {{ Str::upper(Str::substr($student->studentProfile->full_name_km ?? $student->name, 0, 1)) }}
