@@ -12,7 +12,81 @@
         .tab-btn.active { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.5); }
         .hidden { display: none; }
     </style>
-    
+    {{-- Modern Floating Toast --}}
+@if (session('success') || session('error'))
+<div 
+    x-data="{ 
+        show: false, 
+        progress: 100,
+        startTimer() {
+            this.show = true;
+            let interval = setInterval(() => {
+                this.progress -= 1;
+                if (this.progress <= 0) {
+                    this.show = false;
+                    clearInterval(interval);
+                }
+            }, 50); // 5 seconds total (50ms * 100)
+        }
+    }" 
+    x-init="startTimer()"
+    x-show="show" 
+    x-transition:enter="transition ease-out duration-500"
+    x-transition:enter-start="translate-y-12 opacity-0 sm:translate-y-0 sm:translate-x-12"
+    x-transition:enter-end="translate-y-0 opacity-100 sm:translate-x-0"
+    x-transition:leave="transition ease-in duration-300"
+    x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0"
+    class="fixed top-6 right-6 z-[9999] w-full max-w-sm"
+>
+    <div class="relative overflow-hidden bg-white/80 backdrop-blur-xl border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-2xl p-4 ring-1 ring-black/5">
+        <div class="flex items-start gap-4">
+            
+            {{-- Modern Icon Logic --}}
+            <div class="flex-shrink-0">
+                @if(session('success'))
+                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-500/10 text-green-600">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                @else
+                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-red-600">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </div>
+                @endif
+            </div>
+
+            {{-- Text Content --}}
+            <div class="flex-1 pt-0.5">
+                <p class="text-sm font-bold text-gray-900 leading-tight">
+                    {{ session('success') ? __('ជោគជ័យ!') : __('បរាជ័យ!') }}
+                </p>
+                <p class="mt-1 text-sm text-gray-600 leading-relaxed">
+                    {{ session('success') ?? session('error') }}
+                </p>
+            </div>
+
+            {{-- Manual Close --}}
+            <button @click="show = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        {{-- Progress Bar (The "Modern" Touch) --}}
+        <div class="absolute bottom-0 left-0 h-1 bg-gray-100 w-full">
+            <div 
+                class="h-full transition-all duration-75 ease-linear {{ session('success') ? 'bg-green-500' : 'bg-red-500' }}"
+                :style="`width: ${progress}%`"
+            ></div>
+        </div>
+    </div>
+</div>
+@endif
     <div class="portal-wrapper">
         <div class="glass-portal-card">
             {{-- Tab Switcher --}}
@@ -40,6 +114,8 @@
                             <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500"><i class="fa-solid fa-envelope"></i></span>
                             <input id="email" type="email" name="email" required class="block w-full pl-12 pr-4 py-4 rounded-2xl bg-white/5 text-white border-white/10 outline-none focus:border-emerald-500" />
                         </div>
+                        <x-input-error :messages="$errors->get('email')" class="mt-2 text-xs text-red-400" />
+
                     </div>
 
                     <div>
@@ -55,6 +131,8 @@
                                 <i id="eyeIcon" class="fa-solid fa-eye"></i>
                             </button>
                         </div>
+                        <x-input-error :messages="$errors->get('password')" class="mt-2 text-xs text-red-400" />
+
                     </div>
 
                     <button type="submit" class="w-full rounded-2xl bg-emerald-600 py-5 font-black text-white hover:bg-emerald-500 transition-all uppercase tracking-widest">ចូលប្រើប្រព័ន្ធ</button>
