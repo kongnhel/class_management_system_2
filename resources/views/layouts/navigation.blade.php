@@ -57,7 +57,7 @@
 
         {{-- Profile Section (Top) --}}
       <div class="shrink-0 flex flex-col items-center justify-center py-8 border-b border-gray-700/50 mb-8">
-    <a href="{{ route('dashboard') }}" class="flex flex-col items-center space-y-2">
+    <a href="{{ route('profile.edit') }}" class="flex flex-col items-center space-y-2">
         <div class="mt-4 relative group">
             <div class="h-20 w-20 rounded-full overflow-hidden flex items-center justify-center text-3xl font-bold bg-gradient-to-br from-green-500 to-green-700 ring-4 ring-green-500 shadow-lg transition-transform hover:scale-105">
     @if($profileUrl)

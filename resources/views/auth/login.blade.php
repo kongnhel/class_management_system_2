@@ -112,7 +112,7 @@
                         <label class="block text-[11px] font-bold text-emerald-500 uppercase mb-3 ml-1">អ៊ីម៉ែល</label>
                         <div class="relative group">
                             <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500"><i class="fa-solid fa-envelope"></i></span>
-                            <input id="email" type="email" name="email" required class="block w-full pl-12 pr-4 py-4 rounded-2xl bg-white/5 text-white border-white/10 outline-none focus:border-emerald-500" />
+                            <input id="email" type="email" name="email" required class="block w-full pl-12 pr-4 py-4 rounded-2xl bg-white/5 text-white border-white/10 outline-none focus:border-emerald-500" placeholder="example@gmail.com" />
                         </div>
                         <x-input-error :messages="$errors->get('email')" class="mt-2 text-xs text-red-400" />
 
@@ -124,7 +124,7 @@
                             <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500"><i class="fa-solid fa-lock"></i></span>
                             
                             {{-- កំណត់ type="password" ជាដើម --}}
-                            <input id="password" type="password" name="password" required class="block w-full pl-12 pr-12 py-4 rounded-2xl bg-white/5 text-white border-white/10 outline-none focus:border-emerald-500" />
+                            <input id="password" type="password" name="password" required class="block w-full pl-12 pr-12 py-4 rounded-2xl bg-white/5 text-white border-white/10 outline-none focus:border-emerald-500" placeholder="Enter the password"/>
                             
                             {{-- ប៊ូតុង Show/Hide ប្រើ ID សម្រាប់ JavaScript --}}
                             <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-emerald-400">
