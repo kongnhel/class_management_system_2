@@ -38,6 +38,7 @@ use Illuminate\Support\Facades\Route;
 use Kreait\Laravel\Firebase\Facades\Firebase;
 use Kreait\Firebase\Factory;
 use App\Http\Controllers\TelegramController;
+use App\Http\Controllers\Auth\RegisteredUserController;
 
 use App\Http\Controllers\Auth\GoogleAuthController;
 use Illuminate\Support\Facades\Artisan;
@@ -93,6 +94,8 @@ Route::middleware(['web'])->group(function () {
     Route::post('/login', [LoginController::class, 'login']);
 });
 
+
+Route::get('/api/check-student/{code}', [RegisteredUserController::class, 'checkStudent']);
 /*
 |--------------------------------------------------------------------------
 | Authenticated & Verified Routes (Shared for all authenticated users)

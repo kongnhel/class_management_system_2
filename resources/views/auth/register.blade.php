@@ -191,6 +191,11 @@
                                 class="block w-full pl-12 pr-4 py-4 rounded-2xl border-white/10 bg-white/5 text-white placeholder-gray-600 transition-all input-focus-green outline-none"
                                 placeholder="ID-0000X" />
                         </div>
+                        <div class="mt-2">
+                            <p class="text-[10px] text-emerald-400/80 italic font-medium">
+                                * បញ្ចូលលេខសម្គាល់ដើម្បីទាញយកព័ត៌មានដែលរៀបចំដោយរដ្ឋបាល NMU អូតូ
+                            </p>
+                        </div>
                         <x-input-error :messages="$errors->get('student_id_code')" class="mt-2 text-xs" />
                     </div>
 
@@ -308,6 +313,7 @@
             </p>
         </footer>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -346,5 +352,80 @@
             });
         }
     });
+
+
+document.getElementById('student_id_code').addEventListener('blur', function() {
+    let code = this.value;
+    
+    if (code.length >= 3) {
+        // ១. បង្ហាញផ្ទាំង Loading ភ្លាមៗ
+        Swal.fire({
+            title: 'កំពុងស្វែងរកទិន្នន័យ...',
+            html: 'សូមរង់ចាំមួយភ្លែត ពួកយើងកំពុងឆែកមើលបញ្ជីឈ្មោះរបស់រដ្ឋបាល NMU',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading(); // បង្ហាញ Spinner វិលៗ
+            }
+        });
+
+        // ២. ហៅទៅកាន់ API ដើម្បីទាញទិន្នន័យ
+        fetch(`/api/check-student/${code}`)
+            .then(res => res.json())
+            .then(data => {
+                // បិទផ្ទាំង Loading វិញ
+                Swal.close(); 
+
+                if (data.success) {
+                    // ៣. បង្ហាញផ្ទាំង Confirm ព័ត៌មានដែលរកឃើញ
+                    Swal.fire({
+                        title: 'រកឃើញអត្តសញ្ញាណរបស់អ្នក!',
+                        html: `តើអ្នកពិតជាមានឈ្មោះ <b>${data.name}</b> ជំនាន់ <b>${data.generation}</b> មែនដែរឬទេ?<br><br>` +
+                             `<span style="font-size: 0.8em; color: #10b981;">ព័ត៌មាននេះត្រូវបានផ្តល់ដោយរដ្ឋបាល NMU</span>`,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#10b981',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'បាទ/ចាស ត្រឹមត្រូវ',
+                        cancelButtonText: 'មិនមែនទេ'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // បំពេញទិន្នន័យអូតូ និងចាក់សោរ Input
+                            document.getElementById('name').value = data.name;
+                            document.getElementById('program_id').value = data.program_id;
+                            document.getElementById('generation').value = data.generation;
+
+                            document.getElementById('name').readOnly = true;
+                            document.getElementById('program_id').style.pointerEvents = 'none';
+                            document.getElementById('generation').style.pointerEvents = 'none';
+                            
+                            Swal.fire({
+                                title: 'អរគុណ!',
+                                text: 'សូមបន្តបង្កើតអ៊ីមែល និងពាក្យសម្ងាត់របស់អ្នក។',
+                                icon: 'success',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            // បើមិនមែនទេ លុប ID ចេញ
+                            document.getElementById('student_id_code').value = '';
+                        }
+                    });
+                } else {
+                    // បើរកមិនឃើញ
+                    Swal.fire({
+                        title: 'រកមិនឃើញ!',
+                        text: 'លេខសម្គាល់និស្សិតនេះមិនទាន់មានក្នុងប្រព័ន្ធរដ្ឋបាលឡើយ។ សូមទាក់ទងមកកាន់ការិយាល័យសិក្សា!',
+                        icon: 'error'
+                    });
+                    document.getElementById('student_id_code').value = '';
+                }
+            })
+            .catch(error => {
+                Swal.close();
+                Swal.fire('Error!', 'មានបញ្ហាបច្ចេកទេសក្នុងការតភ្ជាប់ទៅកាន់ Server។', 'error');
+                console.error('Fetch error:', error);
+            });
+    }
+});
     </script>
 </x-guest-layout>
