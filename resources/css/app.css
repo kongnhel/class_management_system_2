@@ -1,1 +1,8 @@
 @import "tailwindcss";
+
+/* ✅ បន្ថែមបន្ទាត់នេះដើម្បីឱ្យ Input មានរាងស្អាតមកវិញ */
+@plugin "@tailwindcss/forms"; 
+
+@theme {
+    /* ... custom theme របស់បង (បើមាន) ... */
+}

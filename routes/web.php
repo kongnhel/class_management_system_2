@@ -338,7 +338,8 @@ Route::middleware(['auth'])->post('/qr-authorize', [App\Http\Controllers\Auth\Qr
        });
 
         
-
+    Route::get('/professor/course-offering/{offering_id}/export', [CourseOfferingController::class, 'exportStudents'])
+        ->name('professor.course-offering.export');
 
 
     Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')->group(function () {

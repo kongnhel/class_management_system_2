@@ -8,6 +8,9 @@ use App\Models\Course;
 use App\Models\Program;
 use App\Models\User;
 use App\Models\Room;
+
+use App\Exports\CourseStudentsExport;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
@@ -17,58 +20,91 @@ class CourseOfferingController extends Controller
 {
     const LECTURER_FK_COLUMN = 'lecturer_user_id';
 
-    public function index(Request $request)
-    {
-        // 💡 UPDATE: Load 'targetPrograms' ជំនួសឱ្យ 'program' តែមួយ
-        $query = CourseOffering::query()
-            ->with(['course', 'targetPrograms', 'lecturer', 'schedules']) 
-            ->withCount('studentCourseEnrollments');
+public function index(Request $request)
+{
+    // ១. ចាប់ផ្ដើម Query ជាមួយ Relationship
+    $query = CourseOffering::query()
+        ->with(['course', 'targetPrograms', 'lecturer', 'schedules.room']) 
+        ->withCount('studentCourseEnrollments');
 
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function($q) use ($search) {
-                $q->whereHas('course', function($q2) use ($search) {
-                    $q2->where('title_km', 'LIKE', "%{$search}%")
-                       ->orWhere('title_en', 'LIKE', "%{$search}%");
-                })->orWhereHas('lecturer', function($q3) use ($search) {
-                    $q3->where('name', 'LIKE', "%{$search}%");
-                });
+    // ២. Filter ស្វែងរកតាមអត្ថបទ (Search)
+    if ($request->filled('search')) {
+        $search = $request->input('search');
+        $query->where(function($q) use ($search) {
+            $q->whereHas('course', function($q2) use ($search) {
+                $q2->where('title_km', 'LIKE', "%{$search}%")
+                   ->orWhere('title_en', 'LIKE', "%{$search}%");
+            })->orWhereHas('lecturer', function($q3) use ($search) {
+                $q3->where('name', 'LIKE', "%{$search}%");
             });
-        }
-
-        if ($request->filled('lecturer_id')) {
-            $query->where(self::LECTURER_FK_COLUMN, $request->input('lecturer_id'));
-        }
-
-        // 💡 UPDATE: Filter តាម Program តាមរយៈ Pivot Table
-        if ($request->filled('program_id')) {
-            $query->whereHas('targetPrograms', function($q) use ($request) {
-                $q->where('program_id', $request->input('program_id'));
-            });
-        }
-
-        if ($request->filled('academic_year')) {
-            $query->where('academic_year', $request->input('academic_year'));
-        }
-        
-        $courseOfferings = $query->orderBy('academic_year', 'desc')
-                                 ->orderBy('semester', 'desc')
-                                 ->paginate(50)
-                                 ->appends($request->query());
-
-        $programs = Program::orderBy('name_km')->get();
-        $academicYears = CourseOffering::select('academic_year')->distinct()->orderBy('academic_year', 'desc')->pluck('academic_year');
-
-        $assignedLecturerIds = CourseOffering::distinct()->pluck(self::LECTURER_FK_COLUMN)->filter()->unique();
-        $lecturers = User::whereIn('id', $assignedLecturerIds)
-            ->where('role', 'professor')
-            ->orderBy('name')
-            ->get(['id', 'name']);
-            // In index method
-
-
-        return view('admin.course-offerings.index', compact('courseOfferings', 'programs', 'academicYears', 'lecturers'));
+        });
     }
+
+    // ៣. Filter តាមសាស្ត្រាចារ្យ
+    if ($request->filled('lecturer_id')) {
+        $query->where('lecturer_user_id', $request->input('lecturer_id'));
+    }
+
+    // ៤. Filter តាមកម្មវិធីសិក្សា (Pivot Table)
+    if ($request->filled('program_id')) {
+        $query->whereHas('targetPrograms', function($q) use ($request) {
+            $q->where('program_id', $request->input('program_id'));
+        });
+    }
+
+    // ៥. Filter តាមជំនាន់ (Generation) ក្នុង Pivot Table
+    if ($request->filled('generation')) {
+        $query->whereHas('targetPrograms', function($q) use ($request) {
+            // ប្រើឈ្មោះតារាងឱ្យចំដើម្បីកុំឱ្យ Error
+            $q->where('course_offering_program.generation', '=', $request->input('generation'));
+        });
+    }
+
+    // ៦. Filter តាមឆមាស
+    if ($request->filled('semester')) {
+        $query->where('semester', '=', $request->input('semester'));
+    }
+ // 🔥🔥🔥 2. បន្ថែម Logic សម្រាប់ SHIFT នៅត្រង់នេះ 🔥🔥🔥
+    if ($request->filled('shift')) {
+        $shift = $request->shift;
+        // ប្រើ whereHas ដើម្បីឆែកចូលទៅក្នុង table 'schedules'
+        $query->whereHas('schedules', function ($q) use ($shift) {
+            if ($shift === 'weekend') {
+                // បើ user រើស Weekend, យកតែ record ណាដែលមានថ្ងៃ សៅរ៍ ឬ អាទិត្យ
+                $q->whereIn('day_of_week', ['Saturday', 'Sunday']);
+            } elseif ($shift === 'weekday') {
+                // បើ user រើស Weekday, យកតែ record ណាដែលមានថ្ងៃ ចន្ទ-សុក្រ
+                $q->whereIn('day_of_week', ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']);
+            }
+        });
+    }
+
+$courseOfferings = $query->orderBy('academic_year', 'desc')
+                         ->orderBy('semester', 'desc')
+                         ->paginate(50)
+                         ->appends($request->query());
+    // ៨. រៀបចំទិន្នន័យសម្រាប់ Dropdowns
+    $programs = Program::orderBy('name_km')->get();
+    
+    $academicYears = CourseOffering::select('academic_year')
+        ->distinct()
+        ->orderBy('academic_year', 'desc')
+        ->pluck('academic_year');
+
+    $assignedLecturerIds = CourseOffering::distinct()->pluck('lecturer_user_id')->filter()->unique();
+    $lecturers = User::whereIn('id', $assignedLecturerIds)
+        ->where('role', 'professor')
+        ->orderBy('name')
+        ->get(['id', 'name']);
+
+    // ៩. បញ្ជូនទិន្នន័យទៅកាន់ View
+    return view('admin.course-offerings.index', compact(
+        'courseOfferings', 
+        'programs', 
+        'academicYears', 
+        'lecturers'
+    ));
+}
 
 public function create()
     {
@@ -492,5 +528,11 @@ public function update(Request $request, CourseOffering $courseOffering)
     $courses = $program->courses()->select('id', 'code', 'title_km')->get();
     
     return response()->json($courses);
+}
+
+public function exportStudents($offering_id)
+{
+    // ឈ្មោះ File ដែលនឹងធ្លាក់មក៖ students_list_course_123.xlsx
+    return Excel::download(new CourseStudentsExport($offering_id), 'students_list_course_' . $offering_id . '.xlsx');
 }
 }
