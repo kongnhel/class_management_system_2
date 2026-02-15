@@ -112,7 +112,7 @@
 
         /* --- Table Styling --- */
         .table-container { 
-            display: flex; flex-direction: column; gap: 20px; width: 100%;
+            display: flex; flex-direction: column; gap: 20px; width: 100%;font-family: var(--font-body)
         }
 
         .custom-table { width: 100%; border-collapse: collapse; border: 1.5pt solid black; }
@@ -127,7 +127,7 @@
         .cell-content { display: flex; flex-direction: column; gap: 2px; }
         .cell-subject { font-weight: bold; font-size: 9.5pt; color: #1e293b; }
         .cell-lecturer { font-size: 9pt; color: #334155; }
-        .cell-room { font-weight: bold; font-size: 9pt; color: #059669; }
+        .cell-room { font-weight: bold; font-size: 9pt; color: #08110e; }
 
         /* --- Footer --- */
         .footer-sigs { display: flex; justify-content: space-between; margin-top: 30px; }

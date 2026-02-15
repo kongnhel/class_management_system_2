@@ -131,75 +131,80 @@ public function store(Request $request)
         'end_date' => 'required|date|after_or_equal:start_date',
         
         'target_programs' => 'required|array|min:1',
-        'target_programs.*.program_id' => 'required|exists:programs,id',
+        'target_programs.*.program_id' => 'required|exists:programs,id|distinct', // បន្ថែម distinct
         'target_programs.*.generation' => 'required|string|max:255',
 
         'schedules' => 'required|array|min:1',
         'schedules.*.day_of_week' => 'required|string|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
         'schedules.*.room_id' => 'required|exists:rooms,id',
         'schedules.*.start_time' => 'required|date_format:H:i',
-        'schedules.*.end_time' => 'nullable|date_format:H:i|after:schedules.*.start_time',
+        'schedules.*.end_time' => 'required|date_format:H:i|after:schedules.*.start_time',
     ], [
         'target_programs.required' => 'សូមជ្រើសរើសជំនាញ និងជំនាន់យ៉ាងហោចណាស់មួយ។',
     ]);
 
     // 2. Conflict Checks
     $validator->after(function ($validator) use ($request) {
-        $schedules = $request->input('schedules');
+        $schedules = $request->input('schedules', []);
         $lecturerId = $request->input('lecturer_user_id');
         $academicYear = $request->input('academic_year');
         $semester = $request->input('semester');
 
-        if (is_array($schedules)) {
-            foreach ($schedules as $index => $schedule) {
-                $day = $schedule['day_of_week'] ?? null;
-                $start = $schedule['start_time'] ?? null;
-                $end = $schedule['end_time'] ?? null;
-                $roomId = $schedule['room_id'] ?? null;
+        if (!is_array($schedules)) return;
 
-                if (!$day || !$start || !$end || !$roomId) continue;
+        foreach ($schedules as $index => $current) {
+            $day = $current['day_of_week'] ?? null;
+            $start = $current['start_time'] ?? null;
+            $end = $current['end_time'] ?? null;
+            $roomId = $current['room_id'] ?? null;
 
-                // Check Room Conflict
-                $roomConflict = \App\Models\Schedule::where('day_of_week', $day)
-                    ->where('room_id', $roomId)
-                    ->whereHas('courseOffering', function ($q) use ($academicYear, $semester) {
-                        $q->where('academic_year', $academicYear)
-                          ->where('semester', $semester);
-                    })
-                    ->where(function ($q) use ($start, $end) {
-                        $q->whereBetween('start_time', [$start, $end])
-                          ->orWhereBetween('end_time', [$start, $end])
-                          ->orWhere(function ($q2) use ($start, $end) {
-                              $q2->where('start_time', '<', $start)
-                                 ->where('end_time', '>', $end);
-                          });
-                    })
-                    ->exists();
+            if (!$day || !$start || !$end) continue;
 
-                if ($roomConflict) {
-                    $validator->errors()->add("schedules.$index.room_id", "បន្ទប់នេះជាប់រវល់ហើយ នៅថ្ងៃ $day ម៉ោងនេះ។");
+            // --- CHECK 0: Internal Conflict (Check ជាន់គ្នាឯងក្នុង Request) ---
+            foreach ($schedules as $innerIndex => $compare) {
+                if ($index === $innerIndex) continue;
+                if ($day === ($compare['day_of_week'] ?? '') && 
+                    $start < ($compare['end_time'] ?? '') && 
+                    $end > ($compare['start_time'] ?? '')) {
+                    $validator->errors()->add("schedules.$index", "ម៉ោងដែលអ្នកបញ្ចូលមកមានការជាន់គ្នាឯងក្នុងបញ្ជីខាងលើ។");
                 }
+            }
 
-                // Check Lecturer Conflict
-                $lecturerConflict = \App\Models\Schedule::where('day_of_week', $day)
-                    ->whereHas('courseOffering', function ($q) use ($lecturerId, $academicYear, $semester) {
-                        $q->where('lecturer_user_id', $lecturerId)
-                          ->where('academic_year', $academicYear)
-                          ->where('semester', $semester);
-                    })
-                    ->where(function ($q) use ($start, $end) {
-                        $q->whereBetween('start_time', [$start, $end])
-                          ->orWhereBetween('end_time', [$start, $end])
-                          ->orWhere(function ($q2) use ($start, $end) {
-                              $q2->where('start_time', '<', $start)
-                                 ->where('end_time', '>', $end);
-                          });
-                    })
-                    ->exists();
+            // Standard Overlap Query Logic (កែសម្រួលឱ្យមិនទើសនាទីគ្នា)
+            $overlapQuery = function ($q) use ($start, $end) {
+                $q->where(function ($query) use ($start, $end) {
+                    $query->where('start_time', '<', $end)
+                          ->where('end_time', '>', $start);
+                });
+            };
 
-                if ($lecturerConflict) {
-                    $validator->errors()->add("lecturer_user_id", "សាស្ត្រាចារ្យនេះជាប់បង្រៀនថ្នាក់ផ្សេងហើយ នៅថ្ងៃ {$day} ម៉ោង {$start} - {$end}។");
-                }
+            // --- CHECK A: Room Conflict ---
+            $roomConflict = \App\Models\Schedule::where('day_of_week', $day)
+                ->where('room_id', $roomId)
+                // ក្នុង store() មិនចាំបាច់ប្រើ where('id', '!=', ...) ទេ ព្រោះជាការបង្កើតថ្មី
+                ->whereHas('courseOffering', function ($q) use ($academicYear, $semester) {
+                    $q->where('academic_year', $academicYear)
+                      ->where('semester', $semester);
+                })
+                ->where($overlapQuery)
+                ->exists();
+
+            if ($roomConflict) {
+                $validator->errors()->add("schedules.$index.room_id", "បន្ទប់នេះជាប់រវល់ហើយ នៅថ្ងៃ $day ចន្លោះម៉ោង $start - $end");
+            }
+
+            // --- CHECK B: Lecturer Conflict ---
+            $lecturerConflict = \App\Models\Schedule::where('day_of_week', $day)
+                ->whereHas('courseOffering', function ($q) use ($lecturerId, $academicYear, $semester) {
+                    $q->where('lecturer_user_id', $lecturerId)
+                      ->where('academic_year', $academicYear)
+                      ->where('semester', $semester);
+                })
+                ->where($overlapQuery)
+                ->exists();
+
+            if ($lecturerConflict) {
+                $validator->errors()->add("lecturer_user_id", "សាស្ត្រាចារ្យនេះជាប់បង្រៀនថ្នាក់ផ្សេងហើយ នៅថ្ងៃ {$day} ម៉ោង {$start} - {$end}។");
             }
         }
     });
@@ -211,7 +216,7 @@ public function store(Request $request)
     $validated = $validator->validated();
 
     try {
-        DB::beginTransaction();
+        \Illuminate\Support\Facades\DB::beginTransaction();
 
         // 3. Create Course Offering
         $courseOffering = CourseOffering::create([
@@ -220,23 +225,20 @@ public function store(Request $request)
             'academic_year' => $validated['academic_year'],
             'semester' => $validated['semester'],
             'capacity' => $validated['capacity'],
-            'is_open_for_self_enrollment' => $request->has('is_open_for_self_enrollment'),
+            'is_open_for_self_enrollment' => $request->boolean('is_open_for_self_enrollment'),
             'start_date' => $validated['start_date'],
             'end_date' => $validated['end_date'],
         ]);
 
         // 4. Save Programs & AUTO ENROLL STUDENTS
         foreach ($validated['target_programs'] as $prog) {
-            // A. Save to Pivot Table (course_offering_programs)
             $courseOffering->targetPrograms()->attach($prog['program_id'], [
                 'generation' => $prog['generation']
             ]);
 
-            // B. 🔥 AUTO ENROLL LOGIC (បញ្ចូលសិស្សអូតូ) 🔥
-            // ស្វែងរកសិស្សដែលមាន Program និង Generation ត្រូវគ្នា
             $students = User::where('role', 'student')
-                ->where('program_id', $prog['program_id']) // ត្រូវប្រាកដថា User table មាន program_id
-                ->where('generation', $prog['generation']) // ត្រូវប្រាកដថា User table មាន generation
+                ->where('program_id', $prog['program_id'])
+                ->where('generation', $prog['generation'])
                 ->get();
 
             foreach ($students as $student) {
@@ -244,7 +246,7 @@ public function store(Request $request)
                     'student_user_id' => $student->id,
                     'course_offering_id' => $courseOffering->id,
                 ], [
-                    'student_id' => $student->id, // ដាក់ដើម្បីកុំឱ្យ Error field doesn't have default value
+                    'student_id' => $student->id,
                     'enrollment_date' => now(),
                     'status' => 'enrolled',
                 ]);
@@ -253,24 +255,20 @@ public function store(Request $request)
 
         // 5. Create Schedules
         foreach ($validated['schedules'] as $scheduleData) {
-            $courseOffering->schedules()->create([
-                'day_of_week' => $scheduleData['day_of_week'],
-                'room_id' => $scheduleData['room_id'],
-                'start_time' => $scheduleData['start_time'],
-                'end_time' => $scheduleData['end_time'],
-            ]);
+            $courseOffering->schedules()->create($scheduleData);
         }
 
-        DB::commit();
+        \Illuminate\Support\Facades\DB::commit();
 
-        Session::flash('success', 'ការផ្តល់ជូនមុខវិជ្ជាត្រូវបានបង្កើតដោយជោគជ័យ និងបានបញ្ចូលឈ្មោះសិស្សរួចរាល់!');
-        return redirect()->route('admin.manage-course-offerings');
+        return redirect()->route('admin.manage-course-offerings')
+            ->with('success', 'ការផ្តល់ជូនមុខវិជ្ជាត្រូវបានបង្កើតដោយជោគជ័យ និងបានបញ្ចូលឈ្មោះសិស្សរួចរាល់!');
 
     } catch (\Exception $e) {
-        DB::rollBack();
-        Log::error('Error creating course offering: ' . $e->getMessage());
-        Session::flash('error', 'មានបញ្ហាក្នុងការបង្កើត៖ ' . $e->getMessage());
-        return redirect()->back()->withInput();
+        \Illuminate\Support\Facades\DB::rollBack();
+        \Illuminate\Support\Facades\Log::error('Error creating course offering: ' . $e->getMessage());
+        return redirect()->back()
+            ->with('error', 'មានបញ្ហាក្នុងការបង្កើត៖ ' . $e->getMessage())
+            ->withInput();
     }
 }
 
@@ -366,7 +364,7 @@ public function update(Request $request, CourseOffering $courseOffering)
                 ->exists();
 
             if ($roomConflict) {
-                $validator->errors()->add("schedules.$index.room_id", "បន្ទប់នេះជាប់រវល់ហើយ នៅថ្ងៃ $day ចន្លោះម៉ោង $start - $end។");
+                $validator->errors()->add("schedules.$index.room_id", "បន្ទប់នេះជាប់រវល់ហើយ នៅថ្ងៃ $day ចន្លោះម៉ោង $start - $end");
             }
 
             // --- CHECK B: Lecturer Conflict ---
