@@ -8,6 +8,7 @@
         :root { 
             --font-header: 'Moul', serif; 
             --font-body: 'Battambang', system-ui, sans-serif; 
+            
         }
 
         /* ----------------------------------------- */
@@ -426,15 +427,38 @@
                 <div class="sig-role font-moul">ជ. សាកលវិទ្យាធិការ</div>
                 <div class="sig-role font-moul">សាកលវិទ្យាធិការរង</div>
                 <div class="sig-spacer"></div>
-                <div class="sig-name font-moul">ផុន សុខិន</div>
+                {{-- <div class="sig-name font-moul">ផុន សុខិន</div> --}}
             </div>
+            @php
+    // មុខងារបំប្លែងលេខអារ៉ាប់ ទៅជាលេខខ្មែរ
+    function toKhmerNumber($number) {
+        $khmerNumbers = ['០', '១', '២', '៣', '៤', '៥', '៦', '៧', '៨', '៩'];
+        return str_replace(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'], $khmerNumbers, $number);
+    }
+
+    $now = now(); // ទាញយកម៉ោងបច្ចុប្បន្ន
+    $khmerMonths = [
+        1 => 'មករា', 2 => 'កុម្ភៈ', 3 => 'មីនា', 4 => 'មេសា', 5 => 'ឧសភា', 6 => 'មិថុនា',
+        7 => 'កក្កដា', 8 => 'សីហា', 9 => 'កញ្ញា', 10 => 'តុលា', 11 => 'វិច្ឆិកា', 12 => 'ធ្នូ'
+    ];
+
+    // គណនាឆ្នាំពុទ្ធសករាជ (ព.ស)៖ ឆ្នាំគ្រិស្តសករាជ + ៥៤៣ (ក្រោយថ្ងៃចូលឆ្នាំខ្មែរ) ឬ ៥៤៤
+    $beYear = $now->year + 543; 
+    
+    $day = toKhmerNumber($now->format('d'));
+    $month = $khmerMonths[$now->month];
+    $year = toKhmerNumber($now->year);
+    $beYearKh = toKhmerNumber($beYear);
+@endphp
             
             <div class="sig-block" style="text-align: right; padding-right: 20px;">
-                <div class="sig-date">ថ្ងៃ............. ខែ............. ឆ្នាំ............. ព.ស ២៥៦៨</div>
+                <div class="sig-date">
+                    ថ្ងៃទី{{ $day }} ខែ{{ $month }} ឆ្នាំ{{ $year }} ព.ស {{ $beYearKh }}
+                </div>
                 <div class="sig-date">បន្ទាយមានជ័យ ថ្ងៃទី............. ខែ............. ឆ្នាំ២០......</div>
                 <div class="sig-title-top font-moul" style="margin-top: 5px;">ប្រធានការិយាល័យសិក្សា</div>
                 <div class="sig-spacer"></div>
-                <div class="sig-name font-moul">សឿន ~ មុំ</div>
+                {{-- <div class="sig-name font-moul">សឿន ~ មុំ</div> --}}
             </div>
         </div>
     </div>
