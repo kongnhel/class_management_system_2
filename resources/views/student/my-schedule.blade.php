@@ -29,116 +29,142 @@
             --font-body: 'Battambang', system-ui, sans-serif; 
         }
 
-        /* ----------------------------------------- */
-        /* 📄 A4 PAPER LAYOUT (SCREEN & PRINT)       */
-        /* ----------------------------------------- */
         .a4-paper {
             background: white;
             font-family: var(--font-body);
             color: black;
-            width: 297mm; /* A4 Landscape Width */
-            min-height: 210mm; /* A4 Landscape Height */
-            padding: 10mm 15mm;
-            margin: 20px auto;
+            width: 100%; /* Responsive by default */
+            max-width: 297mm; /* Limit on Desktop */
+            min-height: auto;
+            padding: 5mm;
+            margin: 10px auto;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             position: relative;
-            /* ដក Flex space-between ចេញ ដើម្បីកុំឱ្យ Footer រត់ទៅក្រោមពេក */
             display: block; 
         }
 
-        /* ----------------------------------------- */
-        /* 🖨️ PRINT SETTINGS (FIXED 1 PAGE)         */
-        /* ----------------------------------------- */
+        @media (min-width: 1024px) {
+            .a4-paper {
+                width: 297mm;
+                padding: 10mm 15mm;
+                margin: 20px auto;
+            }
+        }
+
         @media print {
             @page { 
                 size: A4 landscape; 
-                margin: 5mm; /* Margin តូចបំផុត */
+                margin: 5mm;
             }
-            
             body { 
                 background: white !important; 
                 margin: 0 !important;
                 padding: 0 !important;
                 -webkit-print-color-adjust: exact; 
-                /* 🔥 ZOOM: 85% គឺជាលេខដែលសុវត្ថិភាពបំផុតសម្រាប់ 1 ទំព័រ */
                 zoom: 85%; 
             }
-            
             .no-print { display: none !important; } 
-            
             .a4-paper { 
                 margin: 0 !important;
                 box-shadow: none !important;
                 width: 100% !important;
-                /* 🔥 FIX: ប្រើ auto ដើម្បីឱ្យកម្ពស់តាមមាតិកា មិនបង្ខំឱ្យពេញទំព័រ */
                 height: auto !important; 
                 min-height: auto !important;
                 padding: 0 !important;
-                page-break-after: avoid;
-                page-break-inside: avoid;
-            }
-
-            .footer-sigs {
-                margin-top: 30px !important; /* គម្លាតពីតារាងមក Footer */
-                padding-bottom: 0 !important;
-                page-break-inside: avoid;
             }
         }
 
         /* --- Header Layout --- */
         .header-layout {
-            display: grid;
-            grid-template-columns: 30% 40% 30%;
-            align-items: start;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
             border-bottom: 2px solid #000;
             padding-bottom: 10px;
             margin-bottom: 15px;
+            text-align: center;
+        }
+
+        @media (min-width: 768px) {
+            .header-layout {
+                display: grid;
+                grid-template-columns: 30% 40% 30%;
+                text-align: center;
+            }
         }
         
-        .header-col { display: flex; flex-direction: column; align-items: center; text-align: center; }
-
-        /* Fonts */
+        .header-col { display: flex; flex-direction: column; align-items: center; }
         .font-moul { font-family: var(--font-header) !important; font-weight: normal; }
         .text-blue-custom { color: #2a58ad; }
+        .header-logo img { width: 70px; height: auto; margin-bottom: 5px; }
+        .header-line img { width: 100px; height: auto; margin-top: 5px; }
+        
+        @media (min-width: 768px) {
+            .header-logo img { width: 85px; }
+            .header-line img { width: 120px; }
+        }
 
-        .header-logo img { width: 85px; height: auto; margin-bottom: 5px; }
-        .header-line img { width: 120px; height: auto; margin-top: 5px; }
-        .header-title-km { font-size: 11pt; line-height: 1.4; }
-        .header-kingdom { font-size: 12pt; line-height: 1.4; color: black; }
+        .header-title-km { font-size: 10pt; line-height: 1.4; }
+        .header-kingdom { font-size: 11pt; line-height: 1.4; color: black; }
 
-        .schedule-info { text-align: center; margin-bottom: 20px; }
-        .schedule-info h1 { font-size: 13pt; margin: 5px 0; color: black; }
-        .schedule-info p { font-size: 10pt; font-weight: bold; margin: 2px 0; }
+        .schedule-info { text-align: center; margin-bottom: 15px; }
+        .schedule-info h1 { font-size: 11pt; margin: 5px 0; color: black; }
+        .schedule-info p { font-size: 9pt; font-weight: bold; margin: 2px 0; }
 
         /* --- Table Styling --- */
         .table-container { 
-            display: flex; flex-direction: column; gap: 20px; width: 100%;font-family: var(--font-body)
+            display: flex; flex-direction: column; gap: 20px; width: 100%; font-family: var(--font-body);
         }
 
-        .custom-table { width: 100%; border-collapse: collapse; border: 1.5pt solid black; }
-        .custom-table th, .custom-table td { 
-            border: 1pt solid black; padding: 6px; 
-            text-align: center; vertical-align: middle; 
-            font-size: 9.5pt; line-height: 1.3;
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
-        .custom-table th { background-color: #f1f5f9 !important; height: 35px; color: black; }
+
+        .custom-table { width: 100%; border-collapse: collapse; border: 1.5pt solid black; min-width: 600px; }
+        .custom-table th, .custom-table td { 
+            border: 1pt solid black; padding: 4px; 
+            text-align: center; vertical-align: middle; 
+            font-size: 8.5pt; line-height: 1.3;
+        }
+
+        @media (min-width: 768px) {
+            .custom-table th, .custom-table td { font-size: 9.5pt; padding: 6px; }
+            .schedule-info h1 { font-size: 13pt; }
+        }
+
+        .custom-table th { background-color: #f1f5f9 !important; font-weight: normal; }
         .bg-header { background-color: #f8fafc !important; font-weight: bold; }
 
         .cell-content { display: flex; flex-direction: column; gap: 2px; }
-        .cell-subject { font-weight: bold; font-size: 9.5pt; color: #1e293b; }
-        .cell-lecturer { font-size: 9pt; color: #334155; }
-        .cell-room { font-weight: bold; font-size: 9pt; color: #08110e; }
+        .cell-subject { font-weight: bold; color: #1e293b; }
+        .cell-lecturer { color: #334155; }
+        .cell-room { font-weight: bold; color: #08110e; }
 
         /* --- Footer --- */
-        .footer-sigs { display: flex; justify-content: space-between; margin-top: 30px; }
-        .sig-block { text-align: center; width: 35%; }
-        .sig-title { font-size: 10pt; margin-bottom: 5px; }
-        .sig-spacer { height: 70px; }
-        .sig-name { font-size: 11pt; font-weight: bold; color: #2a58ad; }
+        .footer-sigs { 
+            display: flex; 
+            flex-direction: row; 
+            justify-content: space-between; 
+            margin-top: 20px;
+            gap: 10px;
+        }
+        .sig-block { text-align: center; width: 48%; }
+        .sig-title { font-size: 9pt; margin-bottom: 5px; }
+        .sig-spacer { height: 50px; }
+        .sig-name { font-size: 10pt; font-weight: bold; color: #2a58ad; }
+        .sig-date { font-size: 8.5pt; }
+
+        @media (min-width: 768px) {
+            .sig-title { font-size: 10pt; }
+            .sig-spacer { height: 70px; }
+            .sig-date { font-size: 10pt; }
+        }
     </style>
 
-    {{-- CONTENT --}}
-    <div class="bg-gray-100 min-h-screen py-10 no-print-bg">
+    <div class="bg-gray-100 min-h-screen py-4 md:py-10 no-print-bg">
         <div id="printable-area" class="a4-paper">
             
             {{-- 1. HEADER --}}
@@ -153,18 +179,17 @@
                     <h2 class="font-moul header-kingdom">ជាតិ សាសនា ព្រះមហាក្សត្រ</h2>
                     <div class="header-line"><img id="lineImg" src="{{ asset('assets/image/2.png') }}" alt="Line"></div>
                 </div>
-                <div class="header-col"></div>
+                <div class="header-col hidden md:flex"></div>
             </div>
 
             <div class="schedule-info">
-                {{-- 🔥 FIX TEXT HERE --}}
-                <h1 class="font-moul">តារាងវិភាគកម្មធម៌ឆមាសទី១ / Timetable Semester 1</h1>
+                <h1 class="font-moul">តារាងវិភាគកម្មធម៌ឆមាសទី១ <span class="font-sans" style="font-family: var(--font-body)">/Timetable Semester 1</span></h1>
                 <p>
                     ជំនាន់ទី {{ $user->generation ?? '...' }} 
                     @if($studentProgram) | {{ $studentProgram->name_km ?? $studentProgram->name_en }} @endif
                     | ឆ្នាំសិក្សា {{ date('Y') }}-{{ date('Y')+1 }}
                 </p>
-                <p style="font-weight: normal; font-size: 10pt; margin-top: 5px;">ចាប់ផ្តើមពីថ្ងៃចន្ទ ១២ កើត ខែអស្សុជ ឆ្នាំរោង ឆស័ក ព.ស ២៥៦៨ ត្រូវនឹងថ្ងៃទី១៤ ខែតុលា ឆ្នាំ២០២៤</p>
+                <p style="font-weight: normal; margin-top: 5px;">ចាប់ផ្តើមពីថ្ងៃចន្ទ ១២ កើត ខែអស្សុជ ឆ្នាំរោង ឆស័ក ព.ស ២៥៦៨ ត្រូវនឹងថ្ងៃទី១៤ ខែតុលា ឆ្នាំ២០២៤</p>
             </div>
 
             {{-- 2. TABLES --}}
@@ -176,15 +201,13 @@
                     $weekdaySchedules = $schedules->filter(fn($s) => array_key_exists($s->day_of_week, $weekdayMap));
                     $weekendSchedules = $schedules->filter(fn($s) => array_key_exists($s->day_of_week, $weekendMap));
 
-                    // Sort Data
                     $weekdayRows = $weekdaySchedules->groupBy(fn($s) => \Carbon\Carbon::parse($s->start_time)->format('H:i') . '-' . \Carbon\Carbon::parse($s->end_time)->format('H:i'))->sortKeys();
                     $weekendTimeSlots = $weekendSchedules->map(fn($s) => \Carbon\Carbon::parse($s->start_time)->format('H:i') . '-' . \Carbon\Carbon::parse($s->end_time)->format('H:i'))->unique()->sort();
                 @endphp
 
-                {{-- TABLE 1: MON-FRI --}}
                 @if($weekdayRows->isNotEmpty())
-                    <div>
-                        <div style="text-align: left; font-weight: bold; font-family: 'Battambang'; text-decoration: underline; font-size: 10pt; margin-bottom: 5px;">វេនសិក្សា៖ ចន្ទ-សុក្រ (Mon-Fri)</div>
+                    <div class="table-responsive">
+                        <div style="text-align: left; font-weight: bold; text-decoration: underline; font-size: 10pt; margin-bottom: 5px;">វេនសិក្សា៖ ចន្ទ-សុក្រ (Mon-Fri)</div>
                         <table class="custom-table">
                             <thead>
                                 <tr>
@@ -215,10 +238,9 @@
                     </div>
                 @endif
 
-                {{-- TABLE 2: SAT-SUN (TRANSPOSED) --}}
                 @if($weekendSchedules->isNotEmpty())
-                    <div>
-                        <div style="text-align: left; font-weight: bold; font-family: 'Battambang'; text-decoration: underline; font-size: 10pt; margin-bottom: 5px;">វេនសិក្សា៖ សៅរ៍-អាទិត្យ (Sat-Sun)</div>
+                    <div class="table-responsive">
+                        <div style="text-align: left; font-weight: bold; text-decoration: underline; font-size: 10pt; margin-bottom: 5px;">វេនសិក្សា៖ សៅរ៍-អាទិត្យ (Sat-Sun)</div>
                         <table class="custom-table">
                             <thead>
                                 <tr>
@@ -257,46 +279,34 @@
 
             {{-- 3. FOOTER --}}
             <div class="footer-sigs">
-                <div class="sig-block" style="text-align: left; padding-left: 20px;">
-                    <div class="sig-title font-moul">បានឃើញ និងឯកភាព</div>
+                <div class="sig-block" style="text-align: left; padding-left: 10px;">
+                    <div class="sig-title" style="font-weight: bold;">បានឃើញ និងឯកភាព</div>
                     <div class="sig-title font-moul">ជ. សាកលវិទ្យាធិការ</div>
                     <div class="sig-title font-moul">សាកលវិទ្យាធិការរង</div>
                     <div class="sig-spacer"></div>
-                    {{-- <div class="sig-name font-moul">ផុន សុខិន</div> --}}
                 </div>
-                            @php
-    // មុខងារបំប្លែងលេខអារ៉ាប់ ទៅជាលេខខ្មែរ
-    function toKhmerNumber($number) {
-        $khmerNumbers = ['០', '១', '២', '៣', '៤', '៥', '៦', '៧', '៨', '៩'];
-        return str_replace(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'], $khmerNumbers, $number);
-    }
 
-    $now = now(); // ទាញយកម៉ោងបច្ចុប្បន្ន
-    $khmerMonths = [
-        1 => 'មករា', 2 => 'កុម្ភៈ', 3 => 'មីនា', 4 => 'មេសា', 5 => 'ឧសភា', 6 => 'មិថុនា',
-        7 => 'កក្កដា', 8 => 'សីហា', 9 => 'កញ្ញា', 10 => 'តុលា', 11 => 'វិច្ឆិកា', 12 => 'ធ្នូ'
-    ];
+                @php
+                    function toKhmerNumber($number) {
+                        $khmerNumbers = ['០', '១', '២', '៣', '៤', '៥', '៦', '៧', '៨', '៩'];
+                        return str_replace(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'], $khmerNumbers, $number);
+                    }
+                    $now = now();
+                    $khmerMonths = [1 => 'មករា', 2 => 'កុម្ភៈ', 3 => 'មីនា', 4 => 'មេសា', 5 => 'ឧសភា', 6 => 'មិថុនា', 7 => 'កក្កដា', 8 => 'សីហា', 9 => 'កញ្ញា', 10 => 'តុលា', 11 => 'វិច្ឆិកា', 12 => 'ធ្នូ'];
+                    $beYear = $now->year + 543; 
+                    $day = toKhmerNumber($now->format('d'));
+                    $month = $khmerMonths[$now->month];
+                    $year = toKhmerNumber($now->year);
+                    $beYearKh = toKhmerNumber($beYear);
+                @endphp
 
-    // គណនាឆ្នាំពុទ្ធសករាជ (ព.ស)៖ ឆ្នាំគ្រិស្តសករាជ + ៥៤៣ (ក្រោយថ្ងៃចូលឆ្នាំខ្មែរ) ឬ ៥៤៤
-    $beYear = $now->year + 543; 
-    
-    $day = toKhmerNumber($now->format('d'));
-    $month = $khmerMonths[$now->month];
-    $year = toKhmerNumber($now->year);
-    $beYearKh = toKhmerNumber($beYear);
-@endphp
-                <div class="sig-block" style="text-align: right; padding-right: 20px;">
-                                    <div class="sig-date">
-                    ថ្ងៃទី{{ $day }} ខែ{{ $month }} ឆ្នាំ{{ $year }} ព.ស {{ $beYearKh }}
-                </div>
-                    {{-- <div class="sig-date">ថ្ងៃ............. ខែ............. ឆ្នាំ............. ព.ស ២៥៦៨</div> --}}
+                <div class="sig-block" style="text-align: right; padding-right: 10px;">
+                    <div class="sig-date">ថ្ងៃទី{{ $day }} ខែ{{ $month }} ឆ្នាំ{{ $year }} ព.ស {{ $beYearKh }}</div>
                     <div class="sig-date">បន្ទាយមានជ័យ ថ្ងៃទី............. ខែ............. ឆ្នាំ២០......</div>
-                    <div class="sig-title font-moul" style="margin-top: 10px;">ប្រធានការិយាល័យសិក្សា</div>
+                    <div class="sig-title font-moul" style="margin-top: 5px;">ប្រធានការិយាល័យសិក្សា</div>
                     <div class="sig-spacer"></div>
-                    {{-- <div class="sig-name font-moul">សឿន ~ មុំ</div> --}}
                 </div>
             </div>
-
         </div>
     </div>
 

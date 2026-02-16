@@ -1,211 +1,169 @@
 <x-app-layout>
     @php
-        // ១. ទាញយកទិន្នន័យ User និង Profile
         $user = Auth::user()->loadMissing('userProfile');
-        
-        // ២. ទាញយក URL ពី ImgBB ដោយផ្ទាល់ (មិនប្រើ asset() ឡើយ ដើម្បីជៀសវាង Error 403)
         $profileUrl = $user->userProfile?->profile_picture_url;
     @endphp
 
-    <div class="py-12 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
-        <div class="max-w-5xl mx-auto px-6 lg:px-8 space-y-10">
-                        {{-- Alerts --}}
-         @if (session('success'))
-                    <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-3 md:p-5 rounded-xl mb-6 shadow-sm flex items-center animate-bounce" role="alert">
-                        <i class="fas fa-check-circle mr-3 text-green-500 text-xl"></i>
-                        <span class="font-bold text-sm md:text-lg">{{ session('success') }}</span>
-                    </div>
-                @endif
+    <div class="min-h-screen bg-[#f8fafc] dark:bg-gray-900 py-12 font-sans antialiased">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            {{-- Header Section --}}
+            <div class="mb-10 text-center md:text-left">
+                <h1 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                    {{ __('កំណត់ប្រវត្តិរូបសង្ខេប') }}
+                </h1>
+                <p class="mt-2 text-slate-500 dark:text-slate-400">
+                    {{ __('គ្រប់គ្រងព័ត៌មានផ្ទាល់ខ្លួន និងសុវត្ថិភាពគណនីរបស់អ្នកនៅក្នុងប្រព័ន្ធ។') }}
+                </p>
+            </div>
 
-            {{-- ១. ផ្នែកប្តូររូបភាព Profile (PROFILE PICTURE CARD) --}}
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-10">
-                <header class="text-center mb-10">
-                    <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                        {{ __('រូបភាពប្រវត្តិរូប') }}
-                    </h2>
-                    <p class="mt-2 text-gray-600 dark:text-gray-400">
-                        {{ __("ធ្វើបច្ចុប្បន្នភាពរូបភាពប្រវត្តិរូបគណនីរបស់អ្នកតាមរយៈ ImgBB Cloud។") }}
-                    </p>
-                </header>
+            @if (session('success'))
+                <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)" 
+                     class="mb-6 flex items-center p-4 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-xl shadow-sm animate-fade-in-down">
+                    <svg class="h-5 w-5 text-emerald-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    <span class="text-emerald-800 font-bold text-sm">{{ session('success') }}</span>
+                </div>
+            @endif
 
-                <form method="post" action="{{ route('profile.update-picture') }}" enctype="multipart/form-data" class="space-y-8 flex flex-col items-center">
-                    @csrf
-
-                    <div class="flex flex-col items-center space-y-6">
-                        {{-- កន្លែងបង្ហាញរូបភាព និងជ្រើសរើសរូបភាព --}}
-                        <div 
-                            class="relative w-36 h-36 rounded-full overflow-hidden border-4 border-green-400 dark:border-green-600 shadow-xl group cursor-pointer" 
-                            id="profile-picture-container"
-                        >
-                            @if ($profileUrl)
-                                {{-- បង្ហាញរូបភាពពី ImgBB --}}
-                                <img src="{{ $profileUrl }}" alt="{{ $user->name }}" class="object-cover w-full h-full transition-all duration-300" id="profile-picture-preview">
-                            @else
-                                {{-- បង្ហាញអក្សរកាត់ឈ្មោះក្នុងករណីមិនទាន់មានរូបភាព --}}
-                                <div id="profile-picture-placeholder" class="w-full h-full bg-green-100 dark:bg-green-700 flex items-center justify-center text-green-600 dark:text-green-100 text-6xl font-extrabold tracking-tight">
-                                    {{ Str::upper(Str::substr($user->name, 0, 1)) }}
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                
+                {{-- Left Side: Profile Summary Card --}}
+                <div class="lg:col-span-4 space-y-6">
+                    <div class="bg-white dark:bg-gray-800 rounded-[2rem] shadow-sm border border-slate-200 dark:border-gray-700 overflow-hidden">
+                        <div class="h-32 bg-gradient-to-r from-slate-800 to-slate-900"></div>
+                        <div class="px-6 pb-8">
+                            <div class="relative flex justify-center -mt-16 mb-6">
+                                <form method="post" action="{{ route('profile.update-picture') }}" enctype="multipart/form-data" id="picture-form">
+                                    @csrf
+                                    <div class="relative group cursor-pointer" id="profile-picture-container">
+                                        <div class="w-32 h-32 rounded-full border-4 border-white dark:border-gray-800 shadow-lg overflow-hidden bg-slate-100">
+                                            @if ($profileUrl)
+                                                <img src="{{ $profileUrl }}" id="profile-picture-preview" class="w-full h-full object-cover">
+                                            @else
+                                                <div id="profile-picture-placeholder" class="w-full h-full flex items-center justify-center text-3xl font-bold text-slate-400">
+                                                    {{ Str::upper(Str::substr($user->name, 0, 1)) }}
+                                                </div>
+                                            @endif
+                                        </div>
+                                        {{-- Camera Overlay --}}
+                                        <div class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                        </div>
+                                        <input id="profile_picture" name="profile_picture" type="file" class="hidden" accept="image/*" onchange="this.form.submit()" />
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="text-center">
+                                <h3 class="text-xl font-bold text-slate-900 dark:text-white">{{ $user->name }}</h3>
+                                <p class="text-sm text-slate-500">{{ $user->email }}</p>
+                                <div class="mt-4 inline-flex items-center px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold uppercase tracking-wider">
+                                    {{ Auth::user()->role ?? 'User Account' }}
                                 </div>
-                            @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                            {{-- Overlay ពេល Hover --}}
-                            <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <span class="text-white text-center font-bold">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                    <span class="text-sm mt-1">{{ __('ផ្លាស់ប្តូររូប') }}</span>
-                                </span>
+                {{-- Right Side: Settings Forms --}}
+                <div class="lg:col-span-8 space-y-8">
+                    
+                    {{-- 1. Profile Information --}}
+                    <section class="bg-white dark:bg-gray-800 rounded-[2rem] shadow-sm border border-slate-200 dark:border-gray-700 p-8">
+                        <div class="flex items-center gap-4 mb-8">
+                            <div class="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-2xl">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-bold text-slate-900 dark:text-white">{{ __('ព័ត៌មានមូលដ្ឋាន') }}</h2>
+                                <p class="text-sm text-slate-500">{{ __('ធ្វើបច្ចុប្បន្នភាពឈ្មោះ និងអាសយដ្ឋានអ៊ីមែលរបស់អ្នក។') }}</p>
                             </div>
                         </div>
 
-                        {{-- Hidden File Input --}}
-                        <input id="profile_picture" name="profile_picture" type="file" class="hidden" accept="image/*" />
+                        <form method="post" action="{{ route('profile.update') }}" class="space-y-6">
+                            @csrf @method('patch')
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <x-input-label for="name" :value="__('ឈ្មោះពេញ')" class="text-slate-700 font-bold ml-1" />
+                                    <x-text-input id="name" name="name" type="text" class="mt-1.5 block w-full rounded-2xl border-slate-200 bg-slate-50/50 focus:bg-white transition-all shadow-sm" :value="old('name', $user->name)" required autofocus />
+                                    <x-input-error :messages="$errors->get('name')" class="mt-2" />
+                                </div>
+                                <div>
+                                    <x-input-label for="email" :value="__('អាសយដ្ឋានអ៊ីមែល')" class="text-slate-700 font-bold ml-1" />
+                                    <x-text-input id="email" name="email" type="email" class="mt-1.5 block w-full rounded-2xl border-slate-200 bg-slate-50/50 focus:bg-white transition-all shadow-sm" :value="old('email', $user->email)" required />
+                                    <x-input-error :messages="$errors->get('email')" class="mt-2" />
+                                </div>
+                            </div>
+                            <div class="flex justify-end pt-4">
+                                <x-primary-button class="bg-slate-900 hover:bg-slate-800 text-white rounded-xl px-8 py-3 font-bold transition-all shadow-lg shadow-slate-200 dark:shadow-none">
+                                    {{ __('រក្សាទុកការផ្លាស់ប្តូរ') }}
+                                </x-primary-button>
+                            </div>
+                        </form>
+                    </section>
 
-                        <x-input-error class="text-center" :messages="$errors->get('profile_picture')" />
-
-                        <x-primary-button class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-xl shadow-lg mt-4">
-                            {{ __('អាប់ដេតរូបភាព') }}
-                        </x-primary-button>
-
-                        @if (session('success'))
-                            <p class="text-green-600 dark:text-green-400 font-medium mt-4">{{ session('success') }}</p>
-                        @endif
-                    </div>
-                </form>
-            </div>
-
-            {{-- ២. ផ្នែកព័ត៌មានប្រវត្តិរូប (PROFILE INFO CARD) --}}
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-10">
-                <header class="text-center mb-10">
-                    <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ __('ព័ត៌មានប្រវត្តិរូប') }}</h2>
-                    <p class="mt-2 text-gray-600 dark:text-gray-400">
-                        {{ __("ធ្វើបច្ចុប្បន្នភាពព័ត៌មានគណនី និងអាសយដ្ឋានអ៊ីមែលរបស់អ្នក។") }}
-                    </p>
-                </header>
-
-                <form method="post" action="{{ route('profile.update') }}" class="space-y-8">
-                    @csrf
-                    @method('patch')
-
-                    <div class="grid grid-cols-1 gap-6">
-                        <div>
-                            <x-input-label for="name" :value="__('ឈ្មោះ')" />
-                            <x-text-input id="name" name="name" type="text"
-                                class="mt-2 block w-full rounded-xl border-gray-300 shadow-sm focus:ring-green-600 focus:border-green-600 dark:bg-gray-900 dark:border-gray-700"
-                                :value="old('name', $user->name)" required autofocus autocomplete="name" />
-                            <x-input-error :messages="$errors->get('name')" class="mt-2" />
+                    {{-- 2. Password Security --}}
+                    <section class="bg-white dark:bg-gray-800 rounded-[2rem] shadow-sm border border-slate-200 dark:border-gray-700 p-8">
+                        <div class="flex items-center gap-4 mb-8">
+                            <div class="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-2xl">
+                                <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-bold text-slate-900 dark:text-white">{{ __('សុវត្ថិភាពគណនី') }}</h2>
+                                <p class="text-sm text-slate-500">{{ __('ប្តូរលេខសម្ងាត់ថ្មីដើម្បីធានាសុវត្ថិភាពខ្ពស់។') }}</p>
+                            </div>
                         </div>
 
-                        <div>
-                            <x-input-label for="email" :value="__('អ៊ីមែល')" />
-                            <x-text-input id="email" name="email" type="email"
-                                class="mt-2 block w-full rounded-xl border-gray-300 shadow-sm focus:ring-green-600 focus:border-green-600 dark:bg-gray-900 dark:border-gray-700"
-                                :value="old('email', $user->email)" required autocomplete="username" />
-                            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+                        <form method="post" action="{{ route('password.update') }}" class="space-y-6">
+                            @csrf @method('put')
+                            <div class="space-y-5">
+                                <div>
+                                    <x-input-label for="current_password" :value="__('លេខសម្ងាត់បច្ចុប្បន្ន')" class="text-slate-700 font-bold ml-1" />
+                                    <x-text-input id="current_password" name="current_password" type="password" class="mt-1.5 block w-full rounded-2xl border-slate-200 bg-slate-50/50 shadow-sm" />
+                                    <x-input-error :messages="$errors->updatePassword->get('current_password')" class="mt-2" />
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <x-input-label for="password" :value="__('លេខសម្ងាត់ថ្មី')" class="text-slate-700 font-bold ml-1" />
+                                        <x-text-input id="password" name="password" type="password" class="mt-1.5 block w-full rounded-2xl border-slate-200 bg-slate-50/50 shadow-sm" />
+                                        <x-input-error :messages="$errors->updatePassword->get('password')" class="mt-2" />
+                                    </div>
+                                    <div>
+                                        <x-input-label for="password_confirmation" :value="__('បញ្ជាក់លេខសម្ងាត់ថ្មី')" class="text-slate-700 font-bold ml-1" />
+                                        <x-text-input id="password_confirmation" name="password_confirmation" type="password" class="mt-1.5 block w-full rounded-2xl border-slate-200 bg-slate-50/50 shadow-sm" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex justify-end pt-4">
+                                <x-primary-button class="bg-amber-600 hover:bg-amber-700 text-white rounded-xl px-8 py-3 font-bold transition-all shadow-lg shadow-amber-200 dark:shadow-none">
+                                    {{ __('ធ្វើបច្ចុប្បន្នភាពលេខសម្ងាត់') }}
+                                </x-primary-button>
+                            </div>
+                        </form>
+                    </section>
+
+                    {{-- 3. Danger Zone --}}
+                    <section class="bg-red-50/50 dark:bg-red-900/10 rounded-[2rem] border border-red-100 dark:border-red-900/30 p-8">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <h2 class="text-lg font-bold text-red-700 dark:text-red-500">{{ __('លុបគណនីប្រើប្រាស់') }}</h2>
+                                <p class="text-sm text-red-600/70">{{ __('រាល់ទិន្នន័យទាំងអស់នឹងត្រូវលុបជាអចិន្ត្រៃយ៍។') }}</p>
+                            </div>
+                            <button x-data="" x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')" 
+                                    class="inline-flex justify-center items-center px-6 py-3 bg-white dark:bg-red-600 border border-red-200 dark:border-transparent text-red-600 dark:text-white rounded-xl font-bold hover:bg-red-600 hover:text-white transition-all shadow-sm">
+                                {{ __('លុបគណនី') }}
+                            </button>
                         </div>
-                    </div>
+                    </section>
 
-                    <div class="flex items-center justify-center gap-6 pt-6">
-                        <x-primary-button class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-xl shadow-lg">
-                            {{ __('រក្សាទុក') }}
-                        </x-primary-button>
-                        @if (session('status') === 'profile-updated')
-                            <p class="text-green-600 dark:text-green-400 font-medium">{{ __('បានរក្សាទុក។') }}</p>
-                        @endif
-                    </div>
-                </form>
-            </div>
-
-            {{-- ៣. ផ្នែកប្តូរលេខសម្ងាត់ (PASSWORD UPDATE CARD) --}}
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-10">
-                <header class="text-center mb-10">
-                    <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ __('ផ្លាស់ប្តូរលេខសម្ងាត់') }}</h2>
-                    <p class="mt-2 text-gray-600 dark:text-gray-400">{{ __('សូមប្រើលេខសម្ងាត់វែង និងមានសុវត្ថិភាព។') }}</p>
-                </header>
-
-                <form method="post" action="{{ route('password.update') }}" class="space-y-8">
-                    @csrf
-                    @method('put')
-
-                    <div class="grid grid-cols-1 gap-6">
-                        <div>
-                            <x-input-label for="update_password_current_password" :value="__('លេខសម្ងាត់បច្ចុប្បន្ន')" />
-                            <x-text-input id="update_password_current_password" name="current_password" type="password"
-                                class="mt-2 block w-full rounded-xl border-gray-300 shadow-sm focus:ring-green-600 focus:border-green-600 dark:bg-gray-900 dark:border-gray-700"
-                                autocomplete="current-password" />
-                            <x-input-error :messages="$errors->updatePassword->get('current_password')" class="mt-2" />
-                        </div>
-
-                        <div>
-                            <x-input-label for="update_password_password" :value="__('លេខសម្ងាត់ថ្មី')" />
-                            <x-text-input id="update_password_password" name="password" type="password"
-                                class="mt-2 block w-full rounded-xl border-gray-300 shadow-sm focus:ring-green-600 focus:border-green-600 dark:bg-gray-900 dark:border-gray-700"
-                                autocomplete="new-password" />
-                            <x-input-error :messages="$errors->updatePassword->get('password')" class="mt-2" />
-                        </div>
-
-                        <div>
-                            <x-input-label for="update_password_password_confirmation" :value="__('បញ្ជាក់លេខសម្ងាត់')" />
-                            <x-text-input id="update_password_password_confirmation" name="password_confirmation" type="password"
-                                class="mt-2 block w-full rounded-xl border-gray-300 shadow-sm focus:ring-green-600 focus:border-green-600 dark:bg-gray-900 dark:border-gray-700"
-                                autocomplete="new-password" />
-                            <x-input-error :messages="$errors->updatePassword->get('password_confirmation')" class="mt-2" />
-                        </div>
-                    </div>
-
-                    <div class="flex justify-center pt-6">
-                        <x-primary-button class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-xl shadow-lg">
-                            {{ __('រក្សាទុក') }}
-                        </x-primary-button>
-                    </div>
-                </form>
-            </div>
-
-            {{-- ៤. ផ្នែកលុបគណនី (DELETE ACCOUNT CARD) --}}
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-10 text-center">
-                <h2 class="text-2xl font-bold text-red-600">{{ __('លុបគណនី') }}</h2>
-                <p class="mt-3 text-gray-600 dark:text-gray-400">
-                    {{ __('ការលុបគណនីនឹងលុបទិន្នន័យទាំងអស់ជាអចិន្ត្រៃយ៍។ សូមប្រាកដមុនពេលអនុវត្ត។') }}
-                </p>
-
-                <x-danger-button 
-                    x-data=""
-                    x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')" 
-                    class="mt-6 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-8 rounded-xl shadow-lg">
-                    {{ __('លុបគណនី') }}
-                </x-danger-button>
+                </div>
             </div>
         </div>
     </div>
 
-    {{-- JavaScript សម្រាប់គ្រប់គ្រងការជ្រើសរើសរូបភាព --}}
+    {{-- File Preview Script --}}
     <script>
-        // នៅពេលចុចលើរង្វង់រូបភាព ឱ្យវាហៅ Input File
-        document.getElementById('profile-picture-container').addEventListener('click', function() {
-            document.getElementById('profile_picture').click();
-        });
-
-        // បង្ហាញរូបភាពភ្លាមៗ (Preview) នៅពេលជ្រើសរើស File
-        document.getElementById('profile_picture').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            let previewElement = document.getElementById('profile-picture-preview');
-            let placeholder = document.getElementById('profile-picture-placeholder');
-
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    if (previewElement) {
-                        previewElement.src = e.target.result;
-                    } else if (placeholder) {
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.id = 'profile-picture-preview';
-                        img.className = 'object-cover w-full h-full transition-all duration-300';
-                        placeholder.replaceWith(img);
-                    }
-                };
-                reader.readAsDataURL(file);
-            }
-        });
+        document.getElementById('profile-picture-container').onclick = () => document.getElementById('profile_picture').click();
     </script>
 </x-app-layout>

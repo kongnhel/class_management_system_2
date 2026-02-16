@@ -125,7 +125,7 @@
             /* Content inside cells */
             .cell-subject { font-weight: bold; display: block; font-size: 9.5pt; margin-bottom: 4px; }
             .cell-lecturer { display: block; font-size: 9pt; color: #000; }
-            .cell-room { display: block; font-weight: bold; font-size: 9pt; color: #059669; }
+            .cell-room { display: block; font-weight: bold; font-size: 9pt; color: #000000; }
 
             /* --- Footer Signatures --- */
             .f-sigs { 
