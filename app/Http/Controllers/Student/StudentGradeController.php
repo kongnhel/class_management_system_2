@@ -104,7 +104,7 @@ class StudentGradeController extends Controller
         $rankIndex = $rankings->search(fn($r) => $r['id'] == $user->id);
 
         return (object)[
-            'course_rank'      => ($rankIndex !== false) ? $rankIndex + 1 : 'N/A',
+            'course_rank'      => ($rankIndex !== false) ? $rankIndex + 1 : 'មិនចាត់ថ្នាក់',
             'course_name_en'   => $items->first()->course_name_en,
             'course_name_km'   => $items->first()->course_name_km,
             'attendance_score' => $attendanceScore,
@@ -118,7 +118,7 @@ class StudentGradeController extends Controller
     })->values();
 
     // ៣. គណនា Overall Rank (ចំណាត់ថ្នាក់រួម)
-    $overallRank = 'N/A';
+    $overallRank = 'មិនចាត់ថ្នាក់';
     if ($courseGrades->isNotEmpty()) {
         $firstOfferingId = $courseGrades->first()->course_id ?? \App\Models\StudentCourseEnrollment::where('student_user_id', $user->id)->first()->course_offering_id;
         $enrollments = \App\Models\StudentCourseEnrollment::where('course_offering_id', $firstOfferingId)->get();

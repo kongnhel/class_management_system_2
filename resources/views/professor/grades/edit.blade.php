@@ -14,14 +14,20 @@
                 
                 <div class="flex flex-wrap items-center gap-2 md:gap-3">
                     {{-- Excel Actions --}}
-                    <a href="{{ route('grades.export', ['id' => $assessment->id]) }}"
-                       class="flex-1 md:flex-none inline-flex justify-center items-center px-3 py-2 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-xl text-[11px] font-bold hover:bg-emerald-100 transition-all shadow-sm">
-                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        {{ __('ទាញយក') }}
-                    </a>
+@php
+    // កូដនេះនឹងឆែកមើលថា តើ $assessment ជារបស់ Model មួយណា
+    $type = 'exam'; // តម្លៃដើម
+    if ($assessment instanceof \App\Models\Assignment) $type = 'assignment';
+    if ($assessment instanceof \App\Models\Quiz) $type = 'quiz';
+@endphp
 
+<a href="{{ route('grades.export', ['id' => $assessment->id, 'type' => $type]) }}"
+   class="flex-1 md:flex-none inline-flex justify-center items-center px-3 py-2 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-xl text-[11px] font-bold hover:bg-emerald-100 transition-all shadow-sm">
+    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+    {{ __('ទាញយក CSV') }}
+</a>
                     <form id="importForm" action="{{ route('grades.import', ['id' => $assessment->id]) }}" method="POST" enctype="multipart/form-data" class="flex-1 md:flex-none">
                         @csrf
                         <input type="hidden" name="type" value="{{ $type }}"> 

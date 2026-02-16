@@ -504,40 +504,41 @@ public function storeGrades(Request $request, $assessment_id)
 
 public function exportCSV(Request $request, $id)
 {
-    // ១. ទាញយកប្រភេទ Assessment និងកំណត់ Type ឱ្យត្រូវតាម Model Name (ឧទាហរណ៍៖ Exam)
+    // ១. ទាញយកប្រភេទ Assessment (រក្សាទុកដដែល)
     $rawType = $request->query('type'); 
-    $type = ucfirst(strtolower($rawType)); // បំប្លែង assignment -> Assignment
+    $type = ucfirst(strtolower($rawType)); 
 
     if ($type === 'Assignment') {
-        $assessment = \App\Models\Assignment::with('courseOffering')->findOrFail($id);
+        $assessment = \App\Models\Assignment::with('courseOffering.targetPrograms')->findOrFail($id);
     } elseif ($type === 'Quiz') {
-        $assessment = \App\Models\Quiz::with('courseOffering')->findOrFail($id);
+        $assessment = \App\Models\Quiz::with('courseOffering.targetPrograms')->findOrFail($id);
     } else {
-        $assessment = \App\Models\Exam::with('courseOffering')->findOrFail($id);
+        $assessment = \App\Models\Exam::with('courseOffering.targetPrograms')->findOrFail($id);
         $type = 'Exam'; 
     }
 
     $courseOffering = $assessment->courseOffering;
 
-    // ២. ទាញយកសិស្ស (Filter តាម Program & Generation)
+    // ២. 🔥 ជួសជុល៖ ទាញយកសិស្សដែលបាន Enroll ក្នុង Course Offering នេះផ្ទាល់តែម្តង
+    // មិនបាច់ Filter តាម program_id លើ table course_offerings ទៀតទេ
     $students = \App\Models\User::whereHas('studentCourseEnrollments', function($q) use ($courseOffering) {
             $q->where('course_offering_id', $courseOffering->id)
               ->where('status', 'enrolled');
         })
-        ->where('program_id', $courseOffering->program_id)
-        ->where('generation', $courseOffering->generation)
         ->with('userProfile')
         ->get();
 
-    // ៣. ទាញយកពិន្ទុ (ប្រើ ucfirst($type) ដើម្បីឱ្យត្រូវនឹងអ្វីដែលបានរក្សាទុកក្នុង DB)
+    // ៣. ទាញយកពិន្ទុ (រក្សាទុកដដែល)
     $results = \App\Models\ExamResult::where('assessment_id', $id)
-        ->where('assessment_type', $type) 
+        ->where('assessment_type', strtolower($type)) 
         ->get()
         ->keyBy('student_user_id');
 
     // ៤. រៀបចំ File CSV
     $courseName = str_replace([' ', '/', '\\'], '_', $courseOffering->course->title_en ?? 'Subject');
-    $fileName = "Grades_{$courseName}_Gen{$courseOffering->generation}_{$type}_{$id}.csv";
+    
+    // 🔥 ប្តូរឈ្មោះ File ឱ្យសមស្រប (ព្រោះឥឡូវមានច្រើន Gen)
+    $fileName = "Grades_{$courseName}_{$type}_ID{$id}.csv";
 
     $headers = [
         "Content-type"        => "text/csv; charset=UTF-8",
@@ -546,15 +547,12 @@ public function exportCSV(Request $request, $id)
 
     $callback = function() use ($students, $results) {
         $file = fopen('php://output', 'w');
-        fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF)); // Support អក្សរខ្មែរ
+        fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF)); // Support ខ្មែរ
         
         fputcsv($file, ['ID', 'Student Code', 'Name', 'Score', 'Notes']);
 
         foreach ($students as $student) {
-            // ទាញយក Record ពិន្ទុរបស់សិស្ស
             $scoreRecord = $results->get($student->id);
-            
-            // បង្ហាញពិន្ទុ បើគ្មានទេទុកទំនេរ
             $score = $scoreRecord ? $scoreRecord->score_obtained : '';
             $notes = $scoreRecord ? $scoreRecord->notes : '';
 
