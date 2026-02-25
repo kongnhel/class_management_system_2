@@ -139,6 +139,7 @@ Route::middleware(['auth'])->post('/qr-authorize', [App\Http\Controllers\Auth\Qr
         Route::put('/users/{user}', [UserController::class, 'updateUser'])->name('update-user');
         Route::delete('/users/{user}', [UserController::class, 'deleteUser'])->name('delete-user');
         Route::get('/users/show/{user}', [UserController::class, 'showUser'])->name('show-user');
+        Route::get('/admin/users/export', [UserController::class, 'exportUsers'])->name('users.export');
 
         Route::get('/faculties', [FacultyController::class, 'index'])->name('manage-faculties');
         Route::get('/faculties/create', [FacultyController::class, 'create'])->name('create-faculty');
@@ -202,6 +203,8 @@ Route::middleware(['auth'])->post('/qr-authorize', [App\Http\Controllers\Auth\Qr
         Route::get('/users/search', [UserController::class, 'searchUsers'])->name('users.search');
         Route::get('/get-courses-by-program/{program}', [AdminController::class, 'getCoursesByProgram'])->name('get-courses-by-program');
         Route::get('/course-offerings/{courseOffering}', [AdminController::class, 'showCourseOffering'])->name('show-course-offering');
+
+        
     });
 
 /*

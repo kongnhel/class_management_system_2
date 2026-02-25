@@ -391,14 +391,16 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyC5QgFzC-Kuudj7mWxLPf58xmoe_feXF3o",
-        authDomain: "classmanagementsystem-cd57f.firebaseapp.com",
-        projectId: "classmanagementsystem-cd57f",
-        storageBucket: "classmanagementsystem-cd57f.firebasestorage.app",
-        messagingSenderId: "171013327760",
-        appId: "1:171013327760:web:d00df5782c6c78f4c64115"
-    };
+const firebaseConfig = {
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID
+};
+
+// Initialize Firebase...
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
