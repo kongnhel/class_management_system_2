@@ -205,14 +205,18 @@
                                     </div>
                                     
                                     {{-- Action Button --}}
-                                    <button type="button" 
-                                            onclick="verifyTeacherLocationBeforeScan({{ $courseOffering->id }})"
-                                            id="btn-scan-{{ $courseOffering->id }}"
-                                            class="w-full mt-auto py-4 rounded-2xl font-black transition-all flex items-center justify-center gap-3 text-sm uppercase tracking-wider
-                                            {{ $isCompletedToday 
-                                                ? 'bg-white border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 shadow-lg shadow-emerald-50' 
-                                                : 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-xl shadow-indigo-100 hover:shadow-indigo-300 active:scale-[0.98]' 
-                                            }}">
+                                    <button type="button"
+                                        @if($isCompletedToday)
+                                            onclick="openAttendanceListOnly({{ $courseOffering->id }})"
+                                        @else
+                                            onclick="verifyTeacherLocationBeforeScan({{ $courseOffering->id }}, {{ $firstSchedule->id }})"
+                                        @endif
+                                        id="btn-scan-{{ $courseOffering->id }}"
+                                        class="w-full mt-auto py-4 rounded-2xl font-black transition-all flex items-center justify-center gap-3 text-sm uppercase tracking-wider
+                                        {{ $isCompletedToday
+                                            ? 'bg-white border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 shadow-lg shadow-emerald-50'
+                                            : 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-xl shadow-indigo-100 hover:shadow-indigo-300 active:scale-[0.98]'
+                                        }}">
                                         @if($isCompletedToday)
                                             <i class="fas fa-clipboard-list text-lg"></i> {{ __('ពិនិត្យវត្តមានឡើងវិញ') }}
                                         @else
@@ -434,67 +438,221 @@
                 });
         };
     </script>
+<script>
+  async function openAttendanceList(courseOfferingId) {
+    if (window.Livewire?.dispatch) {
+      // Livewire v3
+      Livewire.dispatch('openAttendanceModal', { courseOfferingId });
+    } else if (window.livewire?.emit) {
+      // Livewire v2
+      window.livewire.emit('openAttendanceModal', courseOfferingId);
+    } else {
+      Swal.fire('កំហុស', 'Livewire មិនបាន Load ទេ!', 'error');
+    }
+  }
 
-    <script>
-        function verifyTeacherLocationBeforeScan(courseOfferingId) {
-            Swal.fire({
-                title: 'កំពុងផ្ទៀងផ្ទាត់ទីតាំង',
-                text: 'សូមរង់ចាំបន្តិច ដើម្បីប្រាកដថាលោកគ្រូស្ថិតនៅសាលារៀន...',
-                allowOutsideClick: false,
-                showConfirmButton: false,
-                didOpen: () => { Swal.showLoading(); }
-            });
+  function getCsrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+  }
 
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const lat = position.coords.latitude;
-                        const lng = position.coords.longitude;
+  async function precheckAttendance(courseOfferingId, sessionId) {
+    const csrf = getCsrfToken();
 
-                        fetch('{{ route("professor.verify-location") }}', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            },
-                            body: JSON.stringify({
-                                course_offering_id: courseOfferingId, // Changed to match controller's expectation
-                                lat: lat,
-                                lng: lng
-                            })
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            Swal.close();
-                            if (data.success) {
-                                // ចំណាំ៖ ប្រាកដថា Livewire Component បងប្រើ Event ឈ្មោះ 'openAttendanceModal'
-                                if (window.Livewire) {
-                                    Livewire.dispatch('openAttendanceModal', { courseOfferingId: courseOfferingId });
-                                } else {
-                                    // សម្រាប់ Livewire v2
-                                    window.livewire.emit('openAttendanceModal', courseOfferingId);
-                                }
-                            } else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'ទីតាំងមិនត្រឹមត្រូវ',
-                                    text: data.message,
-                                    confirmButtonColor: '#4f46e5'
-                                });
-                            }
-                        })
-                        .catch(error => {
-                            Swal.fire('កំហុស', 'មានបញ្ហាក្នុងការទាក់ទងទៅ Server!', 'error');
-                        });
-                    },
-                    (error) => {
-                        Swal.fire('GPS ត្រូវបានបិទ', 'សូមបើក GPS និងអនុញ្ញាត (Allow Location) លើ Browser!', 'warning');
-                    },
-                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-                );
-            } else {
-                Swal.fire('កំហុស', 'ឧបករណ៍លោកគ្រូមិនគាំទ្រ GPS ទេ!', 'error');
-            }
+    const res = await fetch("{{ route('professor.attendance.precheck') }}", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': csrf
+      },
+      body: JSON.stringify({
+        course_offering_id: courseOfferingId,
+        session_id: sessionId
+      })
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok) {
+      const msg =
+        data?.message ||
+        (res.status === 419 ? 'CSRF token mismatch (419). សូម Refresh ទំព័រ។' : null) ||
+        `Precheck error (${res.status}).`;
+
+      throw new Error(msg);
+    }
+
+    return !!data?.checked_in;
+  }
+
+  async function verifyLocation(courseOfferingId, sessionId, lat, lng) {
+    const csrf = getCsrfToken();
+
+    const res = await fetch("{{ route('professor.verify-location') }}", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': csrf
+      },
+      body: JSON.stringify({
+        course_offering_id: courseOfferingId,
+        session_id: sessionId,
+        lat: lat,
+        lng: lng
+      })
+    });
+
+    const text = await res.text();
+    let data = null;
+    try { data = JSON.parse(text); } catch (e) {}
+
+    if (!res.ok) {
+      const msg =
+        data?.message ||
+        data?.error ||
+        (res.status === 419 ? 'CSRF token mismatch (419). សូម Refresh ទំព័រ។' : null) ||
+        (res.status === 403 ? (data?.message || 'មិនអនុញ្ញាត (403)') : null) ||
+        `Server error (${res.status}).`;
+
+      throw new Error(msg);
+    }
+
+    return data;
+  }
+
+function getAccurateLocation(maxAttempts = 3) {
+  return new Promise((resolve, reject) => {
+
+    let attempts = 0;
+
+    function tryGetLocation() {
+      attempts++;
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          const accuracy = pos.coords.accuracy;
+
+          console.log("GPS Accuracy:", accuracy);
+
+          // Accept only if accuracy < 60 meters
+          if (accuracy <= 80) {
+            resolve({ lat, lng, accuracy });
+          } else if (attempts < maxAttempts) {
+            // Try again
+            setTimeout(tryGetLocation, 2000);
+          } else {
+            reject(new Error(`GPS មិនទាន់ត្រឹមត្រូវ។ Accuracy: ${Math.round(accuracy)}m`));
+          }
+        },
+        () => reject(new Error('សូមបើក GPS និងអនុញ្ញាត (Allow Location)!')),
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 0
         }
-    </script>
+      );
+    }
+
+    tryGetLocation();
+  });
+}
+
+  async function verifyTeacherLocationBeforeScan(courseOfferingId, sessionId) {
+    console.log('courseOfferingId:', courseOfferingId);
+    console.log('sessionId:', sessionId);
+
+    if (!sessionId) {
+      Swal.fire('កំហុស', 'Session ID មិនត្រឹមត្រូវ (sessionId is missing)', 'error');
+      return;
+    }
+
+    // 1) Precheck first (NO GPS)
+    Swal.fire({
+      title: 'កំពុងពិនិត្យ...',
+      text: 'កំពុងពិនិត្យថាលោកគ្រូបាន Check-in រួចហើយឬនៅ...',
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    try {
+      const checkedIn = await precheckAttendance(courseOfferingId, sessionId);
+
+      if (checkedIn) {
+        Swal.close();
+        // ✅ Already checked in → open list directly, no GPS
+        await openAttendanceList(courseOfferingId);
+        return;
+      }
+
+      // 2) Not checked in yet → do GPS
+      Swal.update({
+        title: 'កំពុងផ្ទៀងផ្ទាត់ទីតាំង',
+        text: 'សូមរង់ចាំបន្តិច ដើម្បីប្រាកដថាលោកគ្រូស្ថិតនៅសាលារៀន...'
+      });
+
+const { lat, lng, accuracy } = await getAccurateLocation();
+
+      // Optional: reject very inaccurate readings
+      if (accuracy && accuracy > 80) {
+        Swal.close();
+        Swal.fire(
+          'GPS មិនទាន់ត្រឹមត្រូវ',
+          `សូមរង់ចាំបន្តិច ហើយសាកល្បងម្ដងទៀត។ Accuracy: ${Math.round(accuracy)}m`,
+          'warning'
+        );
+        return;
+      }
+
+      // 3) Verify on server
+      const data = await verifyLocation(courseOfferingId, sessionId, lat, lng);
+
+      Swal.close();
+
+      if (data?.success) {
+        // Disable button after success (optional)
+        const btn = document.getElementById(`btn-scan-${courseOfferingId}`);
+        if (btn) btn.disabled = true;
+
+        await Swal.fire({
+          icon: 'success',
+          title: 'បានចុះវត្តមានដោយជោគជ័យ 🎉',
+          html: data?.distance
+            ? `ចម្ងាយពីសាលា: <b>${data.distance} ម៉ែត្រ</b>`
+            : 'ទីតាំងត្រឹមត្រូវ។ អាចចាប់ផ្តើមស្រង់វត្តមានបាន។',
+          confirmButtonColor: '#4f46e5',
+          confirmButtonText: 'បន្ត'
+        });
+
+        await openAttendanceList(courseOfferingId);
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'ទីតាំងមិនត្រឹមត្រូវ',
+          text: data?.message || 'Unknown error response',
+          confirmButtonColor: '#4f46e5'
+        });
+      }
+    } catch (err) {
+      Swal.close();
+      console.error(err);
+      Swal.fire('កំហុស', err.message || 'មានបញ្ហាក្នុងការទាក់ទងទៅ Server!', 'error');
+    }
+  }
+</script>
+
+<script>
+  function openAttendanceListOnly(courseOfferingId) {
+    if (window.Livewire?.dispatch) {
+      Livewire.dispatch('openAttendanceModal', { courseOfferingId });
+    } else if (window.livewire?.emit) {
+      window.livewire.emit('openAttendanceModal', courseOfferingId);
+    } else {
+      Swal.fire('កំហុស', 'Livewire មិនបាន Load ទេ!', 'error');
+    }
+  }
+</script>
 </x-app-layout>

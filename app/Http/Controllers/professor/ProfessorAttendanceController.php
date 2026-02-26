@@ -102,14 +102,17 @@ public function verifyLocation(Request $request)
 {
     $request->validate([
         'course_offering_id' => 'required|exists:course_offerings,id',
-        'lat' => 'required|numeric',
-        'lng' => 'required|numeric',
+        'session_id' => 'required|integer', // (or exists:schedules,id)
+        'lat' => 'required|numeric|between:-90,90',
+        'lng' => 'required|numeric|between:-180,180',
     ]);
+    
 
     // ទាញតម្លៃពី .env បើអត់មានវាប្រើ Default (បន្ទាយមានជ័យ)
-$schoolLat = config('app.nmu_lat');
-$schoolLng = config('app.nmu_lng');
-$allowedRadius = config('app.nmu_radius');
+    $schoolLat = env('NMU_LAT', 13.57952292); 
+    $schoolLng = env('NMU_LNG', 102.92898894);
+    $allowedRadius = env('NMU_RADIUS', 100); 
+
     // គណនាចម្ងាយ
     $distance = $this->calculateDistance($request->lat, $request->lng, $schoolLat, $schoolLng);
 
@@ -121,20 +124,43 @@ $allowedRadius = config('app.nmu_radius');
     }
 
     // រក្សាទុកវត្តមានគ្រូ
-    \App\Models\AttendanceProfessor::updateOrCreate(
-        [
-            'professor_id' => auth()->id(),
-            'course_offering_id' => $request->course_offering_id,
-            'verified_date' => now()->toDateString()
-        ],
-        [
-            'lat' => $request->lat,
-            'lng' => $request->lng,
-            'verified_at' => now(),
-        ]
-    );
+$professorId = auth()->id();
+$today = now()->toDateString();
 
-    return response()->json(['success' => true]);
+
+\App\Models\AttendanceProfessor::updateOrCreate(
+    [
+        'professor_id' => $professorId,
+        'course_offering_id' => $request->course_offering_id,
+        'verified_date' => now()->toDateString(),
+        'session_id' => $request->session_id,
+    ],
+    [
+
+        'lat' => $request->lat,
+        'lng' => $request->lng,
+        'verified_at' => now(),
+    ]
+);
+$exists = \App\Models\AttendanceProfessor::where([
+  'professor_id' => $professorId,
+  'course_offering_id' => $request->course_offering_id,
+  'verified_date' => $today,
+  'session_id' => $request->session_id,
+])->exists();
+
+if ($exists) {
+  return response()->json([
+    'success' => true,
+    'already_checked_in' => true,
+  ]);
+}
+    // return response()->json(['success' => true]);
+return response()->json([
+  'success' => true,
+  'already_checked_in' => false,
+  'distance' => round($distance),
+]);
 }
 
 // រូបមន្តគណនាចម្ងាយ Haversine (ត្រូវតែមាន)
@@ -146,5 +172,22 @@ private function calculateDistance($lat1, $lon1, $lat2, $lon2)
     $a = sin($dLat/2) * sin($dLat/2) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon/2) * sin($dLon/2);
     $c = 2 * atan2(sqrt($a), sqrt(1-$a));
     return $earthRadius * $c;
+}
+
+public function precheck(Request $request)
+{
+    $request->validate([
+        'course_offering_id' => 'required|exists:course_offerings,id',
+        'session_id' => 'required|integer',
+    ]);
+
+    $exists = \App\Models\AttendanceProfessor::where([
+        'professor_id' => auth()->id(),
+        'course_offering_id' => $request->course_offering_id,
+        'verified_date' => now()->toDateString(),
+        'session_id' => $request->session_id,
+    ])->exists();
+
+    return response()->json(['checked_in' => $exists]);
 }
 }

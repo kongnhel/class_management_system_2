@@ -325,8 +325,11 @@ Route::middleware(['auth'])->post('/qr-authorize', [App\Http\Controllers\Auth\Qr
 
 
        // ថែមចូលក្នុង Route Group របស់ Professor
-        Route::post('/professor/verify-location', [App\Http\Controllers\professor\ProfessorAttendanceController::class, 'verifyLocation'])
+        Route::post('/verify-location', [App\Http\Controllers\professor\ProfessorAttendanceController::class, 'verifyLocation'])
      ->name('verify-location');
+
+     Route::post('/attendance/precheck', [App\Http\Controllers\professor\ProfessorAttendanceController::class, 'precheck'])
+    ->name('attendance.precheck');
 
        });
 
