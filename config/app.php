@@ -29,6 +29,10 @@ return [
     */
 
     'env' => env('APP_ENV', 'production'),
+    // ក្នុង file config/app.php
+'nmu_lat' => env('NMU_LAT', 13.57952292),
+'nmu_lng' => env('NMU_LNG', 102.92898894),
+'nmu_radius' => env('NMU_RADIUS', 100),
 
     /*
     |--------------------------------------------------------------------------

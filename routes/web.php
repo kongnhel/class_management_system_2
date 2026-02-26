@@ -324,7 +324,9 @@ Route::middleware(['auth'])->post('/qr-authorize', [App\Http\Controllers\Auth\Qr
             ->name('grades.export-docx');
 
 
-
+       // ថែមចូលក្នុង Route Group របស់ Professor
+        Route::post('/professor/verify-location', [App\Http\Controllers\professor\ProfessorAttendanceController::class, 'verifyLocation'])
+     ->name('verify-location');
 
        });
 

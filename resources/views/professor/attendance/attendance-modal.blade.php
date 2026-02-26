@@ -1,4 +1,7 @@
 <div>
+    {{-- ប៊ូតុងដើមសម្រាប់ចុចបើក (ដាក់ក្នុង index.blade.php ឬកន្លែងណាដែលបងចង់ឱ្យគ្រូចុច) --}}
+    {{-- <button onclick="handleStartScan({{ $sessionId }})" class="...">ចាប់ផ្តើមស្កេន</button> --}}
+
     @if($isOpen)
         {{-- Custom CSS --}}
         <style>
@@ -16,17 +19,24 @@
             .custom-scrollbar::-webkit-scrollbar { width: 5px; }
             .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
             .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #e2e8f0; border-radius: 20px; }
+            
+            .animate-fade-in-up {
+                animation: fadeInUp 0.4s ease-out forwards;
+            }
+            @keyframes fadeInUp {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
         </style>
 
         {{-- 1. Main Backdrop --}}
         <div class="fixed inset-0 z-[60] flex items-start md:items-start justify-center bg-slate-950/95 backdrop-blur-sm transition-opacity duration-300">
             
             {{-- 2. Main Modal Container --}}
-            {{-- Note: wire:poll.10s would match your new countdown --}}
             <div class="bg-white md:rounded-[2rem] shadow-2xl w-full md:max-w-7xl mx-auto flex flex-col lg:flex-row h-[100dvh] md:h-[90vh] overflow-hidden relative border border-white/10"
                  wire:poll.10s> 
 
-                {{-- Close Button (Absolute) --}}
+                {{-- Close Button --}}
                 <button wire:click="close" class="absolute top-4 right-4 lg:top-6 lg:right-6 z-[70] p-2 rounded-full bg-black/20 hover:bg-red-500 hover:text-white text-white/70 backdrop-blur-md transition-all">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
@@ -37,7 +47,6 @@
                     <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10"></div>
 
                     <div class="relative z-10 flex flex-col items-center w-full max-w-md mx-auto">
-                        {{-- Header Info --}}
                         <div class="text-center mb-4 lg:mb-8">
                             <div class="inline-flex items-center gap-2 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-2">
                                 <span class="relative flex h-2 w-2">
@@ -50,7 +59,7 @@
                             <p class="text-indigo-300 text-xs lg:text-sm font-bold uppercase truncate max-w-[250px] lg:max-w-none">{{ $courseName }}</p>
                         </div>
 
-                        {{-- QR Code Box (Responsive Size) --}}
+                        {{-- QR Code Box --}}
                         <div class="relative group mx-auto">
                             <div class="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl blur opacity-30"></div>
                             <div class="relative bg-white p-2 lg:p-4 rounded-xl lg:rounded-2xl shadow-2xl">
@@ -61,7 +70,7 @@
                             </div>
                         </div>
 
-                        {{-- Countdown Timer: Updated to 10s --}}
+                        {{-- Countdown Timer --}}
                         <div class="mt-4 lg:mt-8 w-48 lg:w-full" x-data="{ timeLeft: 10 }" x-init="setInterval(() => { timeLeft = timeLeft > 1 ? timeLeft - 1 : 10 }, 1000)">
                             <div class="flex items-center justify-between text-slate-400 text-[10px] lg:text-sm font-medium mb-1.5 px-1">
                                 <span>{{ __('QR ប្តូរថ្មី') }}</span>
@@ -78,7 +87,6 @@
                 {{-- === RIGHT PANEL: Student List === --}}
                 <div class="flex-1 bg-slate-50 flex flex-col min-h-0 relative z-20 lg:rounded-none rounded-t-[2rem] mt-[-1.5rem] lg:mt-0 shadow-[0_-10px_30px_rgba(0,0,0,0.3)] lg:shadow-none overflow-hidden">
                     
-                    {{-- Header (Fixed) --}}
                     <div class="px-6 py-4 border-b border-slate-200 bg-white sticky top-0 z-30 flex justify-between items-center shrink-0">
                         <div>
                             <h3 class="text-lg lg:text-xl font-bold text-slate-800">{{ __('បញ្ជីឈ្មោះសិស្ស') }}</h3>
@@ -92,19 +100,16 @@
                         </div>
                     </div>
 
-                    {{-- Scrollable List Area --}}
                     <div class="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-6 space-y-3 bg-slate-50">
                         @if(isset($attendances) && count($attendances) > 0)
                             @foreach($attendances as $index => $record)
                                 <div class="flex items-center gap-4 bg-white p-3 rounded-2xl border border-slate-100 shadow-sm transition-all animate-fade-in-up">
-                                    {{-- Avatar --}}
                                     <div class="relative shrink-0">
                                         <img src="{{ $record->student->profile_photo_url ?? 'https://ui-avatars.com/api/?name='.$record->student->name.'&background=random&color=fff' }}" 
                                              class="w-10 h-10 lg:w-12 lg:h-12 rounded-full object-cover border-2 border-white shadow-sm ring-1 ring-slate-100">
-                                        <div class="absolute bottom-0 right-0 w-3 h-3 border-2 border-white rounded-full {{ $record->status === 'present' ? 'bg-green-500' : ($record->status === 'late' ? 'bg-yellow-500' : 'bg-red-500') }}"></div>
+                                        <div class="absolute bottom-0 right-0 w-3 h-3 border-2 border-white rounded-full {{ $record->status === 'present' ? 'bg-green-500' : 'bg-yellow-500' }}"></div>
                                     </div>
                                     
-                                    {{-- Info --}}
                                     <div class="flex-1 min-w-0">
                                         <h4 class="font-bold text-slate-800 text-sm lg:text-base truncate">{{ $record->student->name }}</h4>
                                         <div class="flex gap-2 mt-0.5">
@@ -120,7 +125,6 @@
                                 </div>
                             @endforeach
                         @else
-                            {{-- Empty State --}}
                             <div class="flex flex-col items-center justify-center h-full text-center py-10">
                                 <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
                                     <svg class="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 4v16m8-8H4" /></svg>
@@ -130,7 +134,7 @@
                         @endif
                     </div>
 
-                    {{-- Footer / Action Bar (Fixed) --}}
+                    {{-- Action Bar --}}
                     <div class="p-4 lg:p-6 border-t border-slate-200 bg-white flex flex-row gap-3 shrink-0 z-30 pb-10 lg:pb-6">
                         <button wire:click="close" class="flex-1 px-4 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors text-sm">
                             {{ __('បិទផ្ទាំង') }}
@@ -164,6 +168,71 @@
             </div>
         </div>
         @endif
-
     @endif
 </div>
+
+{{-- JavaScript Section --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<script>
+/**
+ * មុខងារសម្រាប់ឱ្យគ្រូចុចចាប់ផ្តើម (ហៅចេញពី index.blade.php)
+ */
+function handleStartScan(sessionId) {
+    if (navigator.geolocation) {
+        // ១. បង្ហាញ Loading
+        Swal.fire({
+            title: 'កំពុងផ្ទៀងផ្ទាត់ទីតាំង...',
+            text: 'សូមរង់ចាំបន្តិច ដើម្បីប្រាកដថាអ្នកនៅក្នុងសាលា NMU',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading() }
+        });
+
+        // ២. ទាញយក GPS
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
+                // ៣. បាញ់ទៅ Laravel Backend តាមរយៈ Axios
+                axios.post('/professor/attendance/verify-location', {
+                    session_id: sessionId,
+                    lat: lat,
+                    lng: lng
+                })
+                .then(response => {
+                    Swal.close();
+                    if (response.data.success) {
+                        // បើទីតាំងត្រូវ៖ ប្រាប់ Livewire ឱ្យបើក Modal
+                        // ចំណាំ៖ ត្រូវប្រាកដថាបងមាន Method openAttendance($id) ក្នុង Livewire Component
+                        window.livewire.emit('openAttendanceModal', sessionId); 
+                        
+                        // បើប្រើ Livewire v3 ប្រើ៖ Livewire.dispatch('openAttendanceModal', { id: sessionId });
+                    }
+                })
+                .catch(error => {
+                    Swal.close();
+                    let msg = error.response.data.message || 'ការផ្ទៀងផ្ទាត់ទីតាំងបរាជ័យ!';
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'មិនអាចបើកការស្កេនបានទេ!',
+                        text: msg,
+                        confirmButtonText: 'យល់ព្រម',
+                        confirmButtonColor: '#4f46e5'
+                    });
+                });
+            },
+            function(error) {
+                Swal.close();
+                let errorMsg = "មិនអាចចូលប្រើ GPS បានទេ។ សូមពិនិត្យការអនុញ្ញាត (Permission)។";
+                if(error.code == 1) errorMsg = "បងត្រូវតែ 'Allow' ទីតាំង ទើបអាចប្រើប្រព័ន្ធបាន។";
+                Swal.fire('កំហុស GPS', errorMsg, 'warning');
+            },
+            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        );
+    } else {
+        Swal.fire('បរាជ័យ', "កម្មវិធីរុករក (Browser) របស់អ្នកមិនគាំទ្រ GPS ទេ។", 'error');
+    }
+}
+</script>

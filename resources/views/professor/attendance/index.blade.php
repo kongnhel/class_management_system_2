@@ -1,4 +1,6 @@
 <x-app-layout>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <div class="py-12 bg-slate-50 min-h-screen">
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
             
@@ -15,13 +17,24 @@
                     </p>
                 </div>
                 
-                <div class="bg-white p-2 rounded-xl shadow-sm border border-slate-200 inline-flex items-center">
-                    <span class="px-3 text-sm font-semibold text-slate-600">ថ្ងៃទី:</span>
-                    <input type="date" 
-                           form="attendanceForm"
-                           name="attendance_date" 
-                           value="{{ $today }}" 
-                           class="border-none focus:ring-0 text-slate-900 font-medium bg-transparent">
+                <div class="flex flex-col md:flex-row gap-3">
+                    <button type="button" onclick="getLocation()" id="btn-location"
+                        class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-xl font-bold text-white text-sm uppercase tracking-widest hover:bg-blue-700 transition-all shadow-md">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        ផ្ទៀងផ្ទាត់ទីតាំងគ្រូ
+                    </button>
+
+                    <div class="bg-white p-2 rounded-xl shadow-sm border border-slate-200 inline-flex items-center">
+                        <span class="px-3 text-sm font-semibold text-slate-600">ថ្ងៃទី:</span>
+                        <input type="date" 
+                               form="attendanceForm"
+                               name="attendance_date" 
+                               value="{{ $today ?? date('Y-m-d') }}" 
+                               class="border-none focus:ring-0 text-slate-900 font-medium bg-transparent">
+                    </div>
                 </div>
             </div>
 
@@ -55,26 +68,20 @@
                                         </td>
                                         <td class="px-8 py-5">
                                             <div class="flex justify-center items-center gap-2">
-                                                <label class="relative flex flex-col items-center cursor-pointer group/radio">
-                                                    <input type="radio" name="attendance[{{ $student->id }}]" value="present" checked class="peer sr-only">
-                                                    <span class="px-4 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-600 peer-checked:bg-green-50 peer-checked:border-green-500 peer-checked:text-green-700 transition-all hover:bg-slate-50">
-                                                        មក
-                                                    </span>
-                                                </label>
+                                                @php $statuses = [
+                                                    'present' => ['label' => 'មក', 'color' => 'green'],
+                                                    'permission' => ['label' => 'ច្បាប់', 'color' => 'blue'],
+                                                    'absent' => ['label' => 'អវត្តមាន', 'color' => 'red']
+                                                ]; @endphp
 
+                                                @foreach($statuses as $value => $info)
                                                 <label class="relative flex flex-col items-center cursor-pointer group/radio">
-                                                    <input type="radio" name="attendance[{{ $student->id }}]" value="permission" class="peer sr-only">
-                                                    <span class="px-4 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-600 peer-checked:bg-blue-50 peer-checked:border-blue-500 peer-checked:text-blue-700 transition-all hover:bg-slate-50">
-                                                        ច្បាប់
+                                                    <input type="radio" name="attendance[{{ $student->id }}]" value="{{ $value }}" {{ $loop->first ? 'checked' : '' }} class="peer sr-only">
+                                                    <span class="px-4 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-600 peer-checked:bg-{{ $info['color'] }}-50 peer-checked:border-{{ $info['color'] }}-500 peer-checked:text-{{ $info['color'] }}-700 transition-all hover:bg-slate-50">
+                                                        {{ $info['label'] }}
                                                     </span>
                                                 </label>
-
-                                                <label class="relative flex flex-col items-center cursor-pointer group/radio">
-                                                    <input type="radio" name="attendance[{{ $student->id }}]" value="absent" class="peer sr-only">
-                                                    <span class="px-4 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-600 peer-checked:bg-red-50 peer-checked:border-red-500 peer-checked:text-red-700 transition-all hover:bg-slate-50">
-                                                        អវត្តមាន
-                                                    </span>
-                                                </label>
+                                                @endforeach
                                             </div>
                                         </td>
                                     </tr>
@@ -95,4 +102,76 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function getLocation() {
+            const btn = document.getElementById('btn-location');
+            btn.disabled = true;
+            btn.innerHTML = 'កំពុងឆែកទីតាំង...';
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition, showError);
+            } else {
+                Swal.fire('កំហុស', 'Browser របស់អ្នកមិនគាំទ្រ GPS ទេ។', 'error');
+                btn.disabled = false;
+            }
+        }
+
+        function showPosition(position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const sessionId = '{{ $courseOffering->id }}';
+
+            // ផ្ញើទៅកាន់ Controller verifyLocation
+            fetch('{{ route("professor.verify-location") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    lat: lat,
+                    lng: lng
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const btn = document.getElementById('btn-location');
+                btn.disabled = false;
+                btn.innerHTML = 'ផ្ទៀងផ្ទាត់ទីតាំងគ្រូ';
+
+                if (data.success) {
+                    Swal.fire({
+                        title: 'ជោគជ័យ!',
+                        text: 'អ្នកបាន Check-in វត្តមានគ្រូបានជោគជ័យ។',
+                        icon: 'success',
+                        confirmButtonColor: '#1e293b'
+                    });
+                    btn.classList.replace('bg-blue-600', 'bg-green-600');
+                    btn.innerHTML = '✓ បានផ្ទៀងផ្ទាត់រួច';
+                } else {
+                    Swal.fire('បរាជ័យ', data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('btn-location').disabled = false;
+            });
+        }
+
+        function showError(error) {
+            const btn = document.getElementById('btn-location');
+            btn.disabled = false;
+            btn.innerHTML = 'ផ្ទៀងផ្ទាត់ទីតាំងគ្រូ';
+            
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    Swal.fire('សុំសិទ្ធិ', 'សូមអនុញ្ញាតឱ្យប្រើ GPS ជាមុនសិន។', 'warning');
+                    break;
+                default:
+                    Swal.fire('កំហុស', 'មានបញ្ហាបច្ចេកទេសក្នុងការចាប់ទីតាំង។', 'error');
+            }
+        }
+    </script>
 </x-app-layout>

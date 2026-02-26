@@ -4,9 +4,11 @@ namespace App\Http\Controllers\professor;
 
 use App\Http\Controllers\Controller;
 use App\Models\AttendanceRecord;
+use App\Models\AttendanceProfessor;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 use Illuminate\Http\Request;
 
@@ -95,4 +97,54 @@ class ProfessorAttendanceController extends Controller
                  ->with('success', __('កំណត់ត្រាវត្តមានត្រូវបានលុបដោយជោគជ័យ។'));
 
     }
+
+public function verifyLocation(Request $request) 
+{
+    $request->validate([
+        'course_offering_id' => 'required|exists:course_offerings,id',
+        'lat' => 'required|numeric',
+        'lng' => 'required|numeric',
+    ]);
+
+    // ទាញតម្លៃពី .env បើអត់មានវាប្រើ Default (បន្ទាយមានជ័យ)
+$schoolLat = config('app.nmu_lat');
+$schoolLng = config('app.nmu_lng');
+$allowedRadius = config('app.nmu_radius');
+    // គណនាចម្ងាយ
+    $distance = $this->calculateDistance($request->lat, $request->lng, $schoolLat, $schoolLng);
+
+    if ($distance > $allowedRadius) {
+        return response()->json([
+            'success' => false, 
+            'message' => 'លោកគ្រូនៅឆ្ងាយពីសាលាពេកហើយ! ចម្ងាយបច្ចុប្បន្ន៖ ' . round($distance) . ' ម៉ែត្រ'
+        ], 403);
+    }
+
+    // រក្សាទុកវត្តមានគ្រូ
+    \App\Models\AttendanceProfessor::updateOrCreate(
+        [
+            'professor_id' => auth()->id(),
+            'course_offering_id' => $request->course_offering_id,
+            'verified_date' => now()->toDateString()
+        ],
+        [
+            'lat' => $request->lat,
+            'lng' => $request->lng,
+            'verified_at' => now(),
+        ]
+    );
+
+    return response()->json(['success' => true]);
+}
+
+// រូបមន្តគណនាចម្ងាយ Haversine (ត្រូវតែមាន)
+private function calculateDistance($lat1, $lon1, $lat2, $lon2) 
+{
+    $earthRadius = 6371000; // ម៉ែត្រ
+    $dLat = deg2rad($lat2 - $lat1);
+    $dLon = deg2rad($lon2 - $lon1);
+    $a = sin($dLat/2) * sin($dLat/2) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon/2) * sin($dLon/2);
+    $c = 2 * atan2(sqrt($a), sqrt(1-$a));
+    return $earthRadius * $c;
+}
 }

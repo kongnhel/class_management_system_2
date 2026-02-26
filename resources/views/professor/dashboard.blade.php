@@ -1,216 +1,202 @@
 <x-app-layout>
+    {{-- Custom Font & Global Style --}}
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,100..700;1,100..700&display=swap');
+        .font-khmer { font-family: 'Kantumruy Pro', 'Battambang', sans-serif; }
+        .glass-effect { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
+        .animate-pulse-slow { animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .7; } }
+    </style>
+
     <x-slot name="header">
-        <h2 class="font-bold text-3xl text-gray-800 leading-tight">
-            {{ __('ផ្ទាំងគ្រប់គ្រងរបស់លោកគ្រូ/អ្នកគ្រូ') }}
-        </h2>
-        <p class="mt-1 text-lg text-gray-500">{{ __('ទិដ្ឋភាពទូទៅនៃព័ត៌មានសំខាន់ៗ') }}</p>
-                            {{-- 🛡️ Google Link Status Card --}}
-                    <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 inline-block w-full sm:w-auto">
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-blue-600">
-                                <i class="fa-brands fa-google text-2xl"></i>
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-gray-800 text-sm">សុវត្ថិភាពគណនី</h3>
-                                <p class="text-[10px] text-gray-500 mb-2">ភ្ជាប់ជាមួយ Google ដើម្បីចូលបានលឿន</p>
-                                
-                                @if(!auth()->user()->google_id)
-                                    <button onclick="linkWithGoogle()" id="btn-link-google" class="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 text-xs font-bold transition-all">
-                                        <i class="fa-solid fa-link"></i> ភ្ជាប់ជាមួយ Google ឥឡូវនេះ
-                                    </button>
-                                @else
-                                    <span class="text-emerald-500 font-bold flex items-center gap-2 text-xs">
-                                        <i class="fa-solid fa-circle-check"></i> បានភ្ជាប់រួចរាល់
-                                    </span>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 font-khmer">
+            <div>
+                <h2 class="font-black text-3xl text-slate-800 leading-tight">
+                    {{ __('ផ្ទាំងគ្រប់គ្រងរបស់លោកគ្រូ/អ្នកគ្រូ') }}
+                </h2>
+                <p class="mt-1 text-slate-500 italic">{{ __('គ្រប់គ្រងវត្តមាន និងសកម្មភាពបង្រៀនដោយភាពវៃឆ្លាត') }}</p>
+            </div>
+
+            {{-- 🛡️ Google Link Status Card --}}
+            <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-4 transition-all hover:shadow-md">
+                <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 shadow-inner">
+                    <i class="fa-brands fa-google text-2xl"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-slate-800 text-sm leading-none mb-1">{{ __('សុវត្ថិភាពគណនី') }}</h3>
+                    @if(!auth()->user()->google_id)
+                        <button onclick="linkWithGoogle()" id="btn-link-google" class="flex items-center gap-2 text-blue-600 hover:text-blue-700 text-[11px] font-black transition-all group">
+                            <i class="fa-solid fa-link group-hover:rotate-45 transition-transform"></i> {{ __('ភ្ជាប់ជាមួយ Google ឥឡូវនេះ') }}
+                        </button>
+                    @else
+                        <span class="text-emerald-500 font-bold flex items-center gap-1.5 text-[11px]">
+                            <i class="fa-solid fa-circle-check"></i> {{ __('បានភ្ជាប់រួចរាល់') }}
+                        </span>
+                    @endif
+                </div>
+            </div>
+        </div>
     </x-slot>
 
-    <div class="bg-gray-50 min-h-screen font-['Battambang']">
+    <div class="bg-[#f8fafc] min-h-screen font-khmer pb-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             
-                        {{-- Alerts --}}
-         @if (session('success'))
-                    <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-3 md:p-5 rounded-xl mb-6 shadow-sm flex items-center animate-bounce" role="alert">
-                        <i class="fas fa-check-circle mr-3 text-green-500 text-xl"></i>
-                        <span class="font-bold text-sm md:text-lg">{{ session('success') }}</span>
+            {{-- Alerts --}}
+            @if (session('success'))
+                <div class="bg-emerald-500 text-white p-4 rounded-2xl mb-8 shadow-lg shadow-emerald-200 flex items-center animate-in fade-in slide-in-from-top-4 duration-500" role="alert">
+                    <div class="bg-white/20 p-2 rounded-xl mr-4">
+                        <i class="fas fa-check-circle text-xl"></i>
                     </div>
-                @endif
-            {{-- Header Section (Telegram & Welcome) --}}
+                    <span class="font-bold">{{ session('success') }}</span>
+                </div>
+            @endif
+
+            {{-- Welcome Section --}}
             <div class="mb-10">
-                <div class="bg-white overflow-hidden shadow-xl rounded-[2rem] p-8 border border-gray-100 flex flex-col lg:flex-row items-center justify-between gap-6 transition-transform duration-500 hover:scale-[1.005]">
-                    <div>
-                        <h3 class="text-2xl font-black text-gray-800 leading-tight mb-2">
-                            {{ __('សូមស្វាគមន៍ត្រឡប់មកវិញ,') }} <span class="text-indigo-600">{{ Auth::user()->name }}</span>! 👋
+                <div class="bg-white overflow-hidden shadow-sm rounded-[2.5rem] p-6 md:p-10 border border-slate-100 flex flex-col lg:flex-row items-center justify-between gap-8 relative">
+                    <div class="absolute top-0 right-0 opacity-5 pointer-events-none transform translate-x-1/4 -translate-y-1/4">
+                        <i class="fas fa-graduation-cap text-[200px]"></i>
+                    </div>
+                    
+                    <div class="relative z-10 text-center lg:text-left">
+                        <h3 class="text-3xl md:text-4xl font-black text-slate-800 leading-tight mb-3">
+                            {{ __('សួស្តី,') }} <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-500">{{ Auth::user()->name }}</span>! 👋
                         </h3>
-                        <p class="text-gray-500">{{ __('នេះគឺជាកាលវិភាគបង្រៀនរបស់អ្នកសម្រាប់') }} <b>{{ __('ថ្ងៃនេះ') }}</b></p>
+                        <p class="text-slate-500 text-lg">{{ __('រីករាយថ្ងៃបង្រៀន! នេះគឺជាកាលវិភាគសម្រាប់') }} <b class="text-slate-800 underline decoration-indigo-200 decoration-4 underline-offset-4">{{ __('ថ្ងៃនេះ') }}</b></p>
                     </div>
 
-                    <div class="flex flex-col sm:flex-row gap-4">
+                    <div class="flex flex-wrap justify-center gap-4 relative z-10 font-bold">
                         @if(!auth()->user()->telegram_chat_id)
                             <button type="button" onclick="document.getElementById('telegramEntryModal').classList.remove('hidden')" 
-                                class="flex items-center justify-center gap-2 bg-[#0088cc] hover:bg-[#0077b5] text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-blue-100 transition-all transform hover:scale-105 active:scale-95 text-sm">
+                                class="flex items-center gap-2 bg-[#0088cc] hover:bg-[#0077b5] text-white px-6 py-4 rounded-2xl shadow-lg shadow-blue-100 transition-all hover:-translate-y-1 active:scale-95 text-sm">
                                 <i class="fab fa-telegram-plane text-xl"></i>
                                 <span>{{ __('ភ្ជាប់ Telegram') }}</span>
                             </button>
                         @else
-                            <div class="inline-flex items-center justify-center gap-2 bg-green-50 text-green-600 border border-green-100 px-6 py-3 rounded-2xl font-bold shadow-sm">
+                            <div class="inline-flex items-center gap-2 bg-emerald-50 text-emerald-600 border border-emerald-100 px-6 py-4 rounded-2xl shadow-sm">
                                 <i class="fas fa-check-circle text-xl"></i>
-                                <span>{{ __('Telegram ភ្ជាប់រួចរាល់') }}</span>
+                                <span>{{ __('Telegram រួចរាល់') }}</span>
                             </div>
                         @endif
-                                            <a href="{{ route('qr.scanner') }}" class="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold text-sm">
-    <i class="fa-solid fa-camera"></i>
-    <span>ស្កែន QR ចូល Computer</span>
-</a>
                         
-                        <div class="inline-flex items-center justify-center gap-2 bg-gray-50 text-gray-700 border border-gray-200 px-6 py-3 rounded-2xl font-bold">
-                            <i class="fas fa-calendar-alt text-gray-400"></i>
-                            <span>{{ now()->format('d M, Y') }}</span>
+                        <a href="{{ route('qr.scanner') }}" class="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-6 py-4 rounded-2xl shadow-lg transition-all hover:-translate-y-1 active:scale-95 text-sm">
+                            <i class="fa-solid fa-qrcode text-xl text-indigo-400"></i>
+                            <span>{{ __('ស្កែន QR ចូល PC') }}</span>
+                        </a>
+                        
+                        <div class="inline-flex items-center gap-2 bg-white text-slate-700 border border-slate-200 px-6 py-4 rounded-2xl shadow-sm">
+                            <i class="fas fa-calendar-alt text-indigo-500"></i>
+                            <span>{{ now()->translatedFormat('d M, Y') }}</span>
                         </div>
                     </div>
                 </div>
             </div>
 
             {{-- 1. Statistics Cards --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                {{-- Card 1: Today's Classes --}}
-                <div class="bg-gradient-to-br from-blue-600 to-blue-700 text-white p-6 rounded-[2rem] shadow-lg shadow-blue-200 flex items-center justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl group cursor-pointer">
-                    <div>
-                        {{-- Count Unique Offerings instead of total sessions --}}
-                        <p class="text-sm font-medium text-blue-100 mb-1">{{ __('ថ្នាក់បង្រៀនថ្ងៃនេះ') }}</p>
-                        <p class="text-4xl font-black">{{ $todaySchedules->pluck('course_offering_id')->unique()->count() }}</p>
-                    </div>
-                    <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform">
-                        <i class="fas fa-chalkboard-teacher text-2xl"></i>
-                    </div>
-                </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                @php
+                    $stats = [
+                        ['title' => 'ថ្នាក់បង្រៀនថ្ងៃនេះ', 'value' => $todaySchedules->pluck('course_offering_id')->unique()->count(), 'icon' => 'fa-chalkboard-teacher', 'color' => 'from-blue-600 to-indigo-700', 'shadow' => 'shadow-blue-200'],
+                        ['title' => 'សិស្សសរុប', 'value' => $totalStudents, 'icon' => 'fa-users', 'color' => 'from-emerald-500 to-teal-600', 'shadow' => 'shadow-emerald-200'],
+                        ['title' => 'កិច្ចការដាក់ឱ្យសិស្ស', 'value' => $upcomingAssignments->count(), 'icon' => 'fa-file-signature', 'color' => 'from-amber-500 to-orange-600', 'shadow' => 'shadow-amber-200'],
+                        ['title' => 'ការប្រឡង/ឃ្វីស', 'value' => $upcomingExams->count() + $upcomingQuizzes->count(), 'icon' => 'fa-award', 'color' => 'from-rose-500 to-pink-600', 'shadow' => 'shadow-rose-200'],
+                    ];
+                @endphp
 
-                {{-- Card 2: Total Students --}}
-                <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white p-6 rounded-[2rem] shadow-lg shadow-emerald-200 flex items-center justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl group cursor-pointer">
-                    <div>
-                        <p class="text-sm font-medium text-emerald-100 mb-1">{{ __('សិស្សសរុប') }}</p>
-                        <p class="text-4xl font-black">{{ $totalStudents }}</p>
+                @foreach($stats as $stat)
+                <div class="bg-gradient-to-br {{ $stat['color'] }} text-white p-6 rounded-[2.2rem] shadow-xl {{ $stat['shadow'] }} flex items-center justify-between transition-all duration-300 hover:-translate-y-2 hover:rotate-1 group overflow-hidden relative">
+                    <div class="absolute -right-2 -bottom-2 opacity-20 transform scale-150 transition-transform group-hover:scale-[1.7] group-hover:rotate-12">
+                        <i class="fas {{ $stat['icon'] }} text-6xl"></i>
                     </div>
-                    <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform">
-                        <i class="fas fa-users text-2xl"></i>
+                    <div class="relative z-10">
+                        <p class="text-white/80 font-medium mb-1 text-sm">{{ __($stat['title']) }}</p>
+                        <p class="text-4xl font-black tracking-tight">{{ $stat['value'] }}</p>
                     </div>
-                </div>
-
-                {{-- Card 3: Assignments --}}
-                <div class="bg-gradient-to-br from-amber-500 to-amber-600 text-white p-6 rounded-[2rem] shadow-lg shadow-amber-200 flex items-center justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl group cursor-pointer">
-                    <div>
-                        <p class="text-sm font-medium text-amber-100 mb-1">{{ __('កិច្ចការដាក់ឱ្យសិស្ស') }}</p>
-                        <p class="text-4xl font-black">{{ $upcomingAssignments->count() }}</p>
-                    </div>
-                    <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform">
-                        <i class="fas fa-file-alt text-2xl"></i>
+                    <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md relative z-10">
+                        <i class="fas {{ $stat['icon'] }} text-2xl"></i>
                     </div>
                 </div>
-
-                {{-- Card 4: Exams/Quizzes --}}
-                <div class="bg-gradient-to-br from-rose-500 to-rose-600 text-white p-6 rounded-[2rem] shadow-lg shadow-rose-200 flex items-center justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl group cursor-pointer">
-                    <div>
-                        <p class="text-sm font-medium text-rose-100 mb-1">{{ __('ការប្រឡង/ឃ្វុីស') }}</p>
-                        <p class="text-4xl font-black">{{ $upcomingExams->count() + $upcomingQuizzes->count() }}</p>
-                    </div>
-                    <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform">
-                        <i class="fas fa-graduation-cap text-2xl"></i>
-                    </div>
-                </div>
+                @endforeach
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
                 
-                {{-- Left Column: Teaching Schedule & Courses --}}
+                {{-- Left Column: Teaching Schedule --}}
                 <div class="lg:col-span-2 space-y-10">
-                    
-                    {{-- 2. Today's Sessions List (GROUPED BY COURSE OFFERING) --}}
                     <section>
-                        <div class="flex items-center justify-between mb-6">
-                            <div class="flex items-center gap-3">
-                                <div class="h-8 w-1.5 bg-indigo-600 rounded-full"></div>
-                                <h4 class="text-2xl font-black text-gray-800">{{ __('កាលវិភាគបង្រៀនថ្ងៃនេះ') }}</h4>
+                        <div class="flex items-center justify-between mb-8">
+                            <div class="flex items-center gap-4">
+                                <div class="h-10 w-2 bg-indigo-600 rounded-full shadow-lg shadow-indigo-200"></div>
+                                <h4 class="text-2xl font-black text-slate-800 tracking-tight">{{ __('កាលវិភាគបង្រៀនថ្ងៃនេះ') }}</h4>
                             </div>
-                            <span class="bg-indigo-50 text-indigo-600 px-4 py-1.5 rounded-full text-xs font-bold border border-indigo-100">
+                            <span class="bg-indigo-50 text-indigo-600 px-5 py-2 rounded-2xl text-xs font-black border border-indigo-100 uppercase tracking-wider">
                                 {{ $todaySchedules->pluck('course_offering_id')->unique()->count() }} {{ __('មុខវិជ្ជា') }}
                             </span>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            @php
-                                // Group schedules by course_offering_id to display as one card
-                                $groupedSchedules = $todaySchedules->groupBy('course_offering_id');
-                            @endphp
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            @php $groupedSchedules = $todaySchedules->groupBy('course_offering_id'); @endphp
 
                             @forelse ($groupedSchedules as $offeringId => $schedules)
                                 @php
                                     $firstSchedule = $schedules->first();
                                     $courseOffering = $firstSchedule->courseOffering;
-                                    
-                                    // Calculate overall start and end time
-                                    $startTime = $schedules->min('start_time');
-                                    $endTime = $schedules->max('end_time');
-                                    
-                                    // Check if ANY session in this group is completed (assuming if one is done, attendance is taken)
-                                    // Or you can check if an AttendanceSession exists for today for this offering
+                                    $startTime = \Carbon\Carbon::parse($schedules->min('start_time'));
+                                    $endTime = \Carbon\Carbon::parse($schedules->max('end_time'));
                                     $isCompletedToday = $schedules->contains('is_completed_today', true);
                                 @endphp
 
-                                <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 hover:shadow-xl transition-all group flex flex-col justify-between h-full relative overflow-hidden">
-                                    
+                                <div class="bg-white p-7 rounded-[2.5rem] shadow-sm border border-slate-100 hover:shadow-2xl hover:border-indigo-100 transition-all group flex flex-col h-full relative overflow-hidden">
                                     {{-- Time & Status --}}
-                                    <div class="flex justify-between items-start mb-4">
-                                        <div class="bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-xl flex items-center gap-2">
-                                            <i class="fas fa-clock text-indigo-500"></i>
-                                            <span class="font-bold text-gray-700 text-sm">
+                                    <div class="flex justify-between items-start mb-6">
+                                        <div class="bg-slate-50 border border-slate-200 px-4 py-2 rounded-2xl flex items-center gap-2 shadow-sm group-hover:bg-white group-hover:border-indigo-200 transition-colors">
+                                            <i class="fas fa-clock text-indigo-500 animate-pulse"></i>
+                                            <span class="font-black text-slate-700 text-sm">
                                                 {{ $startTime->format('H:i') }} - {{ $endTime->format('H:i') }}
                                             </span>
                                         </div>
 
                                         @if($isCompletedToday)
-                                            <span class="shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-600 shadow-sm" title="Completed Today">
-                                                <i class="fas fa-check"></i>
-                                            </span>
+                                            <div class="bg-emerald-100 text-emerald-600 p-2.5 rounded-2xl shadow-sm" title="Completed Today">
+                                                <i class="fas fa-check-double"></i>
+                                            </div>
                                         @else
-                                            <span class="shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-600 shadow-sm animate-pulse" title="Active">
-                                                <div class="w-2 h-2 bg-blue-600 rounded-full"></div>
-                                            </span>
+                                            <div class="relative flex items-center justify-center">
+                                                <div class="absolute w-full h-full bg-blue-400 rounded-full animate-ping opacity-25"></div>
+                                                <div class="bg-blue-600 text-white p-2.5 rounded-2xl shadow-lg relative z-10">
+                                                    <i class="fas fa-radio"></i>
+                                                </div>
+                                            </div>
                                         @endif
                                     </div>
 
                                     {{-- Course Details --}}
-                                    <div class="mb-6">
-                                        <h3 class="font-black text-lg text-gray-800 line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors mb-2" 
-                                            title="{{ $courseOffering->course->name }}">
-                                            {{ $courseOffering->course->name ?? $courseOffering->course->title_en }}
+                                    <div class="mb-8">
+                                        <h3 class="font-black text-xl text-slate-800 line-clamp-2 leading-tight group-hover:text-indigo-600 transition-colors mb-4">
+                                            {{ $courseOffering->course->name_km ?? ($courseOffering->course->name ?? $courseOffering->course->title_en) }}
                                         </h3>
                                         
-                                        <div class="space-y-3">
-                                            {{-- Room & Gen --}}
-                                            <div class="flex items-center flex-wrap gap-2 text-sm text-gray-600">
-                                                <div class="flex items-center gap-1">
-                                                    <i class="fas fa-users text-gray-400 w-5 text-center"></i>
-                                                    <span>{{ __('ជំនាន់') }}: <b class="text-gray-800">{{ $courseOffering->generation }}</b></span>
-                                                </div>
-                                                <span class="text-gray-300">|</span>
-                                                <span class="bg-indigo-50 text-indigo-600 text-[10px] font-bold px-2 py-0.5 rounded">
-                                                    {{ $courseOffering->course->program->name_km ?? 'Program' }}
+                                        <div class="space-y-4">
+                                            <div class="flex items-center gap-3">
+                                                <span class="bg-indigo-50 text-indigo-600 text-[10px] font-black px-3 py-1 rounded-lg border border-indigo-100 uppercase">
+                                                    {{ $courseOffering->course->program->name_km ?? 'បច្ចេកវិទ្យាវិទ្យាសាស្ត្រ' }}
                                                 </span>
+                                                <span class="text-slate-300">|</span>
+                                                <div class="flex items-center gap-1.5 text-sm text-slate-500 font-bold">
+                                                    <i class="fas fa-layer-group text-slate-400"></i>
+                                                    <span>{{ __('ជំនាន់') }}: <b class="text-slate-800">{{ $courseOffering->generation }}</b></span>
+                                                </div>
                                             </div>
 
-                                            {{-- List Individual Sessions (Rooms) --}}
-                                            <div class="bg-gray-50 rounded-xl p-3 space-y-2">
-                                                <p class="text-[10px] font-bold text-gray-400 uppercase">{{ __('កាលវិភាគលម្អិត:') }}</p>
+                                            <div class="bg-slate-50 rounded-3xl p-4 space-y-3 group-hover:bg-indigo-50/50 transition-colors border border-transparent group-hover:border-indigo-50">
+                                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ __('បន្ទប់សិក្សា & ម៉ោងសិក្សា:') }}</p>
                                                 @foreach($schedules as $sched)
-                                                    <div class="flex justify-between items-center text-xs">
-                                                        <span class="text-gray-600 font-medium">
-                                                            Session {{ $loop->iteration }} ({{ $sched->start_time->format('H:i') }}-{{ $sched->end_time->format('H:i') }})
+                                                    <div class="flex justify-between items-center bg-white p-2.5 rounded-xl border border-slate-100 shadow-sm">
+                                                        <span class="text-slate-600 font-bold text-xs">
+                                                            {{ __('វេនទី') }} {{ $loop->iteration }}
                                                         </span>
-                                                        <span class="text-gray-800 font-bold bg-white px-2 py-0.5 rounded border border-gray-100">
-                                                            <i class="fas fa-door-open text-gray-400 mr-1"></i> {{ $sched->room->room_number ?? 'Online' }}
+                                                        <span class="text-indigo-700 font-black text-xs px-3 py-1 bg-indigo-50 rounded-lg">
+                                                            <i class="fas fa-door-open mr-1.5"></i> {{ $sched->room->room_number ?? 'Online' }}
                                                         </span>
                                                     </div>
                                                 @endforeach
@@ -218,97 +204,105 @@
                                         </div>
                                     </div>
                                     
-                                    {{-- Action Button (ONE BUTTON PER OFFERING) --}}
-                                    {{-- We pass the courseOfferingId because attendance is usually tracked by offering for the day --}}
-                                    {{-- Or pass the first schedule ID if your backend logic requires it --}}
-                                    <button onclick="Livewire.dispatch('openAttendanceModal', { courseOfferingId: {{ $courseOffering->id }} })"
-                                            class="w-full mt-auto py-3.5 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-wide
+                                    {{-- Action Button --}}
+                                    <button type="button" 
+                                            onclick="verifyTeacherLocationBeforeScan({{ $courseOffering->id }})"
+                                            id="btn-scan-{{ $courseOffering->id }}"
+                                            class="w-full mt-auto py-4 rounded-2xl font-black transition-all flex items-center justify-center gap-3 text-sm uppercase tracking-wider
                                             {{ $isCompletedToday 
-                                                ? 'bg-white border-2 border-green-500 text-green-600 hover:bg-green-50' 
-                                                : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-200 hover:to-blue-800 active:scale-95' 
+                                                ? 'bg-white border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 shadow-lg shadow-emerald-50' 
+                                                : 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-xl shadow-indigo-100 hover:shadow-indigo-300 active:scale-[0.98]' 
                                             }}">
                                         @if($isCompletedToday)
-                                            <i class="fas fa-eye"></i> {{ __('មើលវត្តមាន') }}
+                                            <i class="fas fa-clipboard-list text-lg"></i> {{ __('ពិនិត្យវត្តមានឡើងវិញ') }}
                                         @else
-                                            <i class="fas fa-qrcode"></i> {{ __('ចាប់ផ្ដើមស្រង់ (Scan)') }}
+                                            <i class="fas fa-qrcode text-lg"></i> {{ __('ចាប់ផ្ដើមស្រង់វត្តមាន (Scan)') }}
                                         @endif
                                     </button>
                                 </div>
                             @empty
-                                <div class="col-span-full bg-white border-2 border-dashed border-gray-200 rounded-[2rem] p-12 text-center">
-                                    <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-gray-300">
-                                        <i class="fas fa-mug-hot text-3xl"></i>
+                                <div class="col-span-full bg-white border-2 border-dashed border-slate-200 rounded-[3rem] p-16 text-center shadow-inner">
+                                    <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-slate-100">
+                                        <i class="fas fa-mug-hot text-4xl text-slate-300"></i>
                                     </div>
-                                    <p class="text-gray-500 font-bold text-lg">{{ __('មិនមានម៉ោងបង្រៀនសម្រាប់ថ្ងៃនេះទេ។') }}</p>
-                                    <p class="text-sm text-gray-400 mt-2">{{ __('លោកគ្រូអាចសម្រាក ឬរៀបចំមេរៀនសម្រាប់ថ្ងៃស្អែក!') }}</p>
+                                    <h5 class="text-slate-800 font-black text-xl mb-2">{{ __('សម្រាកឱ្យបានច្រើន លោកគ្រូ/អ្នកគ្រូ!') }}</h5>
+                                    <p class="text-slate-400 font-medium max-w-sm mx-auto">{{ __('មិនមានម៉ោងបង្រៀនសម្រាប់ថ្ងៃនេះទេ។ សូមរៀបចំខ្លួនសម្រាប់ថ្ងៃស្អែក!') }}</p>
                                 </div>
                             @endforelse
                         </div>
                     </section>
                 </div>
 
-                {{-- Right Column: Announcements & Upcoming Tasks --}}
-                <div class="space-y-8">
+                {{-- Right Column: Side Info --}}
+                <div class="space-y-10">
                     
                     {{-- Announcements --}}
-                    <div class="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm">
-                        <div class="flex items-center justify-between mb-6">
-                            <h4 class="text-xl font-black text-gray-800 flex items-center gap-2">
-                                <i class="fas fa-bullhorn text-yellow-500 bg-yellow-50 p-2 rounded-xl"></i>
+                    <div class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm transition-all hover:shadow-xl">
+                        <div class="flex items-center justify-between mb-8">
+                            <h4 class="text-xl font-black text-slate-800 flex items-center gap-3">
+                                <div class="bg-amber-50 p-2.5 rounded-xl">
+                                    <i class="fas fa-bullhorn text-amber-500"></i>
+                                </div>
                                 {{ __('សេចក្តីប្រកាស') }}
                             </h4>
                         </div>
 
-                        <div class="space-y-4">
+                        <div class="space-y-5">
                             @forelse ($announcements as $announcement)
-                                <div id="announcement-{{ $announcement->id }}" class="p-4 bg-gray-50 rounded-2xl border border-gray-100 relative group transition-all hover:bg-white hover:shadow-md">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <h5 class="font-bold text-gray-800 text-sm leading-snug line-clamp-2">
-                                            {{ $announcement->title_km ?? $announcement->title_en }}
-                                        </h5>
-                                    </div>
-                                    <p class="text-xs text-gray-500 line-clamp-2 mb-3">{{ $announcement->content_km ?? $announcement->content_en }}</p>
-                                    <div class="flex items-center justify-between border-t border-gray-200 pt-3">
-                                        <span class="text-[10px] font-bold text-gray-400 uppercase">{{ \Carbon\Carbon::parse($announcement->created_at)->diffForHumans() }}</span>
+                                <div class="p-5 bg-slate-50 rounded-[1.8rem] border border-slate-100 relative group transition-all hover:bg-white hover:shadow-lg hover:border-amber-100">
+                                    <h5 class="font-black text-slate-800 text-sm leading-snug mb-2 line-clamp-1 group-hover:text-amber-600 transition-colors">
+                                        {{ $announcement->title_km ?? ($announcement->title_en ?? 'គ្មានចំណងជើង') }}
+                                    </h5>
+                                    <p class="text-xs text-slate-500 line-clamp-2 mb-4 leading-relaxed">{{ $announcement->content_km ?? ($announcement->content_en ?? 'គ្មានខ្លឹមសារ') }}</p>
+                                    <div class="flex items-center justify-between border-t border-slate-200/60 pt-4">
+                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-tighter bg-white px-2 py-1 rounded-md shadow-sm border border-slate-100">
+                                            <i class="far fa-clock mr-1"></i> {{ \Carbon\Carbon::parse($announcement->created_at)->diffForHumans() }}
+                                        </span>
+                                        <i class="fas fa-arrow-right text-[10px] text-slate-300 group-hover:translate-x-1 transition-transform"></i>
                                     </div>
                                 </div>
                             @empty
-                                <div class="text-center py-8 text-gray-400">
-                                    <p class="text-sm">{{ __('មិនមានសេចក្តីប្រកាសថ្មីទេ។') }}</p>
+                                <div class="text-center py-10">
+                                    <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-200">
+                                        <i class="fas fa-inbox text-2xl"></i>
+                                    </div>
+                                    <p class="text-sm text-slate-400 font-bold italic">{{ __('មិនមានសេចក្តីប្រកាសថ្មី') }}</p>
                                 </div>
                             @endforelse
                         </div>
                     </div>
 
                     {{-- Upcoming Tasks --}}
-                    <div class="bg-indigo-900 text-white p-6 rounded-[2.5rem] shadow-xl relative overflow-hidden">
-                        <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
-                        <div class="absolute bottom-0 left-0 w-24 h-24 bg-indigo-500/30 rounded-full blur-xl -ml-5 -mb-5"></div>
+                    <div class="bg-slate-900 text-white p-8 rounded-[2.8rem] shadow-2xl relative overflow-hidden group">
+                        <div class="absolute -top-10 -right-10 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl transition-transform group-hover:scale-150"></div>
+                        <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl transition-transform group-hover:scale-150"></div>
 
-                        <h4 class="text-xl font-black mb-6 relative z-10 flex items-center gap-2">
-                            <i class="fas fa-tasks bg-white/20 p-2 rounded-xl"></i>
+                        <h4 class="text-xl font-black mb-8 relative z-10 flex items-center gap-3">
+                            <div class="bg-white/10 p-2.5 rounded-xl border border-white/5">
+                                <i class="fas fa-tasks text-indigo-400"></i>
+                            </div>
                             {{ __('កិច្ចការត្រូវធ្វើ') }}
                         </h4>
 
-                        <div class="space-y-4 relative z-10">
+                        <div class="space-y-5 relative z-10">
                             @forelse ($upcomingAssignments as $assignment)
                                 <a href="{{ route('professor.manage-grades', ['offering_id' => $assignment->course_offering_id]) }}" 
-                                   class="block bg-white/10 backdrop-blur-md border border-white/10 p-4 rounded-2xl hover:bg-white/20 transition-all group">
-                                    <div class="flex items-center gap-3 mb-2">
-                                        <span class="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 text-[10px] font-bold uppercase border border-amber-500/30">
-                                            Homework
+                                   class="block bg-white/5 backdrop-blur-md border border-white/10 p-5 rounded-[1.8rem] hover:bg-white/10 transition-all group/task">
+                                    <div class="flex items-center gap-3 mb-3">
+                                        <span class="px-2.5 py-1 rounded-lg bg-indigo-500 text-white text-[9px] font-black uppercase tracking-widest shadow-lg shadow-indigo-900/50">
+                                            Assignment
                                         </span>
-                                        <p class="text-xs text-indigo-200 font-mono">
-                                            Due: {{ \Carbon\Carbon::parse($assignment->due_date)->format('d M') }}
+                                        <p class="text-[10px] text-indigo-300 font-mono font-bold">
+                                            <i class="far fa-calendar-alt mr-1"></i> Due: {{ \Carbon\Carbon::parse($assignment->due_date)->format('d M') }}
                                         </p>
                                     </div>
-                                    <h5 class="font-bold text-sm text-white mb-1 group-hover:text-amber-300 transition-colors">
-                                        {{ $assignment->title_km ?? $assignment->title_en }}
+                                    <h5 class="font-bold text-sm text-white group-hover/task:text-indigo-300 transition-colors leading-relaxed">
+                                        {{ $assignment->title_km ?? ($assignment->title_en ?? 'គ្មានចំណងជើង') }}
                                     </h5>
                                 </a>
                             @empty
-                                <div class="text-center py-6 text-indigo-300 bg-white/5 rounded-2xl border border-dashed border-white/10">
-                                    <p class="text-sm">{{ __('មិនមានកិច្ចការជិតដល់ទេ។') }}</p>
+                                <div class="text-center py-10 bg-white/5 rounded-[2rem] border border-dashed border-white/10">
+                                    <p class="text-sm text-slate-400 font-bold">{{ __('កិច្ចការទាំងអស់ត្រូវបានរួចរាល់!') }}</p>
                                 </div>
                             @endforelse
                         </div>
@@ -320,59 +314,54 @@
     </div>
 
     {{-- Telegram Modal --}}
-    <div id="telegramEntryModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-[9999] p-4">
-        <div class="bg-white rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl transform transition-all border border-slate-100">
-            <div class="flex justify-between items-center mb-8">
-                <div class="flex items-center gap-3">
-                    <div class="p-3 bg-blue-100 rounded-2xl text-[#0088cc]">
-                        <i class="fab fa-telegram-plane text-2xl"></i>
+    <div id="telegramEntryModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md hidden flex items-center justify-center z-[9999] p-4 animate-in fade-in duration-300">
+        <div class="bg-white rounded-[3rem] p-8 md:p-10 w-full max-w-md shadow-2xl border border-white relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#0088cc] to-blue-400"></div>
+            
+            <div class="flex justify-between items-start mb-8">
+                <div class="flex items-center gap-4">
+                    <div class="p-4 bg-blue-50 rounded-2xl text-[#0088cc] shadow-inner">
+                        <i class="fab fa-telegram-plane text-3xl"></i>
                     </div>
                     <div>
-                        <h3 class="text-xl font-black text-slate-800">ភ្ជាប់ Telegram</h3>
-                        <p class="text-[10px] text-slate-400 font-bold">ទទួលការជូនដំណឹងកាលវិភាគ</p>
+                        <h3 class="text-2xl font-black text-slate-800 tracking-tight">ភ្ជាប់ Telegram</h3>
+                        <p class="text-[11px] text-slate-400 font-bold uppercase tracking-widest">Bot Smart Notification</p>
                     </div>
                 </div>
-                <button onclick="document.getElementById('telegramEntryModal').classList.add('hidden')" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-50 text-slate-400 transition">
+                <button onclick="document.getElementById('telegramEntryModal').classList.add('hidden')" class="w-10 h-10 flex items-center justify-center rounded-2xl hover:bg-slate-50 text-slate-400 transition-all border border-transparent hover:border-slate-100">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
 
-            <div class="space-y-4 mb-8">
-                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 group hover:border-blue-200 transition-all">
-                    <div class="flex gap-4">
-                        <span class="flex-none w-8 h-8 bg-white shadow-sm text-blue-600 rounded-lg flex items-center justify-center text-xs font-black">០១</span>
-                        <p class="text-[11px] text-slate-600 leading-relaxed">
-                            <span class="font-bold text-slate-800 block mb-1">យកលេខសម្គាល់ (Chat ID):</span>
-                            ផ្ញើសារទៅកាន់ <a href="https://t.me/userinfobot" target="_blank" class="font-bold underline text-blue-600">@userinfobot</a> រួចចម្លងលេខ ID របស់អ្នក។
-                        </p>
-                    </div>
+            <div class="space-y-4 mb-10">
+                <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex gap-4">
+                    <span class="flex-none w-8 h-8 bg-white shadow-sm text-[#0088cc] rounded-xl flex items-center justify-center text-xs font-black border border-slate-100">01</span>
+                    <p class="text-xs text-slate-600 leading-relaxed font-bold">
+                        ផ្ញើសារទៅកាន់ <a href="https://t.me/userinfobot" target="_blank" class="font-black underline text-blue-600 decoration-2 decoration-blue-200">@userinfobot</a> រួចចម្លងលេខ ID របស់អ្នក។
+                    </p>
                 </div>
-
-                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 group hover:border-amber-200 transition-all">
-                    <div class="flex gap-4">
-                        <span class="flex-none w-8 h-8 bg-white shadow-sm text-amber-500 rounded-lg flex items-center justify-center text-xs font-black">០២</span>
-                        <p class="text-[11px] text-slate-600 leading-relaxed">
-                            <span class="font-bold text-slate-800 block mb-1">បើកដំណើរការ Bot:</span>
-                            ចុចលើ <a href="https://t.me/Nmu1_schedule_bot" target="_blank" class="font-bold underline text-amber-600">@Nmu1_schedule_bot</a> រួចចុច <span class="bg-amber-100 px-2 py-0.5 rounded italic">START</span>
-                        </p>
-                    </div>
+                <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex gap-4">
+                    <span class="flex-none w-8 h-8 bg-white shadow-sm text-amber-500 rounded-xl flex items-center justify-center text-xs font-black border border-slate-100">02</span>
+                    <p class="text-xs text-slate-600 leading-relaxed font-bold">
+                        ចុច <a href="https://t.me/Nmu1_schedule_bot" target="_blank" class="font-black underline text-amber-600 decoration-2 decoration-amber-200">@Nmu1_schedule_bot</a> រួចចុច <span class="text-amber-600 italic">START</span>
+                    </p>
                 </div>
             </div>
             
             <form action="{{ route('professor.update_telegram') }}" method="POST">
                 @csrf
-                <div class="mb-6">
-                    <label class="block text-sm font-black text-slate-700 mb-3">បញ្ចូលលេខ Telegram ID របស់អ្នក</label>
+                <div class="mb-8">
+                    <label class="block text-sm font-black text-slate-700 mb-4 ml-1">បញ្ចូលលេខ Telegram ID</label>
                     <input type="number" name="telegram_chat_id" required 
-                           placeholder="ឧទាហរណ៍៖ 584930211"
-                           class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition text-slate-700 font-mono text-lg">
+                            placeholder="ឧទាហរណ៍៖ 584930211"
+                            class="w-full px-6 py-5 bg-slate-50 border-2 border-slate-100 rounded-3xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-slate-700 font-mono text-xl text-center tracking-widest shadow-inner">
                 </div>
-                <div class="flex gap-3">
+                <div class="flex gap-4 font-black">
                     <button type="button" onclick="document.getElementById('telegramEntryModal').classList.add('hidden')" 
-                            class="flex-1 px-4 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition">
+                            class="flex-1 px-4 py-5 bg-slate-100 text-slate-500 rounded-2xl hover:bg-slate-200 transition-colors">
                         បោះបង់
                     </button>
-                    <button type="submit" class="flex-[2] px-4 py-4 bg-[#0088cc] text-white rounded-2xl font-bold hover:bg-[#0077b5] shadow-lg shadow-blue-100 transition transform active:scale-95">
+                    <button type="submit" class="flex-[2] px-4 py-5 bg-[#0088cc] text-white rounded-2xl hover:bg-[#0077b5] shadow-xl shadow-blue-100 transition-all transform active:scale-[0.98]">
                         រក្សាទុកទិន្នន័យ
                     </button>
                 </div>
@@ -383,61 +372,129 @@
     {{-- Livewire Modal --}}
     @livewire('teacher.attendance-modal')
 
+    {{-- Scripts --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    {{-- Firebase Integration --}}
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+        const firebaseConfig = {
+            apiKey: "{{ config('services.firebase.api_key') }}",
+            authDomain: "{{ config('services.firebase.auth_domain') }}",
+            projectId: "{{ config('services.firebase.project_id') }}",
+            storageBucket: "{{ config('services.firebase.storage_bucket') }}",
+            messagingSenderId: "{{ config('services.firebase.messaging_sender_id') }}",
+            appId: "{{ config('services.firebase.app_id') }}"
+        };
 
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
 
+        window.linkWithGoogle = () => {
+            const btn = document.getElementById('btn-link-google');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> កំពុងដំណើរការ...';
+            btn.disabled = true;
 
-
-    {{-- 🚀 ផ្នែក Firebase SDK សម្រាប់ Dashboard --}}
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyC5QgFzC-Kuudj7mWxLPf58xmoe_feXF3o",
-        authDomain: "classmanagementsystem-cd57f.firebaseapp.com",
-        projectId: "classmanagementsystem-cd57f",
-        storageBucket: "classmanagementsystem-cd57f.firebasestorage.app",
-        messagingSenderId: "171013327760",
-        appId: "1:171013327760:web:d00df5782c6c78f4c64115"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
-
-    // បង្កើត Function ឱ្យត្រូវនឹងឈ្មោះ onclick="linkWithGoogle()" ក្នុងប៊ូតុងបង
-    window.linkWithGoogle = () => {
-        signInWithPopup(auth, provider)
-            .then((result) => {
-                const user = result.user;
-                
-                // ផ្ញើទិន្នន័យទៅរក្សាទុកក្នុង Database របស់ Laravel
-                fetch('{{ route("user.link-google") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify({
-                        uid: user.uid,
-                        photoURL: user.photoURL
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    const user = result.user;
+                    fetch('{{ route("user.link-google") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({
+                            uid: user.uid,
+                            photoURL: user.photoURL
+                        })
                     })
+                    .then(res => res.json())
+                    .then(data => {
+                        if(data.status === 'linked') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'ជោគជ័យ',
+                                text: 'គណនី Google ត្រូវបានភ្ជាប់!',
+                                timer: 2000,
+                                showConfirmButton: false
+                            }).then(() => window.location.reload());
+                        }
+                    });
                 })
-                .then(res => res.json())
-                .then(data => {
-                    if(data.status === 'linked') {
-                        // បើរក្សាទុកក្នុង Database ជាប់ វានឹង Refresh ទំព័រ រួចបាត់ប៊ូតុងភ្ជាប់
-                        window.location.reload();
-                    }
+                .catch((error) => {
+                    console.error("Firebase Error:", error.code);
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+                    Swal.fire('បរាជ័យ', 'មិនអាចភ្ជាប់ Google បានទេ៖ ' + error.message, 'error');
                 });
-            })
-            .catch((error) => {
-                console.error("Firebase Error:", error.code);
-                if(error.code === 'auth/unauthorized-domain') {
-                    alert("Error: បងត្រូវបន្ថែម domain 127.0.0.1 ក្នុង Firebase Console ជាមុនសិន!");
-                }
+        };
+    </script>
+
+    <script>
+        function verifyTeacherLocationBeforeScan(courseOfferingId) {
+            Swal.fire({
+                title: 'កំពុងផ្ទៀងផ្ទាត់ទីតាំង',
+                text: 'សូមរង់ចាំបន្តិច ដើម្បីប្រាកដថាលោកគ្រូស្ថិតនៅសាលារៀន...',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => { Swal.showLoading(); }
             });
-    };
-</script>
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+
+                        fetch('{{ route("professor.verify-location") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({
+                                course_offering_id: courseOfferingId, // Changed to match controller's expectation
+                                lat: lat,
+                                lng: lng
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            Swal.close();
+                            if (data.success) {
+                                // ចំណាំ៖ ប្រាកដថា Livewire Component បងប្រើ Event ឈ្មោះ 'openAttendanceModal'
+                                if (window.Livewire) {
+                                    Livewire.dispatch('openAttendanceModal', { courseOfferingId: courseOfferingId });
+                                } else {
+                                    // សម្រាប់ Livewire v2
+                                    window.livewire.emit('openAttendanceModal', courseOfferingId);
+                                }
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'ទីតាំងមិនត្រឹមត្រូវ',
+                                    text: data.message,
+                                    confirmButtonColor: '#4f46e5'
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            Swal.fire('កំហុស', 'មានបញ្ហាក្នុងការទាក់ទងទៅ Server!', 'error');
+                        });
+                    },
+                    (error) => {
+                        Swal.fire('GPS ត្រូវបានបិទ', 'សូមបើក GPS និងអនុញ្ញាត (Allow Location) លើ Browser!', 'warning');
+                    },
+                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                );
+            } else {
+                Swal.fire('កំហុស', 'ឧបករណ៍លោកគ្រូមិនគាំទ្រ GPS ទេ!', 'error');
+            }
+        }
+    </script>
 </x-app-layout>

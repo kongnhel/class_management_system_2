@@ -15,7 +15,8 @@ class AttendanceModal extends Component
     public $qrCodeImage;
     public $showConfirmation = false;
 
-    protected $listeners = ['openAttendanceModal' => 'open'];
+protected $listeners = ['openAttendanceModal' => 'open'];
+
 
     public function open($courseOfferingId)
     {
@@ -28,6 +29,7 @@ class AttendanceModal extends Component
     {
         $this->isOpen = false;
         $this->courseId = null;
+        $this->qrCodeImage = null;
     }
 
 public function generateToken()
