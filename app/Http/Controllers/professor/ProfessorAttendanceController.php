@@ -6,18 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceProfessor;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 use Illuminate\Validation\Rule;
-
 use Illuminate\Http\Request;
 
 class ProfessorAttendanceController extends Controller
 {
-        /**
-     * Display all grades managed by the professor across all their courses.
-     */
-
     /**
      * Store a newly created attendance record in storage.
      */
@@ -26,32 +21,31 @@ class ProfessorAttendanceController extends Controller
         $request->validate([
             'course_offering_id' => 'required|exists:course_offerings,id',
             'student_user_id' => [
-    'required',
-    Rule::exists('student_course_enrollments', 'student_user_id')
-        ->where('course_offering_id', $request->course_offering_id)
-],
+                'required',
+                Rule::exists('student_course_enrollments', 'student_user_id')
+                    ->where('course_offering_id', $request->course_offering_id)
+            ],
             'date' => 'required|date',
             'status' => 'required|in:present,absent,late,excused',
             'note' => 'nullable|string|max:255',
         ], [
             'student_user_id.required' => 'អត្តសញ្ញាណសិស្សតម្រូវឱ្យបញ្ចូល។',
-            'student_user_id.exists' => 'អត្តសញ្ញាណសិស្សមិនមាននៅក្នុងប្រព័ន្ធទេ។',
+            'student_user_id.exists' => 'អត្តសញ្ញាណសិស្សមិនមានឈ្មោះក្នុងបញ្ជីរៀននៃវគ្គសិក្សានេះទេ។',
             'course_offering_id.required' => 'អត្តសញ្ញាណវគ្គសិក្សាតម្រូវឱ្យបញ្ចូល។',
             'date.required' => 'កាលបរិច្ឆេទតម្រូវឱ្យបញ្ចូល។',
             'status.required' => 'ស្ថានភាពវត្តមានតម្រូវឱ្យបញ្ចូល។',
         ]);
 
-        $attendance = AttendanceRecord::create([
+        AttendanceRecord::create([
             'course_offering_id' => $request->input('course_offering_id'),
-            'student_user_id' => $request->input('student_user_id'), // Ensure this is mapped correctly
+            'student_user_id' => $request->input('student_user_id'),
             'date' => $request->input('date'),
             'status' => $request->input('status'),
             'note' => $request->input('note'),
         ]);
 
         return redirect()->route('professor.manage-attendance', ['offering_id' => $request->input('course_offering_id')])
-                 ->with('success', __('កំណត់ត្រាវត្តមានត្រូវបានបន្ថែមដោយជោគជ័យ។'));
-
+                         ->with('success', __('កំណត់ត្រាវត្តមានត្រូវបានបន្ថែមដោយជោគជ័យ។'));
     }
 
     /**
@@ -61,29 +55,27 @@ class ProfessorAttendanceController extends Controller
     {
         $request->validate([
             'course_offering_id' => 'required|exists:course_offerings,id',
-            'student_user_id' => 'required|exists:users,id', // Changed from 'student_id' to 'student_user_id'
+            'student_user_id' => [
+                'required',
+                // បន្ថែម Rule ដើម្បីធានាថាការ Update ក៏មិនច្រឡំសិស្សក្រៅថ្នាក់ដែរ
+                Rule::exists('student_course_enrollments', 'student_user_id')
+                    ->where('course_offering_id', $request->course_offering_id)
+            ],
             'date' => 'required|date',
             'status' => 'required|in:present,absent,late,excused',
             'note' => 'nullable|string|max:255',
         ], [
             'student_user_id.required' => 'អត្តសញ្ញាណសិស្សតម្រូវឱ្យបញ្ចូល។',
-            'student_user_id.exists' => 'អត្តសញ្ញាណសិស្សមិនមាននៅក្នុងប្រព័ន្ធទេ។',
+            'student_user_id.exists' => 'អត្តសញ្ញាណសិស្សមិនមានឈ្មោះក្នុងបញ្ជីរៀននៃវគ្គសិក្សានេះទេ។',
             'course_offering_id.required' => 'អត្តសញ្ញាណវគ្គសិក្សាតម្រូវឱ្យបញ្ចូល។',
             'date.required' => 'កាលបរិច្ឆេទតម្រូវឱ្យបញ្ចូល។',
             'status.required' => 'ស្ថានភាពវត្តមានតម្រូវឱ្យបញ្ចូល។',
         ]);
 
-        $attendance->update([
-            'course_offering_id' => $request->input('course_offering_id'),
-            'student_user_id' => $request->input('student_user_id'),
-            'date' => $request->input('date'),
-            'status' => $request->input('status'),
-            'note' => $request->input('note'),
-        ]);
+        $attendance->update($request->only(['course_offering_id', 'student_user_id', 'date', 'status', 'note']));
 
         return redirect()->route('professor.manage-attendance', ['offering_id' => $attendance->course_offering_id])
-                 ->with('success', __('កំណត់ត្រាវត្តមានត្រូវបានកែប្រែដោយជោគជ័យ។'));
-
+                         ->with('success', __('កំណត់ត្រាវត្តមានត្រូវបានកែប្រែដោយជោគជ័យ។'));
     }
 
     /**
@@ -91,103 +83,99 @@ class ProfessorAttendanceController extends Controller
      */
     public function destroyAttendance(AttendanceRecord $attendance)
     {
+        $courseOfferingId = $attendance->course_offering_id;
         $attendance->delete();
 
-        return redirect()->route('professor.manage-attendance', ['offering_id' => $attendance->course_offering_id])
-                 ->with('success', __('កំណត់ត្រាវត្តមានត្រូវបានលុបដោយជោគជ័យ។'));
-
+        return redirect()->route('professor.manage-attendance', ['offering_id' => $courseOfferingId])
+                         ->with('success', __('កំណត់ត្រាវត្តមានត្រូវបានលុបដោយជោគជ័យ។'));
     }
 
-public function verifyLocation(Request $request) 
-{
-    $request->validate([
-        'course_offering_id' => 'required|exists:course_offerings,id',
-        'session_id' => 'required|integer', // (or exists:schedules,id)
-        'lat' => 'required|numeric|between:-90,90',
-        'lng' => 'required|numeric|between:-180,180',
-    ]);
-    
+    /**
+     * Verify professor's location and check-in.
+     */
+    public function verifyLocation(Request $request)
+    {
+        $request->validate([
+            'course_offering_id' => 'required|exists:course_offerings,id',
+            'session_id' => 'required|integer',
+            'lat' => 'required|numeric|between:-90,90',
+            'lng' => 'required|numeric|between:-180,180',
+        ]);
 
-    // ទាញតម្លៃពី .env បើអត់មានវាប្រើ Default (បន្ទាយមានជ័យ)
-    $schoolLat = env('NMU_LAT', 13.57952292); 
-    $schoolLng = env('NMU_LNG', 102.92898894);
-    $allowedRadius = env('NMU_RADIUS', 100); 
+        // ប្រើ config ជំនួស env ផ្ទាល់ដើម្បីសុវត្ថិភាពពេល cache config
+        $schoolLat = config('services.nmu.lat', env('NMU_LAT', 13.57952292)); 
+        $schoolLng = config('services.nmu.lng', env('NMU_LNG', 102.92898894));
+        $allowedRadius = config('services.nmu.radius', env('NMU_RADIUS', 100)); 
 
-    // គណនាចម្ងាយ
-    $distance = $this->calculateDistance($request->lat, $request->lng, $schoolLat, $schoolLng);
+        $professorId = auth()->id();
+        $now = Carbon::now('Asia/Phnom_Penh');
+        $today = $now->toDateString();
 
-    if ($distance > $allowedRadius) {
+        // ឆែកមើលថាតើធ្លាប់ Check-in រួចហើយឬនៅ
+        $exists = AttendanceProfessor::where([
+            'professor_id' => $professorId,
+            'course_offering_id' => $request->course_offering_id,
+            'verified_date' => $today,
+            'session_id' => $request->session_id,
+        ])->exists();
+
+        if ($exists) {
+            return response()->json([
+                'success' => true,
+                'already_checked_in' => true,
+            ]);
+        }
+
+        $distance = $this->calculateDistance($request->lat, $request->lng, $schoolLat, $schoolLng);
+
+        if ($distance > $allowedRadius) {
+            return response()->json([
+                'success' => false,
+                'message' => 'លោកគ្រូនៅឆ្ងាយពីសាលាពេកហើយ! ចម្ងាយបច្ចុប្បន្ន៖ ' . round($distance) . ' ម៉ែត្រ។ មកឱ្យជិតសិនលោកគ្រូ!'
+            ], 403);
+        }
+
+        AttendanceProfessor::create([
+            'professor_id' => $professorId,
+            'course_offering_id' => $request->course_offering_id,
+            'session_id' => $request->session_id,
+            'verified_date' => $today,
+            'lat' => $request->lat,
+            'lng' => $request->lng,
+            'verified_at' => $now,
+        ]);
+
         return response()->json([
-            'success' => false, 
-            'message' => 'លោកគ្រូនៅឆ្ងាយពីសាលាពេកហើយ! ចម្ងាយបច្ចុប្បន្ន៖ ' . round($distance) . ' ម៉ែត្រ'
-        ], 403);
+            'success' => true,
+            'already_checked_in' => false,
+            'distance' => round($distance),
+        ]);
     }
 
-    // រក្សាទុកវត្តមានគ្រូ
-$professorId = auth()->id();
-$today = now()->toDateString();
+    private function calculateDistance($lat1, $lon1, $lat2, $lon2) 
+    {
+        $earthRadius = 6371000; // ម៉ែត្រ
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+        $a = sin($dLat/2) * sin($dLat/2) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon/2) * sin($dLon/2);
+        $c = 2 * atan2(sqrt($a), sqrt(1-$a));
+        return $earthRadius * $c;
+    }
 
+    public function precheck(Request $request)
+    {
+        $request->validate([
+            'course_offering_id' => 'required|exists:course_offerings,id',
+            'session_id' => 'required|integer',
+        ]);
 
-\App\Models\AttendanceProfessor::updateOrCreate(
-    [
-        'professor_id' => $professorId,
-        'course_offering_id' => $request->course_offering_id,
-        'verified_date' => now()->toDateString(),
-        'session_id' => $request->session_id,
-    ],
-    [
+        $exists = AttendanceProfessor::where([
+            'professor_id' => auth()->id(),
+            'course_offering_id' => $request->course_offering_id,
+            'verified_date' => Carbon::now('Asia/Phnom_Penh')->toDateString(),
+            'session_id' => $request->session_id,
+        ])->exists();
 
-        'lat' => $request->lat,
-        'lng' => $request->lng,
-        'verified_at' => now(),
-    ]
-);
-$exists = \App\Models\AttendanceProfessor::where([
-  'professor_id' => $professorId,
-  'course_offering_id' => $request->course_offering_id,
-  'verified_date' => $today,
-  'session_id' => $request->session_id,
-])->exists();
-
-if ($exists) {
-  return response()->json([
-    'success' => true,
-    'already_checked_in' => true,
-  ]);
-}
-    // return response()->json(['success' => true]);
-return response()->json([
-  'success' => true,
-  'already_checked_in' => false,
-  'distance' => round($distance),
-]);
-}
-
-// រូបមន្តគណនាចម្ងាយ Haversine (ត្រូវតែមាន)
-private function calculateDistance($lat1, $lon1, $lat2, $lon2) 
-{
-    $earthRadius = 6371000; // ម៉ែត្រ
-    $dLat = deg2rad($lat2 - $lat1);
-    $dLon = deg2rad($lon2 - $lon1);
-    $a = sin($dLat/2) * sin($dLat/2) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon/2) * sin($dLon/2);
-    $c = 2 * atan2(sqrt($a), sqrt(1-$a));
-    return $earthRadius * $c;
-}
-
-public function precheck(Request $request)
-{
-    $request->validate([
-        'course_offering_id' => 'required|exists:course_offerings,id',
-        'session_id' => 'required|integer',
-    ]);
-
-    $exists = \App\Models\AttendanceProfessor::where([
-        'professor_id' => auth()->id(),
-        'course_offering_id' => $request->course_offering_id,
-        'verified_date' => now()->toDateString(),
-        'session_id' => $request->session_id,
-    ])->exists();
-
-    return response()->json(['checked_in' => $exists]);
-}
+        return response()->json(['checked_in' => $exists]);
+    }
 }
