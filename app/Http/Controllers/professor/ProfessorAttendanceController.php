@@ -90,7 +90,7 @@ class ProfessorAttendanceController extends Controller
                          ->with('success', __('កំណត់ត្រាវត្តមានត្រូវបានលុបដោយជោគជ័យ។'));
     }
 
-    /**
+/**
      * Verify professor's location and check-in.
      */
     public function verifyLocation(Request $request)
@@ -111,7 +111,7 @@ class ProfessorAttendanceController extends Controller
         $now = Carbon::now('Asia/Phnom_Penh');
         $today = $now->toDateString();
 
-        // ឆែកមើលថាតើធ្លាប់ Check-in រួចហើយឬនៅ
+        // ១. ឆែកមើលថាតើធ្លាប់ Check-in រួចហើយឬនៅ
         $exists = AttendanceProfessor::where([
             'professor_id' => $professorId,
             'course_offering_id' => $request->course_offering_id,
@@ -119,15 +119,20 @@ class ProfessorAttendanceController extends Controller
             'session_id' => $request->session_id,
         ])->exists();
 
+        // បើមានហើយ ត្រឡប់ Success ទៅវិញតែប្រាប់ថា already_checked_in = true
+        // ធ្វើបែបនេះ JS នឹងបើក Modal ឱ្យលោកគ្រូភ្លាម មិនបាច់ Scan នាំហត់
         if ($exists) {
             return response()->json([
-                'success' => true,
+                'success' => true, 
                 'already_checked_in' => true,
+                'message' => 'លោកគ្រូបានចុះវត្តមានសម្រាប់ម៉ោងនេះរួចរាល់ហើយ!'
             ]);
         }
 
+        // ២. គណនាចម្ងាយ
         $distance = $this->calculateDistance($request->lat, $request->lng, $schoolLat, $schoolLng);
 
+        // ៣. បើនៅឆ្ងាយពេក (លើស Radius)
         if ($distance > $allowedRadius) {
             return response()->json([
                 'success' => false,
@@ -135,6 +140,7 @@ class ProfessorAttendanceController extends Controller
             ], 403);
         }
 
+        // ៤. ចុះវត្តមានថ្មីចូល Database
         AttendanceProfessor::create([
             'professor_id' => $professorId,
             'course_offering_id' => $request->course_offering_id,
@@ -149,6 +155,7 @@ class ProfessorAttendanceController extends Controller
             'success' => true,
             'already_checked_in' => false,
             'distance' => round($distance),
+            'message' => 'ចុះវត្តមានបានសម្រេច!'
         ]);
     }
 

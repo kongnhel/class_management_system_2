@@ -444,6 +444,10 @@
     return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
   }
 
+  async function openAttendanceListOnly(courseOfferingId) {
+    await openAttendanceList(courseOfferingId);
+  }
+
   async function openAttendanceList(courseOfferingId) {
     if (window.Livewire?.dispatch) {
       Livewire.dispatch('openAttendanceModal', { courseOfferingId });
@@ -471,27 +475,16 @@
     try { data = JSON.parse(text); } catch (e) {}
 
     if (!res.ok) {
-      const msg =
-        data?.message ||
-        data?.error ||
-        (res.status === 419 ? 'CSRF token mismatch (419). សូម Refresh ទំព័រ។' : null) ||
-        (res.status === 403 ? (data?.message || 'មិនអនុញ្ញាត (403)') : null) ||
-        (res.status === 422 ? (data?.message || 'Validation error (422)') : null) ||
-        `Server error (${res.status}).`;
-
+      const msg = data?.message || `Server error (${res.status}).`;
       const err = new Error(msg);
       err.status = res.status;
-      err.raw = text;
       err.data = data;
       throw err;
     }
-
     return data;
   }
 
-  // ========= API Calls =========
   async function precheckAttendance(courseOfferingId, sessionId) {
-    // NOTE: make sure this route exists in web.php
     return await postJson("{{ route('professor.attendance.precheck') }}", {
       course_offering_id: courseOfferingId,
       session_id: sessionId
@@ -507,137 +500,68 @@
     });
   }
 
-  // ========= GPS: take best reading from retries =========
   function getBestLocation(attempts = 3, waitMs = 1500) {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
         reject(new Error('ឧបករណ៍លោកគ្រូមិនគាំទ្រ GPS ទេ!'));
         return;
       }
-
       let best = null;
       let count = 0;
-
       const tryOnce = () => {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
-            const reading = {
-              lat: pos.coords.latitude,
-              lng: pos.coords.longitude,
-              accuracy: pos.coords.accuracy
-            };
-
+            const reading = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy };
             if (!best || reading.accuracy < best.accuracy) best = reading;
-
             count++;
-            if (count >= attempts) {
-              resolve(best);
-            } else {
-              setTimeout(tryOnce, waitMs);
-            }
+            if (count >= attempts) resolve(best);
+            else setTimeout(tryOnce, waitMs);
           },
           () => reject(new Error('សូមបើក GPS និងអនុញ្ញាត (Allow Location)!')),
           { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
         );
       };
-
       tryOnce();
     });
   }
 
-  // ========= Main =========
   async function verifyTeacherLocationBeforeScan(courseOfferingId, sessionId) {
-    console.log('courseOfferingId:', courseOfferingId);
-    console.log('sessionId:', sessionId);
-
-    if (!sessionId) {
-      Swal.fire('កំហុស', 'Session ID មិនត្រឹមត្រូវ (sessionId is missing)', 'error');
-      return;
-    }
+    const scanBtn = document.getElementById(`btn-scan-${courseOfferingId}`);
+    if (scanBtn) scanBtn.disabled = true;
 
     Swal.fire({
       title: 'កំពុងពិនិត្យ...',
-      text: 'កំពុងពិនិត្យថាលោកគ្រូបាន Check-in រួចហើយឬនៅ...',
+      text: 'សូមរង់ចាំបន្តិច...',
       allowOutsideClick: false,
       showConfirmButton: false,
       didOpen: () => Swal.showLoading()
     });
 
     try {
-      // 1) Precheck first (NO GPS)
       const pre = await precheckAttendance(courseOfferingId, sessionId);
-
       if (pre?.checked_in) {
         Swal.close();
         await openAttendanceList(courseOfferingId);
+        if (scanBtn) scanBtn.disabled = false;
         return;
       }
-
-      // 2) Not checked in -> do GPS verify
-      Swal.update({
-        title: 'កំពុងផ្ទៀងផ្ទាត់ទីតាំង',
-        text: 'សូមរង់ចាំបន្តិច ដើម្បីប្រាកដថាលោកគ្រូស្ថិតនៅសាលារៀន...'
-      });
 
       const loc = await getBestLocation(3, 1500);
-
-      // ✅ Soft rule: if accuracy is VERY bad, warn user (don’t waste server call)
-      // You can adjust thresholds:
-      // - phone: usually 5-30m
-      // - laptop: 50-500m
-      if (loc.accuracy > 5000) {
-        Swal.close();
-        Swal.fire(
-          'GPS មិនត្រឹមត្រូវ',
-          `Accuracy: ${Math.round(loc.accuracy)}m\nសូមបើក Location Service/Wi-Fi ឬប្រើទូរស័ព្ទ។`,
-          'warning'
-        );
-        return;
-      }
-
-      // 3) Verify on server
       const data = await verifyLocation(courseOfferingId, sessionId, loc.lat, loc.lng);
 
       Swal.close();
 
       if (data?.success) {
-        const btn = document.getElementById(`btn-scan-${courseOfferingId}`);
-        if (btn) btn.disabled = true;
-
-        await Swal.fire({
-          icon: 'success',
-          title: 'បានចុះវត្តមានដោយជោគជ័យ 🎉',
-          html: data?.distance
-            ? ``
-            // ចម្ងាយពីសាលា: <b>${data.distance} ម៉ែត្រ</b><br>Accuracy: <b>${Math.round(loc.accuracy)}m</b>
-            : `ទីតាំងត្រឹមត្រូវ។<br>Accuracy: <b>${Math.round(loc.accuracy)}m</b>`,
-          confirmButtonColor: '#4f46e5',
-          confirmButtonText: 'បន្ត'
-        });
-
+        await Swal.fire({ icon: 'success', title: 'ជោគជ័យ', text: 'ចុះវត្តមានបានសម្រេច!', confirmButtonColor: '#4f46e5' });
         await openAttendanceList(courseOfferingId);
       } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'ទីតាំងមិនត្រឹមត្រូវ',
-          text: data?.message || 'Unknown error response',
-          confirmButtonColor: '#4f46e5'
-        });
+        Swal.fire({ icon: 'error', title: 'បរាជ័យ', text: data?.message || 'ទីតាំងមិនត្រឹមត្រូវ' });
+        if (scanBtn) scanBtn.disabled = false;
       }
     } catch (err) {
       Swal.close();
-      console.error(err);
-
-      // Better validation message display (422)
-      if (err.status === 422 && err.data?.errors) {
-        const firstKey = Object.keys(err.data.errors)[0];
-        const firstMsg = err.data.errors[firstKey]?.[0] || err.message;
-
-        Swal.fire('Validation Error', firstMsg, 'error');
-        return;
-      }
-
-      Swal.fire('កំហុស', err.message || 'មានបញ្ហាក្នុងការទាក់ទងទៅ Server!', 'error');
+      if (scanBtn) scanBtn.disabled = false;
+      Swal.fire('កំហុស', err.message || 'មានបញ្ហា!', 'error');
     }
   }
 </script>
