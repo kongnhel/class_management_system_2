@@ -56,8 +56,11 @@
                                     <select id="course_id" name="course_id" class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50 transition duration-200" required>
                                         <option value="">{{ __('ជ្រើសរើសមុខវិជ្ជា') }}</option>
                                         @foreach ($courses as $course)
-                                            <option value="{{ $course->id }}" {{ old('course_id') == $course->id ? 'selected' : '' }}>
-                                                {{ $course->title_en ?? $course->title }}
+                                            <option value="{{ $course->id }}" 
+                                                    data-programs="{{ json_encode($course->programs) }}"
+                                                    data-generation="{{ $course->generation }}"
+                                                    {{ old('course_id') == $course->id ? 'selected' : '' }}>
+                                                {{ $course->title_km }} (Gen: {{ $course->generation ?? 'N/A' }})
                                             </option>
                                         @endforeach
                                     </select>
@@ -65,22 +68,20 @@
                             </div>
                         </section>
 
-                        {{-- 2. Target Programs (UPDATED WITH AUTO GENERATION) --}}
+                        {{-- 2. Target Programs (NOW FULLY AUTO-SELECTED) --}}
                         <section class="bg-blue-50/50 p-8 rounded-3xl border border-blue-100 shadow-inner">
                             <div class="flex items-center justify-between mb-6">
                                 <div class="flex items-center space-x-3">
                                     <span class="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-bold text-sm">2</span>
                                     <h3 class="text-xl font-bold text-gray-800">{{ __('កម្មវិធីសិក្សា និង ជំនាន់ (Target Audience)') }}</h3>
                                 </div>
-                                <button type="button" id="add-program" class="text-sm bg-white border border-blue-200 text-blue-600 px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-blue-50 transition">
-                                    + {{ __('បន្ថែមកម្មវិធីសិក្សា') }}
-                                </button>
                             </div>
 
                             <div id="programs-container" class="space-y-3">
-                                {{-- Program Rows will be added here via JS --}}
+                                <div id="program-placeholder" class="text-center py-6 text-gray-400 italic">
+                                    {{ __('សូមជ្រើសរើសមុខវិជ្ជាដើម្បីបង្ហាញកម្មវិធីសិក្សា និងជំនាន់ដោយស្វ័យប្រវត្តិ') }}
+                                </div>
                             </div>
-                            @error('target_programs') <p class="text-red-500 text-xs mt-2 italic">* {{ $message }}</p> @enderror
                         </section>
 
                         {{-- 3. Offering Details --}}
@@ -151,7 +152,7 @@
                                 </div>
                                 
                                 <div id="schedules-container" class="space-y-4 flex-grow">
-                                    {{-- Schedule Rows added here --}}
+                                    {{-- Schedule Rows --}}
                                 </div>
 
                                 <div class="mt-8 pt-6 border-t border-gray-100">
@@ -161,7 +162,6 @@
                                         </span>
                                         <span>{{ __('បន្ថែមម៉ោងសិក្សាថ្មី') }}</span>
                                     </button>
-                                    @error('schedules') <p class="text-red-500 text-xs mt-2 italic">* {{ $message }}</p> @enderror
                                 </div>
                             </section>
                         </div>
@@ -186,120 +186,54 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // ============================================
-            // 1. DATA PREPARATION (Map Programs to Gens)
-            // ============================================
-            const allPrograms = {!! json_encode($programs) !!};
-            const allCourses = {!! json_encode($courses) !!}; 
-            
-            // បង្កើត Map: Program_ID => [Gen1, Gen2, Gen3]
-            const programGenMap = {};
+            const courseSelect = document.getElementById('course_id');
+            const programsContainer = document.getElementById('programs-container');
 
-            allCourses.forEach(course => {
-                if (course.program_id && course.generation) {
-                    if (!programGenMap[course.program_id]) {
-                        programGenMap[course.program_id] = new Set();
-                    }
-                    programGenMap[course.program_id].add(course.generation);
+            // ============================================
+            // 1. AUTO-POPULATE PROGRAM & GENERATION
+            // ============================================
+            courseSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const programsData = JSON.parse(selectedOption.getAttribute('data-programs') || '[]');
+                const courseGen = selectedOption.getAttribute('data-generation') || '';
+                
+                programsContainer.innerHTML = '';
+
+                if (programsData.length === 0) {
+                    programsContainer.innerHTML = `<div class="text-center py-6 text-gray-400 italic">{{ __('មិនមានកម្មវិធីសិក្សាសម្រាប់មុខវិជ្ជានេះទេ') }}</div>`;
+                    return;
                 }
+
+                programsData.forEach((prog, index) => {
+                    const row = document.createElement('div');
+                    row.className = 'flex items-center gap-4 bg-white p-4 rounded-xl border border-blue-100 shadow-sm animate-fadeIn mb-3';
+                    
+                    row.innerHTML = `
+                        <div class="flex-grow grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">{{ __('កម្មវិធីសិក្សា') }}</label>
+                                <div class="w-full py-2 px-3 bg-gray-50 rounded-lg text-sm font-semibold text-gray-700 border border-gray-200">
+                                    ${prog.name_km ?? prog.name}
+                                </div>
+                                <input type="hidden" name="target_programs[${index}][program_id]" value="${prog.id}">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">{{ __('ជំនាន់ (Generation)') }}</label>
+                                <div class="w-full py-2 px-3 bg-blue-50 rounded-lg text-sm font-bold text-blue-700 border border-blue-200">
+                                    ${courseGen ? 'ជំនាន់ទី ' + courseGen : '{{ __("មិនទាន់កំណត់") }}'}
+                                </div>
+                                <input type="hidden" name="target_programs[${index}][generation]" value="${courseGen}">
+                            </div>
+                        </div>
+                    `;
+                    programsContainer.appendChild(row);
+                });
             });
 
-            // ============================================
-            // 2. DYNAMIC PROGRAM ROWS LOGIC
-            // ============================================
-            const programsContainer = document.getElementById('programs-container');
-            const addProgramBtn = document.getElementById('add-program');
-            let programIndex = 0;
-
-            function addProgramRow(data = {}) {
-                const rowId = `program-row-${programIndex}`;
-                const div = document.createElement('div');
-                div.className = 'flex items-center gap-4 bg-white p-3 rounded-xl border border-blue-100 shadow-sm animate-fadeIn';
-                div.id = rowId;
-
-                // Create Program Options
-                let programOptions = `<option value="">{{ __('ជ្រើសរើសជំនាញ') }}</option>`;
-                allPrograms.forEach(p => {
-                    const selected = (data.program_id == p.id) ? 'selected' : '';
-                    programOptions += `<option value="${p.id}" ${selected}>${p.name_km ?? p.name}</option>`;
-                });
-
-                div.innerHTML = `
-                    <div class="flex-grow grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">{{ __('ជំនាញ (Program)') }}</label>
-                            <select name="target_programs[${programIndex}][program_id]" class="program-select w-full rounded-lg border-gray-200 text-sm focus:ring-blue-500" required>
-                                ${programOptions}
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">{{ __('ជំនាន់ (Generation)') }}</label>
-                            <select name="target_programs[${programIndex}][generation]" class="generation-select w-full rounded-lg border-gray-200 text-sm focus:ring-blue-500 bg-gray-50" required disabled>
-                                <option value="">{{ __('សូមជ្រើសរើសជំនាញជាមុន') }}</option>
-                            </select>
-                        </div>
-                    </div>
-                    <button type="button" onclick="document.getElementById('${rowId}').remove()" class="mt-5 text-red-400 hover:text-red-600 p-2 rounded-full hover:bg-red-50 transition">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                    </button>
-                `;
-                programsContainer.appendChild(div);
-
-                // Add Event Listener to the new Program Select
-                const progSelect = div.querySelector('.program-select');
-                const genSelect = div.querySelector('.generation-select');
-
-                progSelect.addEventListener('change', function() {
-                    const progId = this.value;
-                    genSelect.innerHTML = '<option value="">{{ __("ជ្រើសរើសជំនាន់") }}</option>';
-                    
-                    if (progId && programGenMap[progId]) {
-                        // Sort generations
-                        const gens = Array.from(programGenMap[progId]).sort();
-                        
-                        if (gens.length > 0) {
-                            gens.forEach(gen => {
-                                const selected = (data.generation == gen) ? 'selected' : '';
-                                const option = document.createElement('option');
-                                option.value = gen;
-                                option.textContent = gen;
-                                if (selected) option.selected = true;
-                                genSelect.appendChild(option);
-                            });
-                            genSelect.disabled = false;
-                            genSelect.classList.remove('bg-gray-50');
-                        } else {
-                            genSelect.innerHTML = '<option value="">{{ __("មិនមានទិន្នន័យជំនាន់") }}</option>';
-                            genSelect.disabled = true;
-                        }
-                    } else {
-                        genSelect.disabled = true;
-                        genSelect.classList.add('bg-gray-50');
-                        genSelect.innerHTML = '<option value="">{{ __("សូមជ្រើសរើសជំនាញជាមុន") }}</option>';
-                    }
-                });
-
-                // Trigger change manually if we have initial data (for old input or edit)
-                if (data.program_id) {
-                    progSelect.dispatchEvent(new Event('change'));
-                }
-
-                programIndex++;
-            }
-
-            addProgramBtn.addEventListener('click', () => addProgramRow());
-
-            // Handle Old Data (Validation Error Repopulation)
-            const oldPrograms = {!! json_encode(old('target_programs', [])) !!};
-            if (Object.keys(oldPrograms).length > 0) {
-                Object.values(oldPrograms).forEach(p => addProgramRow(p));
-            } else {
-                addProgramRow(); // Default row
-            }
-
+            if (courseSelect.value) courseSelect.dispatchEvent(new Event('change'));
 
             // ============================================
-            // 3. SCHEDULE LOGIC (Existing)
+            // 2. SCHEDULE LOGIC (Kept stable)
             // ============================================
             const scheduleContainer = document.getElementById('schedules-container');
             const addScheduleBtn = document.getElementById('add-schedule');
@@ -318,7 +252,6 @@
                         <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"></path></svg>
                         Session ${currentSessions}
                     </div>
-
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div class="col-span-2 md:col-span-1">
                             <label class="block text-xs font-bold text-gray-400 uppercase mb-1">{{ __('ថ្ងៃសិក្សា') }}</label>
@@ -342,14 +275,14 @@
                         </div>
                         <div class="col-span-1">
                             <label class="block text-xs font-bold text-gray-400 uppercase mb-1">{{ __('ចាប់ផ្តើម') }}</label>
-                            <input type="time" name="schedules[${scheduleIndex}][start_time]" class="w-full rounded-xl border-gray-200 text-sm focus:ring-green-500 focus:border-green-500" value="${initialData.start_time || ''}" required>
+                            <input type="time" name="schedules[${scheduleIndex}][start_time]" class="w-full rounded-xl border-gray-200 text-sm" value="${initialData.start_time || ''}" required>
                         </div>
                         <div class="col-span-1">
                             <label class="block text-xs font-bold text-gray-400 uppercase mb-1">{{ __('បញ្ចប់') }}</label>
-                            <input type="time" name="schedules[${scheduleIndex}][end_time]" class="w-full rounded-xl border-gray-200 text-sm focus:ring-green-500 focus:border-green-500" value="${initialData.end_time || ''}" required>
+                            <input type="time" name="schedules[${scheduleIndex}][end_time]" class="w-full rounded-xl border-gray-200 text-sm" value="${initialData.end_time || ''}" required>
                         </div>
                     </div>
-                    <button type="button" class="remove-schedule absolute -top-2 -right-2 bg-white text-gray-300 hover:text-red-500 rounded-full border border-gray-100 shadow-sm p-1 transition-colors duration-200 opacity-0 group-hover:opacity-100">
+                    <button type="button" class="remove-schedule absolute -top-2 -right-2 bg-white text-gray-300 hover:text-red-500 rounded-full border border-gray-100 p-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 `;
@@ -357,13 +290,16 @@
                 
                 scheduleDiv.querySelector('.remove-schedule').addEventListener('click', function() { 
                     scheduleDiv.remove();
-                    // Update session numbers
-                    document.querySelectorAll('.schedule-row').forEach((row, i) => {
-                        row.querySelector('.flex.items-center.text-green-600').innerHTML = 
-                            `<svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"></path></svg> Session ${i + 1}`;
-                    });
+                    updateSessionNumbers();
                 });
                 scheduleIndex++;
+            }
+
+            function updateSessionNumbers() {
+                document.querySelectorAll('.schedule-row').forEach((row, i) => {
+                    const label = row.querySelector('.flex.items-center.text-green-600');
+                    if (label) label.innerHTML = `<svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"></path></svg> Session ${i + 1}`;
+                });
             }
 
             addScheduleBtn.addEventListener('click', () => addScheduleRow());

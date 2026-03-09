@@ -277,7 +277,7 @@
                     </div>
 
                     {{-- Upcoming Tasks --}}
-                    <div class="bg-slate-900 text-white p-8 rounded-[2.8rem] shadow-2xl relative overflow-hidden group">
+                    {{-- <div class="bg-slate-900 text-white p-8 rounded-[2.8rem] shadow-2xl relative overflow-hidden group">
                         <div class="absolute -top-10 -right-10 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl transition-transform group-hover:scale-150"></div>
                         <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl transition-transform group-hover:scale-150"></div>
 
@@ -310,7 +310,7 @@
                                 </div>
                             @endforelse
                         </div>
-                    </div>
+                    </div> --}}
 
                 </div>
             </div>

@@ -48,7 +48,7 @@
                         <option value="">-- {{ __('ជ្រើសរើសមុខវិជ្ជា') }} --</option>
                         @foreach($courseOfferings as $offering)
                             <option value="{{ $offering->id }}">
-                                {{ $offering->course->title_km ?? 'N/A' }} ({{ $offering->course->code ?? 'N/A' }})
+                                {{ $offering->course->title_km ?? 'N/A' }}
                             </option>
                         @endforeach
                     </select>
@@ -132,7 +132,7 @@ document.getElementById('course_offering_id').addEventListener('change', functio
                     <div>
                         <label class="flex items-center space-x-2">
                             <input type="checkbox" name="recipient_ids[]" value="${student.id}" class="rounded">
-                            <span>${student.name} (${student.student_id_code || 'N/A'})</span>
+                            <span>${student.name} </span>
                         </label>
                     </div>
                 `;

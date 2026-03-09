@@ -47,27 +47,20 @@
                         </div>
 
                         <div>
-                            <label for="program_id" class="block text-sm font-medium text-gray-700">{{ __('កម្មវិធីសិក្សា:') }}</label>
-                            <select name="program_id" id="program_id" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 transition duration-150 ease-in-out" required>
-                                <option value="">{{ __('ជ្រើសរើសកម្មវិធីសិក្សា') }}</option>
+                            <label for="program_ids" class="block text-sm font-medium text-gray-700">{{ __('កម្មវិធីសិក្សា (ជ្រើសរើសបានច្រើន):') }}</label>
+                            <select name="program_ids[]" id="program_ids" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 transition duration-150 ease-in-out" multiple required>
                                 @foreach($programs as $program)
-                                    <option value="{{ $program->id }}" {{ old('program_id', $course->program_id) == $program->id ? 'selected' : '' }}>
+                                    <option value="{{ $program->id }}" 
+                                        {{ in_array($program->id, old('program_ids', $selectedPrograms)) ? 'selected' : '' }}>
                                         {{ $program->name_km }} ({{ $program->name_en }})
                                     </option>
                                 @endforeach
                             </select>
-                            @error('program_id')
+                            <p class="text-xs text-gray-500 mt-1">{{ __('ចុច Ctrl (Windows) ឬ Command (Mac) ដើម្បីជ្រើសរើសលើសពីមួយ') }}</p>
+                            @error('program_ids')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
                         </div>
-
-                        {{-- <div>
-                            <label for="code" class="block text-sm font-medium text-gray-700">{{ __('លេខកូដមុខវិជ្ជា:') }}</label>
-                            <input type="text" name="code" id="code" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500" value="{{ old('code', $course->code) }}" required>
-                            @error('code')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div> --}}
 
                         <div>
                             <label for="credits" class="block text-sm font-medium text-gray-700">{{ __('Credits:') }}</label>
@@ -77,20 +70,19 @@
                             @enderror
                         </div>
                         
-                    {{-- <div class="col-span-full sm:col-span-3">
-                        <label for="generation" class="block text-sm font-medium text-gray-700">{{ __('ជំនាន់') }}</label>
-                        <input type="text" name="generation" id="generation" value="{{ old('generation', $course->generation) }}" required
-                            class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                    </div> --}}
                         <div>
                             <label for="generation" class="block text-sm font-medium text-gray-700">{{ __('ជំនាន់') }}<span class="text-red-500">*</span></label>
                             <select id="generation" name="generation" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm" required>
                                 <option value="">{{ __('ជ្រើសរើសជំនាន់') }}</option>
                                 @foreach ($generations as $generation)
-                                    <option value="{{ $generation }}" {{ $course->generation == $generation ? 'selected' : '' }}>{{ $generation }}</option>
+                                    <option value="{{ $generation }}" {{ old('generation', $course->generation) == $generation ? 'selected' : '' }}>{{ $generation }}</option>
                                 @endforeach
                             </select>
+                            @error('generation')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
+
                         <div class="md:col-span-2">
                             <label for="title_km" class="block text-sm font-medium text-gray-700">{{ __('ចំណងជើង (ខ្មែរ):') }}</label>
                             <input type="text" name="title_km" id="title_km" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500" value="{{ old('title_km', $course->title_km) }}" required>

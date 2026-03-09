@@ -78,11 +78,22 @@ public function index(Request $request)
             }
         });
     }
+    $courseOfferings = $query->orderBy('academic_year', 'desc')
+    ->orderBy('semester', 'desc')
+    ->paginate(50)
+    ->appends($request->query());
 
-$courseOfferings = $query->orderBy('academic_year', 'desc')
-                         ->orderBy('semester', 'desc')
-                         ->paginate(50)
-                         ->appends($request->query());
+// Add the "is_active" status to each item
+$courseOfferings->getCollection()->transform(function ($offering) {
+    // Logic: Active if current date is between start and end date
+    $offering->is_active = now()->between($offering->start_date, $offering->end_date);
+    return $offering;
+});
+
+// $courseOfferings = $query->orderBy('academic_year', 'desc')
+//                          ->orderBy('semester', 'desc')
+//                          ->paginate(50)
+//                          ->appends($request->query());
     // ៨. រៀបចំទិន្នន័យសម្រាប់ Dropdowns
     $programs = Program::orderBy('name_km')->get();
     
@@ -108,7 +119,8 @@ $courseOfferings = $query->orderBy('academic_year', 'desc')
 
 public function create()
     {
-        $courses = Course::all();
+        // $courses = Course::all();
+        $courses = Course::with('programs')->get();
         $professors = User::where('role', 'professor')->get();
         $programs = Program::all();
         $rooms = Room::all();

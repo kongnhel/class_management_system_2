@@ -128,18 +128,12 @@
             .cell-room { display: block; font-weight: bold; font-size: 9pt; color: #000000; }
 
             /* --- Footer Signatures --- */
-            /* .f-sigs { 
+            .f-sigs { 
                 display: flex; 
                 justify-content: space-between; 
                 margin-top: 10px; 
                 padding-bottom: 10px;
-            } */
-            .f-sigs { 
-    page-break-inside: avoid; 
-    display: flex; 
-    justify-content: space-between; 
-    margin-top: 20px; 
-}
+            }
             .sig-block { text-align: center; width: 35%; }
             
             .sig-title-top { font-size: 10pt; margin-bottom: 10px; }
@@ -244,15 +238,7 @@
                         @endforeach
                     </select>
                 </div>
-{{-- Status Filter --}}
-{{-- <div class="md:col-span-2">
-    <label class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5 block">ស្ថានភាព (Status)</label>
-    <select name="status" class="block w-full rounded-lg border-gray-200 bg-gray-50 focus:bg-white sm:text-sm py-2.5 transition-all">
-        <option value="">{{ __('ទាំងអស់') }}</option>
-        <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>សកម្ម (Active)</option>
-        <option value="expired" {{ request('status') == 'expired' ? 'selected' : '' }}>ផុតកំណត់ (Expired)</option>
-    </select>
-</div> --}}
+
                 {{-- Buttons --}}
                 <div class="md:col-span-12 flex justify-end gap-2 mt-2">
                      {{-- Reset Button --}}
@@ -277,25 +263,9 @@
                     @else
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             @foreach ($courseOfferings as $offering)
-                            
                                 <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative group">
                                     <div class="flex justify-between items-start mb-4">
                                         <div class="flex flex-col">
-                                            @php
-    // Logic: Active if current date is between start and end date
-    $today = now()->startOfDay();
-    $isActive = $today->between($offering->start_date, $offering->end_date);
-@endphp
-
-<div class="flex justify-between items-start mb-4">
-
-    
-    {{-- Status Badge --}}
-    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider border {{ $isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-rose-50 text-rose-600 border-rose-200' }}">
-        <span class="w-1.5 h-1.5 rounded-full mr-1.5 {{ $isActive ? 'bg-emerald-500' : 'bg-rose-500' }}"></span>
-        {{ $isActive ? 'Active' : 'Expired' }}
-    </span>
-</div>
                                             <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-1 rounded-md mb-2 w-fit">Sem {{ $offering->semester }} / {{ $offering->academic_year }}</span>
                                             <div class="flex flex-wrap gap-1">
                                                 @foreach($offering->targetPrograms as $p)
@@ -329,7 +299,6 @@
                 </div>
                 <div class="mt-12 no-print">{{ $courseOfferings->links() }}</div>
             </div>
-            
         </div>
     </div>
 

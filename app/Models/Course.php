@@ -60,10 +60,18 @@ class Course extends Model
      * This method defines the relationship between a Course and a Program.
      * It assumes that your 'courses' table has a 'program_id' foreign key.
      */
-    public function program()
-    {
-        return $this->belongsTo(Program::class);
-    }
+    // public function program()
+    // {
+    //     // return $this->belongsTo(Program::class);
+    //     return $this->belongsToMany(Program::class, 'course_program');
+
+
+    // }
+
+    public function programs()
+{
+    return $this->belongsToMany(Program::class, 'course_program', 'course_id', 'program_id');
+}
 
     /**
      * Get the course offerings for this course.

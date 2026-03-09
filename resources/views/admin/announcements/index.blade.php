@@ -257,58 +257,89 @@
         </div>
     </div>
 
-    <div id="delete-modal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+<div id="delete-modal" 
+     class="fixed inset-0 z-[100] overflow-y-auto hidden opacity-0 transition-opacity duration-300" 
+     aria-labelledby="modal-title" 
+     role="dialog" 
+     aria-modal="true">
+    
+    <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity"></div>
 
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div class="sm:flex sm:items-start">
-                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                            <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                        </div>
-                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-xl leading-6 font-bold text-gray-900" id="modal-title">
-                                {{ __('លុបសេចក្តីប្រកាស') }}
-                            </h3>
-                            <div class="mt-2">
-                                <p class="text-base text-gray-500">
-                                    {{ __('តើអ្នកពិតជាចង់លុបសេចក្តីប្រកាសនេះមែនទេ? សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។') }}
-                                </p>
-                            </div>
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        
+        <div class="relative inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full scale-95 duration-300" id="modal-container">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10 ring-4 ring-red-50">
+                        <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-xl leading-6 font-bold text-gray-900" id="modal-title">
+                            {{ __('លុបសេចក្តីប្រកាស') }}
+                        </h3>
+                        <div class="mt-2">
+                            <p class="text-base text-gray-500">
+                                {{ __('តើអ្នកពិតជាចង់លុបសេចក្តីប្រកាសនេះមែនទេ? សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។') }}
+                            </p>
                         </div>
                     </div>
                 </div>
-                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-3xl">
-                    <form id="delete-form" method="POST" action="">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="w-full inline-flex justify-center rounded-full border border-transparent shadow-sm px-6 py-3 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm transition duration-150 ease-in-out">
-                            {{ __('លុប') }}
-                        </button>
-                    </form>
-                    <button type="button" onclick="closeDeleteModal()" class="mt-3 w-full inline-flex justify-center rounded-full border border-gray-300 shadow-sm px-6 py-3 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:mt-0 sm:w-auto sm:text-sm transition duration-150 ease-in-out">
-                        {{ __('បោះបង់') }}
+            </div>
+            <div class="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse rounded-b-3xl gap-3">
+                <form id="delete-form" method="POST" action="">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="w-full inline-flex justify-center rounded-full border border-transparent shadow-lg px-6 py-2.5 bg-red-600 text-sm font-bold text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-200">
+                        {{ __('លុបចោលភ្លាម') }}
                     </button>
-                </div>
+                </form>
+                <button type="button" onclick="closeDeleteModal()" class="mt-3 sm:mt-0 w-full inline-flex justify-center rounded-full border border-gray-300 shadow-sm px-6 py-2.5 bg-white text-sm font-bold text-gray-700 hover:bg-gray-100 focus:outline-none transition duration-200">
+                    {{ __('បោះបង់') }}
+                </button>
             </div>
         </div>
     </div>
+</div>
 
-    <script>
-        const deleteModal = document.getElementById('delete-modal');
-        const deleteForm = document.getElementById('delete-form');
+<script>
+    function openDeleteModal(deleteUrl) {
+        const modal = document.getElementById('delete-modal');
+        const modalContainer = document.getElementById('modal-container');
+        const form = document.getElementById('delete-form');
+        
+        form.action = deleteUrl;
 
-        function openDeleteModal(deleteUrl) {
-            deleteForm.action = deleteUrl;
-            deleteModal.classList.remove('hidden');
+        // បង្ហាញ Modal ជាមួយ Animation
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modal.classList.add('opacity-100');
+            modalContainer.classList.remove('scale-95');
+            modalContainer.classList.add('scale-100');
+        }, 10);
+    }
+
+    function closeDeleteModal() {
+        const modal = document.getElementById('delete-modal');
+        const modalContainer = document.getElementById('modal-container');
+
+        modal.classList.remove('opacity-100');
+        modalContainer.classList.remove('scale-100');
+        modalContainer.classList.add('scale-95');
+
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300); // ចាំវាបិទចប់ Animation សិនចាំលាក់
+    }
+
+    // ចុចក្រៅ Modal អោយវាបិទវិញ (ដើម្បីភាពងាយស្រួល)
+    window.onclick = function(event) {
+        const modal = document.getElementById('delete-modal');
+        if (event.target == modal) {
+            closeDeleteModal();
         }
-
-        function closeDeleteModal() {
-            deleteModal.classList.add('hidden');
-        }
-    </script>
+    }
+</script>
 </x-app-layout>
