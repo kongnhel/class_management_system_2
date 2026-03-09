@@ -70,13 +70,14 @@ public function dashboard()
     // 2. Get Today's SCHEDULES (Sessions) 
     // Instead of looping through CourseOfferings directly, we loop through Schedule
     // This allows showing multiple sessions of the same course correctly.
-    $todaySchedules = \App\Models\Schedule::whereHas('courseOffering', function ($query) use ($user) {
-            $query->where('lecturer_user_id', $user->id);
-        })
-        ->where('day_of_week', $todayName)
-        ->with(['courseOffering.course.program', 'room']) // Load relations
-        ->orderBy('start_time', 'asc')
-        ->get()
+// ប្តូរពី courseOffering.course.program ទៅជា courseOffering.course.programs
+$todaySchedules = \App\Models\Schedule::whereHas('courseOffering', function ($query) use ($user) {
+        $query->where('lecturer_user_id', $user->id);
+    })
+    ->where('day_of_week', $todayName)
+    ->with(['courseOffering.course.programs', 'room']) // ✅ កែត្រង់នេះ
+    ->orderBy('start_time', 'asc')
+    ->get()
         ->map(function ($schedule) use ($todayDate) {
             // Check if attendance has been taken for this Course Offering TODAY
             // Note: If you want to track attendance per SESSION, you need a 'schedule_id' or 'time_slot' column in AttendanceRecord.
@@ -88,7 +89,7 @@ public function dashboard()
             $schedule->is_completed_today = $hasRecord;
             return $schedule;
         });
-
+    
     // 3. Count Total Unique Students (for all courses taught by this professor)
     $totalStudents = \App\Models\StudentCourseEnrollment::whereHas('courseOffering', function ($q) use ($user) {
         $q->where('lecturer_user_id', $user->id);

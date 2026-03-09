@@ -150,7 +150,11 @@ public function dashboard()
         ->where('status', 'completed')
         ->count();
 
-    $totalCoursesInProgram = $studentProgram ? $studentProgram->courses->count() : 0;
+    // $totalCoursesInProgram = $studentProgram ? $studentProgram->courses->count() : 0;
+    // រាប់ចំនួន Course ផ្សេងៗគ្នាដែលមានក្នុង Program របស់សិស្ស
+$totalCoursesInProgram = $studentProgram ? \App\Models\CourseOffering::whereHas('targetPrograms', function($query) use ($studentProgram) {
+    $query->where('program_id', $studentProgram->id);
+})->distinct('course_id')->count() : 0;
 
     // 6. Announcements & Notifications (Feed)
     $allAnnouncements = Announcement::where('target_role', 'all')
