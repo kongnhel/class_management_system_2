@@ -20,7 +20,7 @@ class ProfessorCourseOfferingController extends Controller
         $user = Auth::user();
         $courseOfferings = CourseOffering::where('lecturer_user_id', $user->id)
                                          ->with('course.department', 'lecturer')
-                                         ->paginate(10); // Paginate for the view
+                                         ->paginate(10); 
 
         return view('professor.my-course-offerings', compact('courseOfferings'));
     }
@@ -30,10 +30,6 @@ class ProfessorCourseOfferingController extends Controller
     | Professor Management Functionality (Placeholders - will be expanded)
     |--------------------------------------------------------------------------
     */
-// grading_category_id
-    /**
-     * Display departments for professors.
-     */
     public function viewDepartments()
     {
         $departments = Department::with('faculty', 'head')->paginate(10);

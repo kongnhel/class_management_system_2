@@ -20,9 +20,7 @@ class ProfessorQuestionController extends Controller
      */
     public function store(Request $request, $offering_id, Quiz $quiz)
     {
-        // 1. Authorization: Ensure the professor owns the course offering.
         if (Gate::denies('manage-quiz', $quiz)) {
-            // Fallback/Explicit check (assuming Quiz has a courseOffering relation)
             if ($quiz->courseOffering->professor_id !== Auth::id()) {
                 return back()->with('error', 'អ្នកមិនមានសិទ្ធិគ្រប់គ្រង Quiz នេះទេ។');
             }
@@ -30,7 +28,7 @@ class ProfessorQuestionController extends Controller
         
         // 2. Validation
         $validatedData = $request->validate([
-            'type' => 'required|string|in:multiple_choice', // Only allow 'multiple_choice' for now
+            'type' => 'required|string|in:multiple_choice', 
             'text_km' => 'required|string',
             'score' => 'required|numeric|min:0.1',
         ], [
@@ -42,17 +40,13 @@ class ProfessorQuestionController extends Controller
         ]);
 
         try {
-            // 3. Create the Question
             $question = $quiz->questions()->create([
                 'type' => $validatedData['type'],
                 'text_km' => $validatedData['text_km'],
-                // Add English version if needed, currently optional
                 'text_en' => $request->input('text_en', ''),
                 'score' => $validatedData['score'],
-                // 'quiz_id' is automatically set via the relationship
             ]);
 
-            // 4. Redirect with success
             return redirect()->route('professor.quizzes.manage-questions', ['offering_id' => $offering_id, 'quiz' => $quiz->id])
                              ->with('success', 'សំណួរថ្មីត្រូវបានបង្កើតដោយជោគជ័យ!');
 
@@ -92,11 +86,10 @@ class ProfessorQuestionController extends Controller
         ]);
 
         try {
-            // 3. Update the Question
             $question->update([
                 'type' => $validatedData['type'],
                 'text_km' => $validatedData['text_km'],
-                'text_en' => $request->input('text_en', ''), // Assuming English is optional
+                'text_en' => $request->input('text_en', ''), 
                 'score' => $validatedData['score'],
             ]);
 
@@ -120,16 +113,13 @@ class ProfessorQuestionController extends Controller
      */
     public function destroy($offering_id, Quiz $quiz, Question $question)
     {
-        // 1. Authorization: Ensure the professor owns the course offering AND the question belongs to the quiz.
         if ($question->quiz_id !== $quiz->id || $quiz->courseOffering->professor_id !== Auth::id()) {
              return back()->with('error', 'អ្នកមិនមានសិទ្ធិលុបសំណួរនេះទេ។');
         }
 
         try {
-            // 2. Delete the Question
             $question->delete();
 
-            // 3. Redirect with success
             return redirect()->route('professor.quizzes.manage-questions', ['offering_id' => $offering_id, 'quiz' => $quiz->id])
                              ->with('success', 'សំណួរត្រូវបានលុបដោយជោគជ័យ!');
         } catch (\Exception $e) {

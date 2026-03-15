@@ -15,11 +15,11 @@ use App\Models\Submission;
 use App\Models\ExamResult;
 use App\Models\StudentQuizResponse;
 use App\Models\CourseOffering;
-use App\Models\Announcement; // Import Announcement model
+use App\Models\Announcement; 
 use App\Models\Program;
 use App\Models\Course;
 use App\Models\UserProfile;
-use App\Models\StudentProgramEnrollment; // ត្រូវប្រាកដថាបាន import StudentProgramEnrollment model
+use App\Models\StudentProgramEnrollment; 
 use App\Models\Room;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Models\AnnouncementRead;
@@ -29,12 +29,11 @@ use Illuminate\Support\Facades\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Session;
 use App\Notifications\GeneralNotification;
-use Illuminate\Support\Facades\DB; // Make sure DB facade is imported for transactions
+use Illuminate\Support\Facades\DB; 
 
 class StudentController extends Controller
 {
 
-// myEnrolledCourses
 
 public function dashboard()
 {
@@ -42,9 +41,6 @@ public function dashboard()
     $studentId = $user->id;
     $todayName = now()->format('l');
     $todayDate = now()->toDateString();
-
-    // --- 0. ស្ថិតិវត្តមាន (Attendance Stats) ---
-    // (សម្រាប់បង្ហាញលើកាតខាងលើ៖ វត្តមាន, អវត្តមាន, ច្បាប់)
     $totalPresent = \App\Models\AttendanceRecord::where('student_user_id', $studentId)->where('status', 'present')->count();
     $totalAbsent = \App\Models\AttendanceRecord::where('student_user_id', $studentId)->where('status', 'absent')->count();
     $totalPermission = \App\Models\AttendanceRecord::where('student_user_id', $studentId)->where('status', 'permission')->count();
@@ -53,7 +49,7 @@ public function dashboard()
     $todayOfferingIds = \App\Models\Schedule::where('day_of_week', $todayName)
         ->pluck('course_offering_id');
  
-    $enrolledCourses = CourseOffering::whereIn('id', $todayOfferingIds) // ✅ Filter យកតែមុខវិជ្ជាមានរៀនថ្ងៃនេះ
+    $enrolledCourses = CourseOffering::whereIn('id', $todayOfferingIds) 
         ->whereHas('students', function($query) use ($studentId) {
             $query->where('student_user_id', $studentId);
         })
@@ -72,12 +68,10 @@ public function dashboard()
         });
 
 
-    // 2. ទាញយកទិន្នន័យ Enrollment លម្អិត (សម្រាប់ Progress ឬ Status)
     $enrollments = StudentCourseEnrollment::where('student_user_id', $user->id)
                     ->with('courseOffering.course', 'courseOffering.lecturer')
                     ->get();
 
-    // 3. ទាញយកកិច្ចការ ការប្រឡង និង QUIZ ដែលជិតមកដល់
     $upcomingAssignments = Assignment::whereHas('courseOffering.studentCourseEnrollments', function ($query) use ($user) {
             $query->where('student_user_id', $user->id);
         })
@@ -102,7 +96,6 @@ public function dashboard()
         ->take(5)
         ->get();
 
-    // Schedule ថ្ងៃនេះ (ទាញយក Room និង Lecturer មកជាមួយ)
     $upcomingSchedules = Schedule::whereHas('courseOffering.studentCourseEnrollments', function ($query) use ($studentId) {
             $query->where('student_user_id', $studentId);
         })
@@ -111,7 +104,6 @@ public function dashboard()
         ->orderBy('start_time', 'asc')
         ->get();
 
-    // 4. ព័ត៌មានអំពីកម្មវិធីសិក្សា និង មុខវិជ្ជាដែលអាចចុះឈ្មោះបាន
     $studentProgram = null;
     $studentProgramEnrollment = \App\Models\StudentProgramEnrollment::where('student_user_id', $user->id)
         ->where('status', 'active')
@@ -133,15 +125,14 @@ public function dashboard()
         $availableCoursesInProgram = CourseOffering::with(['course', 'lecturer'])
         ->withCount('studentCourseEnrollments')
         
-        // ឆែកក្នុងតារាង Pivot (course_offering_program)
         ->whereHas('targetPrograms', function ($query) use ($user) {
-            $query->where('program_id', $user->program_id)      // ត្រូវនឹងជំនាញសិស្ស
-                  ->where('generation', $user->generation);     // ត្រូវនឹងជំនាន់សិស្ស
+            $query->where('program_id', $user->program_id)      
+                  ->where('generation', $user->generation);     
         })
         
-        // លក្ខខណ្ឌបន្ថែម (មិនទាន់ផុតកំណត់, មិនទាន់ចុះឈ្មោះ)
+        
         ->where('end_date', '>=', now())
-        ->whereNotIn('id', $enrolledCourseOfferingIds) // $enrolledCourseOfferingIds បានពីកូដចាស់
+        ->whereNotIn('id', $enrolledCourseOfferingIds) 
         ->get();
     }
 
@@ -150,13 +141,10 @@ public function dashboard()
         ->where('status', 'completed')
         ->count();
 
-    // $totalCoursesInProgram = $studentProgram ? $studentProgram->courses->count() : 0;
-    // រាប់ចំនួន Course ផ្សេងៗគ្នាដែលមានក្នុង Program របស់សិស្ស
 $totalCoursesInProgram = $studentProgram ? \App\Models\CourseOffering::whereHas('targetPrograms', function($query) use ($studentProgram) {
     $query->where('program_id', $studentProgram->id);
 })->distinct('course_id')->count() : 0;
 
-    // 6. Announcements & Notifications (Feed)
     $allAnnouncements = Announcement::where('target_role', 'all')
         ->orWhere('target_role', 'student')
         ->with(['poster', 'reads' => function($query) use ($user) {

@@ -9,14 +9,11 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-// ១. ហៅ Firebase Factory មកប្រើ
 use Kreait\Firebase\Factory;
 
 class FacultyController extends Controller
 {
-    /**
-     * បង្កើតរោងចក្រ Firebase (Private Helper)
-     */
+
     private function getFirebaseDatabase()
     {
         $credentialPath = storage_path('app/firebase/classmanagementsystem.json');
@@ -46,19 +43,7 @@ class FacultyController extends Controller
         }
     }
 
-    /**
-     * មុខងារផ្ញើសញ្ញាទៅ Firebase ដើម្បីឱ្យ Index ធ្វើការ Refresh (Real-time Sync)
-     */
-    // private function syncWithFirebase()
-    // {
-    //     try {
-    //         $this->getFirebaseDatabase()
-    //             ->getReference('faculties_sync')
-    //             ->set(['updated_at' => now()->timestamp]);
-    //     } catch (\Exception $e) {
-    //         Log::error('Firebase Sync Error: ' . $e->getMessage());
-    //     }
-    // }
+
 
     public function index()
     {
@@ -82,7 +67,6 @@ class FacultyController extends Controller
 
         Faculty::create($request->all());
 
-        // ២. បញ្ជូនសញ្ញាទៅ Firebase
         $this->syncWithFirebase("មហាវិទ្យាល័យថ្មីត្រូវបានបន្ថែម");
         return redirect()->route('admin.manage-faculties')->with('success', 'មហាវិទ្យាល័យត្រូវបានបង្កើតដោយជោគជ័យ។');
     }
@@ -103,7 +87,6 @@ class FacultyController extends Controller
 
         $faculty->update($request->all());
 
-        // ៣. បញ្ជូនសញ្ញាទៅ Firebase
         $this->syncWithFirebase("មហាវិទ្យាល័យ '{$faculty->name_km}' ត្រូវបានកែប្រែ");
 
         return redirect()->route('admin.manage-faculties')->with('success', 'មហាវិទ្យាល័យត្រូវបានធ្វើបច្ចុប្បន្នដោយជោគជ័យ!');
@@ -126,7 +109,6 @@ class FacultyController extends Controller
 
             DB::commit();
 
-            // ៤. បញ្ជូនសញ្ញាទៅ Firebase
             $this->syncWithFirebase("មហាវិទ្យាល័យមួយត្រូវបានលុបចេញពីប្រព័ន្ធ");
 
             return redirect()->route('admin.manage-faculties')

@@ -21,21 +21,11 @@ class notificationController extends Controller
     {
         $student = Auth::user();
 
-        // ទាញយកការជូនដំណឹងទាំងអស់
         $notifications = $student->notifications()->latest()->paginate(10);
 
         return view('student.notifications.index', compact('notifications'));
     }
 
-    // public function markAsRead($id)
-    // {
-    //     $student = Auth::user();
-    //     $notification = $student->notifications()->findOrFail($id);
-
-    //     $notification->markAsRead();
-
-    //     return back()->with('success', 'បានអានការជូនដំណឹង!');
-    // }
 
     public function markAllAsRead()
     {
@@ -48,44 +38,33 @@ class notificationController extends Controller
     {
         $user = Auth::user();
 
-        // រកមើលការជូនដំណឹងតាម ID
         $notification = $user->notifications()->find($id);
 
         if ($notification) {
-            // សម្គាល់ថាបានអាន
             $notification->markAsRead();
             
-            // ត្រឡប់ការឆ្លើយតបជា JSON
             return response()->json([
                 'success' => true,
                 'message' => 'Notification marked as read.'
             ]);
         }
         
-        // ត្រឡប់កំហុសប្រសិនបើមិនមានការជូនដំណឹង
         return response()->json([
             'success' => false,
             'message' => 'Notification not found.'
         ], 404);
     }
 
-    /**
-     * សម្គាល់សេចក្តីប្រកាសថាបានអានហើយ។
-     * Mark an announcement as read.
-     */
     public function markAnnouncementAsRead(Request $request, $id)
     {
         $user = Auth::user();
         
-        // រកមើលសេចក្តីប្រកាសតាម ID
         $announcement = Announcement::find($id);
 
         if ($announcement) {
-            // ពិនិត្យមើលថាតើអ្នកប្រើប្រាស់បានសម្គាល់វាថាបានអានហើយឬនៅ
             $readRecord = AnnouncementRead::where('announcement_id', $id)->where('user_id', $user->id)->first();
             
             if (!$readRecord) {
-                // បង្កើតកំណត់ត្រាថ្មីប្រសិនបើមិនទាន់មាន
                 AnnouncementRead::create([
                     'announcement_id' => $id,
                     'user_id' => $user->id,
@@ -110,15 +89,12 @@ class notificationController extends Controller
         ], 404);
     }
 
-    // room
 public function notifications()
 {
     $user = Auth::user();
     
-    // Fetch all user notifications (both unread and read)
     $notifications = $user->notifications;
 
-    // Fetch all relevant announcements for the student
     $courseOfferingIds = StudentCourseEnrollment::where('student_user_id', $user->id)->pluck('course_offering_id');
     $announcements = Announcement::where('target_role', 'all')
                                  ->orWhere('target_role', 'student')
@@ -126,7 +102,6 @@ public function notifications()
                                  ->with('poster')
                                  ->get();
 
-    // Combine notifications and announcements into a single collection
     $combinedFeed = collect();
 
     foreach ($notifications as $notification) {
@@ -156,10 +131,8 @@ public function notifications()
         ]);
     }
 
-    // Sort the combined feed by creation date, with unread items at the top
     $combinedFeed = $combinedFeed->sortByDesc('created_at')->sortBy('is_read');
 
-    // Manually paginate the combined feed
     $perPage = 10;
     $currentPage = request()->get('page', 1);
     $currentItems = $combinedFeed->slice(($currentPage - 1) * $perPage, $perPage)->all();

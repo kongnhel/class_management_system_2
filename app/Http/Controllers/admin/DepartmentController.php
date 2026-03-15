@@ -14,9 +14,7 @@ use Kreait\Firebase\Factory;
 
 class DepartmentController extends Controller
 {
-    /**
-     * បង្កើតរោងចក្រ Firebase (Private Helper)
-     */
+
     private function getFirebaseDatabase()
     {
         $credentialPath = storage_path('app/firebase/classmanagementsystem.json');
@@ -31,14 +29,11 @@ class DepartmentController extends Controller
             ->createDatabase();
     }
 
-    /**
-     * ផ្ញើសញ្ញាទៅ Firebase សម្រាប់ Real-time Sync
-     */
     private function syncWithFirebase($message = 'ទិន្នន័យដេប៉ាតឺម៉ង់ត្រូវបានកែប្រែ')
     {
         try {
             $this->getFirebaseDatabase()
-                ->getReference('departments_sync') // ប្រើ departments_sync សម្រាប់ Listener ក្នុង JS
+                ->getReference('departments_sync') 
                 ->set([
                     'updated_at' => now()->timestamp,
                     'message' => $message 
@@ -72,7 +67,7 @@ class DepartmentController extends Controller
 
         $department = Department::create($request->all());
 
-        // --- បញ្ជូនទៅ Firebase និងបាញ់សញ្ញា Sync ---
+        
         try {
             $db = $this->getFirebaseDatabase();
             $db->getReference('departments/' . $department->id)->set([
@@ -81,7 +76,6 @@ class DepartmentController extends Controller
                 'updated_at' => now()->toDateTimeString()
             ]);
             
-            // ហៅការ Sync ដើម្បីឱ្យ Browser ផ្សេងទៀតលោត Alert
             $this->syncWithFirebase("ដេប៉ាតឺម៉ង់ '" . $department->name_km . "' ត្រូវបានបង្កើតថ្មី!");
         } catch (\Exception $e) {
             Log::error('Firebase Store Error: ' . $e->getMessage());
@@ -108,7 +102,6 @@ class DepartmentController extends Controller
 
         $department->update($request->all());
 
-        // --- Update ទៅ Firebase និងបាញ់សញ្ញា Sync ---
         try {
             $this->getFirebaseDatabase()
                 ->getReference('departments/' . $department->id)
@@ -143,7 +136,6 @@ class DepartmentController extends Controller
 
             DB::commit();
 
-            // --- លុបចេញពី Firebase និងបាញ់សញ្ញា Sync ---
             try {
                 $this->getFirebaseDatabase()->getReference('departments/' . $deptId)->remove();
                 $this->syncWithFirebase("ដេប៉ាតឺម៉ង់ '" . $deptName . "' ត្រូវបានលុបចេញពីប្រព័ន្ធ!");

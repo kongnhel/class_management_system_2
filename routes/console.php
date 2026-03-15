@@ -7,19 +7,16 @@ use Illuminate\Support\Facades\Schedule;
 use Carbon\Carbon;
 
 Schedule::call(function () {
-    // ១. ទាញយក User ដែលមាន Telegram Chat ID
     $users = User::whereNotNull('telegram_chat_id')->get();
     $botToken = env('TELEGRAM_BOT_TOKEN2');
-    $todayName = Carbon::now()->format('l'); // លទ្ធផល: Thursday
-$users = User::where('role', 'professor')
-                 ->whereNotNull('telegram_chat_id')
-                 ->get();
+    $todayName = Carbon::now()->format('l'); 
+    $users = User::where('role', 'professor')
+                    ->whereNotNull('telegram_chat_id')
+                    ->get();
 
     foreach ($users as $user) {
-        // ២. ទាញយកកាលវិភាគដោយប្រើ lecturer_user_id តាមការរកឃើញក្នុង Tinker
         $todaySchedules = ClassSchedule::with(['courseOffering.course', 'room'])
             ->whereHas('courseOffering', function ($query) use ($user) {
-                // កែពី user_id ឬ professor_id មកជា lecturer_user_id វិញ
                 $query->where('lecturer_user_id', $user->id); 
             })
             ->where('day_of_week', $todayName)

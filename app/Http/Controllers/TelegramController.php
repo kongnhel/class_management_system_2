@@ -8,21 +8,19 @@ use Illuminate\Support\Facades\Log;
 
 class TelegramController extends Controller
 {
-// នៅក្នុង TelegramController.php
 public function handleWebhook(Request $request)
 {
     $chatId = $request->input('message.chat.id');
-    $text = $request->input('message.text'); // វាលោតចេញមក "/start 1" (ប្រសិនបើ User ID = 1)
+    $text = $request->input('message.text'); 
 
     if (str_contains($text, '/start')) {
         $userId = str_replace('/start ', '', $text);
         
         $user = User::find($userId);
         if ($user) {
-            $user->telegram_chat_id = $chatId; // រក្សាទុក Chat ID ចូលក្នុង Table Users
+            $user->telegram_chat_id = $chatId; 
             $user->save();
             
-            // ផ្ញើសារតបទៅសិស្សវិញថាជោគជ័យ
             $this->notifyTelegram($chatId, "✅ ការភ្ជាប់គណនីជោគជ័យ! អ្នកនឹងទទួលបានពិន្ទុតាមរយៈ Bot នេះ។");
         }
     }
@@ -40,13 +38,10 @@ public function handleWebhook(Request $request)
     protected function schedule(Schedule $schedule): void
     {
         $schedule->call(function () {
-            // ១. ទាញយកសាស្ត្រាចារ្យទាំងឡាយណាដែលមាន Telegram Chat ID
             $users = User::whereNotNull('telegram_chat_id')->get();
-            $botToken = env('TELEGRAM_BOT_TOKEN2'); // កុំភ្លេចដាក់ក្នុង .env
+            $botToken = env('TELEGRAM_BOT_TOKEN2'); 
 
             foreach ($users as $user) {
-                // ២. ទាញយកកាលវិភាគថ្ងៃនេះរបស់សាស្ត្រាចារ្យម្នាក់ៗ
-                // លោកគ្រូត្រូវកែសម្រួល Logic ទាញកាលវិភាគតាម Database របស់លោកគ្រូ
                 $todaySchedules = \App\Models\Schedule::where('professor_id', $user->id)
                     ->whereDate('date', now())
                     ->orderBy('start_time', 'asc')
@@ -66,7 +61,6 @@ public function handleWebhook(Request $request)
                     
                     $message .= "\nសូមលោកគ្រូត្រៀមខ្លួនឱ្យបានរួចរាល់។ សូមអរគុណ!";
 
-                    // ៣. ផ្ញើសារទៅកាន់ Telegram
                     Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
                         'chat_id' => $user->telegram_chat_id,
                         'text' => $message,

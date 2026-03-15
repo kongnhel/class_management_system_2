@@ -42,7 +42,6 @@ class StudentRegistrationController extends Controller
 
         try {
             DB::transaction(function () use ($request) {
-                // 🟢 1. ទាញយក User មក Update
                 $user = User::where('student_id_code', $request->student_id_code)->firstOrFail();
 
                 $user->forceFill([
@@ -52,7 +51,6 @@ class StudentRegistrationController extends Controller
                     'password' => Hash::make($request->password),
                 ])->save();
 
-                // 🟢 2. ចុះឈ្មោះ Program (ប្រើ student_user_id)
                 StudentProgramEnrollment::firstOrCreate([
                     'student_user_id' => $user->id,
                     'program_id' => $request->program_id,
@@ -61,7 +59,6 @@ class StudentRegistrationController extends Controller
                     'status' => 'active',
                 ]);
 
-                // 🟢 3. Auto-enroll ចូលមុខវិជ្ជា
                 $courseOfferings = CourseOffering::where('generation', $request->generation)
                     ->whereHas('course', function ($query) use ($request) {
                         $query->where('program_id', $request->program_id);
@@ -70,7 +67,7 @@ class StudentRegistrationController extends Controller
                 foreach ($courseOfferings as $offering) {
                     StudentCourseEnrollment::create([
                         'student_user_id'    => $user->id,
-                        'student_id'         => $user->id, // 💡 បញ្ជូន ID ដូចគ្នាទៅក្នុង field ទាំងពីរដើម្បីដោះស្រាយ Error ក្នុង DB
+                        'student_id'         => $user->id, 
                         'course_offering_id' => $offering->id,
                         'enrollment_date'    => now(),
                         'status'             => 'enrolled',

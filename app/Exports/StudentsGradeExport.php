@@ -26,8 +26,6 @@ class StudentsGradeExport implements FromCollection, WithHeadings, WithMapping
             $student->id,
             $student->student_id_code,
             $student->studentProfile?->full_name_km ?? $student->name,
-            '', // ទុកឱ្យគ្រូបញ្ចូលពិន្ទុ
-            '', // ទុកឱ្យគ្រូបញ្ចូលចំណាំ
         ];
     }
 

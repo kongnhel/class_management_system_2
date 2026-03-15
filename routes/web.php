@@ -45,85 +45,73 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Http\Request;
 
 
-// my-grades
-// admin.course-offerings.destroy
 
-
-// myCourseOfferings
-
-Route::get('/run-scheduler/scheduler-secret-key', function () {
-    Artisan::call('schedule:run');
-    return "Scheduler is running!";
-});
-/*
-|--------------------------------------------------------------------------
-| Public Routes
-|--------------------------------------------------------------------------
-*/
-Route::get('/', function () {
-    if (Auth::check()) {
-        $user = Auth::user();
-        if ($user->isAdmin()) {
-            return redirect()->route('admin.dashboard');
+    Route::get('/run-scheduler/scheduler-secret-key', function () {
+        Artisan::call('schedule:run');
+        return "Scheduler is running!";
+    });
+    /*
+    |--------------------------------------------------------------------------
+    | Public Routes
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/', function () {
+        if (Auth::check()) {
+            $user = Auth::user();
+            if ($user->isAdmin()) {
+                return redirect()->route('admin.dashboard');
+            }
+            if ($user->isProfessor()) {
+                return redirect()->route('professor.dashboard');
+            }
+            if ($user->isStudent()) {
+                return redirect()->route('student.dashboard');
+            }
+            return redirect()->route('auth.login');
         }
-        if ($user->isProfessor()) {
-            return redirect()->route('professor.dashboard');
-        }
-        if ($user->isStudent()) {
-            return redirect()->route('student.dashboard');
-        }
-        return redirect()->route('auth.login');
-    }
 
-    return redirect()->route('login');
-});
-// // កែប្រែ Route Login ដើម (Override the default Breeze login route)
-// Route::get('login', [AuthenticatedSessionController::class, 'create'])
-//                 ->name('login');
-
-// // Route សម្រាប់ទទួលការសម្រេចការ Login តាម QR
-// Route::get('/qr-login/finalize/{token}', [QrLoginController::class, 'finalizeLogin'])->name('qr.finalize');
+        return redirect()->route('login');
+    });
 
 
-        Route::get('/qr-login', [QrLoginController::class, 'showQrForm'])->name('qr.login');
+
+    Route::get('/qr-login', [QrLoginController::class, 'showQrForm'])->name('qr.login');
     Route::get('/qr-login/finalize/{token}', [QrLoginController::class, 'finalizeLogin'])->name('qr.finalize');
 
-Route::middleware(['web'])->group(function () {
-    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+    Route::middleware(['web'])->group(function () {
+        Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 
-    Route::post('/login', [LoginController::class, 'login']);
-});
+        Route::post('/login', [LoginController::class, 'login']);
+    });
 
 
-Route::get('/api/check-student/{code}', [RegisteredUserController::class, 'checkStudent']);
+    Route::get('/api/check-student/{code}', [RegisteredUserController::class, 'checkStudent']);
 /*
 |--------------------------------------------------------------------------
 | Authenticated & Verified Routes (Shared for all authenticated users)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', function () {
-        if (Auth::user()->isAdmin()) {
-            return redirect()->route('admin.dashboard');
-        } elseif (Auth::user()->isProfessor()) {
-            return redirect()->route('professor.dashboard');
-        } else { // Default to student role
-            return redirect()->route('student.dashboard');
-        }
-    })->name('dashboard');
+    Route::middleware(['auth', 'verified'])->group(function () {
+        Route::get('/dashboard', function () {
+            if (Auth::user()->isAdmin()) {
+                return redirect()->route('admin.dashboard');
+            } elseif (Auth::user()->isProfessor()) {
+                return redirect()->route('professor.dashboard');
+            } else { // Default to student role
+                return redirect()->route('student.dashboard');
+            }
+        })->name('dashboard');
 
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::post('/profile/update-picture', [ProfileController::class, 'updateProfilePicture'])->name('profile.update-picture');
-});
+        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+        Route::post('/profile/update-picture', [ProfileController::class, 'updateProfilePicture'])->name('profile.update-picture');
+    });
 
 
-// ប្រើ middleware 'auth' ដើម្បីឱ្យដឹងថាជា User ដែលបាន Login លើទូរស័ព្ទរួចហើយ
-Route::middleware(['auth'])->post('/qr-authorize', [App\Http\Controllers\Auth\QrLoginController::class, 'handleScan'])
-     ->name('qr.authorize');
+    Route::middleware(['auth'])->post('/qr-authorize', [App\Http\Controllers\Auth\QrLoginController::class, 'handleScan'])
+        ->name('qr.authorize');
      Route::get('/qr-refresh', [App\Http\Controllers\Auth\QrLoginController::class, 'refreshQr'])->name('qr.refresh');
-// showGradeEntryForm
     /*
     |--------------------------------------------------------------------------
     | Admin Routes (Protected by 'role:admin' middleware)
@@ -213,7 +201,6 @@ Route::middleware(['auth'])->post('/qr-authorize', [App\Http\Controllers\Auth\Qr
 |--------------------------------------------------------------------------
 */
 
-// manageGrades
 
     Route::middleware(['auth', 'role:professor'])->prefix('professor')->name('professor.')->group(function () {
 
@@ -285,7 +272,6 @@ Route::middleware(['auth'])->post('/qr-authorize', [App\Http\Controllers\Auth\Qr
 
         Route::get('/quizzes/{quiz}/questions', [ProfessorController::class, 'manageQuizQuestions'])->name('quizzes.questions.index');
         Route::post('/quizzes/{quiz}/questions', [ProfessorController::class, 'storeQuizQuestion'])->name('quizzes.questions.store');
-// destroyAssessment
 
         Route::post('/telegram/webhook', [TelegramController::class, 'handle']);
 
@@ -313,28 +299,22 @@ Route::middleware(['auth'])->post('/qr-authorize', [App\Http\Controllers\Auth\Qr
             [ProfessorGradeController::class, 'update']
         )->name('assessments.update');
 
- 
-
-
-
 
         Route::get('/course-offerings/{offering_id}/export-docx', [ProfessorController::class, 'exportStudentsDocx'])
             ->name('students.export-docx');
         Route::get('/course-offerings/{offering_id}/export-gradebook', [ProfessorController::class, 'exportGradebookDocx'])
             ->name('grades.export-docx');
 
-
-       // ថែមចូលក្នុង Route Group របស់ Professor
         Route::post('/verify-location', [App\Http\Controllers\professor\ProfessorAttendanceController::class, 'verifyLocation'])
-     ->name('verify-location');
+        ->name('verify-location');
 
-     Route::post('/attendance/precheck', [App\Http\Controllers\professor\ProfessorAttendanceController::class, 'precheck'])
-    ->name('attendance.precheck');
+        Route::post('/attendance/precheck', [App\Http\Controllers\professor\ProfessorAttendanceController::class, 'precheck'])
+        ->name('attendance.precheck');
 
-       });
+        });
 
 
-       Route::prefix('grades')->name('grades.')->group(function () {
+        Route::prefix('grades')->name('grades.')->group(function () {
         Route::get('/edit/{student_id}/{course_id}', [ProfessorGradeController::class, 'editAttendance'])
                 ->name('edit-attendance');
         Route::post('/attendance/update', [ProfessorGradeController::class, 'updateAttendanceScore'])
@@ -346,11 +326,11 @@ Route::middleware(['auth'])->post('/qr-authorize', [App\Http\Controllers\Auth\Qr
        });
 
         
-    Route::get('/professor/course-offering/{offering_id}/export', [CourseOfferingController::class, 'exportStudents'])
-        ->name('professor.course-offering.export');
+        Route::get('/professor/course-offering/{offering_id}/export', [CourseOfferingController::class, 'exportStudents'])
+            ->name('professor.course-offering.export');
 
 
-    Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')->group(function () {
+        Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')->group(function () {
         Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
         Route::get('/my-grades', [StudentGradeController::class, 'myGrades'])->name('my-grades');
         Route::get('/my-enrolled-courses', [StudentGradeController::class, 'myEnrolledCourses'])->name('my-enrolled-courses');
@@ -386,18 +366,13 @@ Route::middleware(['auth'])->post('/qr-authorize', [App\Http\Controllers\Auth\Qr
             ->name('leader.report');
         Route::post('/student/update-telegram', [StudentController::class, 'updateTelegram'])
             ->name('update_telegram');
-    Route::get('/student/scan', function () {
-        return view('student.scan');
-    })->name('scan');
+        Route::get('/student/scan', function () {
+            return view('student.scan');
+        })->name('scan');
 
-    // API សម្រាប់ទទួលទិន្នន័យស្កែន
-    Route::post('/student/process-scan', [AttendanceController::class, 'processScan'])
-        ->name('process-scan');
-
-
-
-// storeGradesForAssessment
-
+        // API សម្រាប់ទទួលទិន្នន័យស្កែន
+        Route::post('/student/process-scan', [AttendanceController::class, 'processScan'])
+            ->name('process-scan');
 
         });
 
@@ -411,22 +386,17 @@ Route::middleware(['auth'])->post('/qr-authorize', [App\Http\Controllers\Auth\Qr
 
 
 
-        // លើ Web (Desktop)
+        Route::post('/api/qr-scan', [QrLoginController::class, 'handleScan'])->middleware('auth:sanctum');
+
+        Route::middleware(['auth'])->get('/qr-scanner', function () {
+            return view('qr-scanner');
+        })->name('qr.scanner');
 
 
-    // លើ API (សម្រាប់ Mobile App Scan)
-    Route::post('/api/qr-scan', [QrLoginController::class, 'handleScan'])->middleware('auth:sanctum');
+        Route::post('/auth/google/callback', [GoogleAuthController::class, 'handleCallback'])
+            ->name('auth.google.callback');
 
-Route::middleware(['auth'])->get('/qr-scanner', function () {
-    return view('qr-scanner');
-})->name('qr.scanner');
+        Route::post('/user/link-google', [App\Http\Controllers\Auth\GoogleAuthController::class, 'linkAccount'])->name('user.link-google');
 
 
-
-Route::post('/auth/google/callback', [GoogleAuthController::class, 'handleCallback'])
-    ->name('auth.google.callback');
-
-Route::post('/user/link-google', [App\Http\Controllers\Auth\GoogleAuthController::class, 'linkAccount'])->name('user.link-google');
-
-
-require __DIR__.'/auth.php';
+    require __DIR__.'/auth.php';

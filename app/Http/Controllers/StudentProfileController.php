@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Http; // សម្រាប់ប្រើប្រាស់ ImgBB API
+use Illuminate\Support\Facades\Http; 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
@@ -20,7 +20,6 @@ class StudentProfileController extends Controller
             return redirect()->route('dashboard');
         }
 
-        // ប្រើ userProfile តែមួយគត់សម្រាប់គ្រប់ Role
         $userProfile = $user->userProfile()->firstOrCreate([
             'user_id' => $user->id
         ]);
@@ -69,15 +68,10 @@ class StudentProfileController extends Controller
             'profile_picture' => ['nullable', 'image', 'max:2048'],
         ]);
 
-        // ===========================================
-        // បង្ហោះរូបភាពទៅកាន់ ImgBB
-        // ===========================================
-// បង្ហោះរូបភាពទៅកាន់ ImageKit
 if ($request->hasFile('profile_picture')) { 
     try {
         $image = $request->file('profile_picture');
         
-        // បញ្ជូនរូបភាពទៅកាន់ ImageKit API
         $response = Http::withBasicAuth(env('IMAGEKIT_PRIVATE_KEY'), '')
             ->attach(
                 'file', 
@@ -91,7 +85,6 @@ if ($request->hasFile('profile_picture')) {
             ]);
 
         if ($response->successful()) {
-            // រក្សាទុក URL ថ្មីចូលក្នុង Database ភ្លាមៗ
             $userProfile->profile_picture_url = $response->json()['url'];
         } else {
             Log::error('ImageKit Upload Error: ' . $response->body());
@@ -101,14 +94,10 @@ if ($request->hasFile('profile_picture')) {
         Log::error('Upload Error: ' . $e->getMessage());
     }
 } 
-// ករណីលុបរូបភាពចេញ (គ្រាន់តែផ្ដាច់ Link ក្នុង DB)
 elseif ($request->has('remove_profile_picture') && $request->input('remove_profile_picture') === '1') {
     $userProfile->profile_picture_url = null;
 }
 
-        // ===========================================
-        // ធ្វើបច្ចុប្បន្នភាពព័ត៌មាន Profile
-        // ===========================================
         $userProfile->fill($validatedData);
         $userProfile->save();
 

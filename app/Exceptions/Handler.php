@@ -11,7 +11,6 @@ class Handler extends ExceptionHandler
 {
     public function render($request, Throwable $e)
     {
-        // 419 Page Expired
         if ($e instanceof TokenMismatchException) {
             return redirect()->route('login')
                 ->with('message', 'Session expired, please login again.');

@@ -20,10 +20,6 @@ class AnnouncementController extends Controller
         return view('admin.announcements.index', compact('announcements'));
     }
 
-    /**
-     * Show the form for creating a new announcement.
-     * កែសម្រួលដើម្បីរួមបញ្ចូល roles ទាំងអស់
-     */
     public function create()
     {
         $courseOfferings = CourseOffering::with('course', 'program')->get();
@@ -31,25 +27,19 @@ class AnnouncementController extends Controller
 
         return view('admin.announcements.create', compact('courseOfferings', 'role'));
     }
-    /**
-     * Store a new announcement in the database.
-     * កែសម្រួលការ Redirect បន្ទាប់ពីបានជោគជ័យ
-     */
+
     public function store(Request $request)
     {
         $request->validate([
             'title_km' => 'required|string|max:255',
             'title_en' => 'nullable|string|max:255',
-            // 'title_en' => 'required|string|max:255',
             'content_km' => 'required|string',
             'content_en' => 'nullable|string',
             'target_role' => ['nullable', 'string', Rule::in(['all', 'student', 'professor', 'admin'])],
             'course_offering_id' => 'nullable|exists:course_offerings,id',
         ], [
             'title_km.required' => 'ចំណងជើងជាភាសាខ្មែរត្រូវតែបញ្ចូល។',
-            // 'title_en.required' => 'ចំណងជើងជាភាសាអង់គ្លេសត្រូវតែបញ្ចូល។',
             'content_km.required' => 'ខ្លឹមសារជាភាសាខ្មែរត្រូវតែបញ្ចូល។',
-            // 'content_en.required' => 'ខ្លឹមសារជាភាសាអង់គ្លេសត្រូវតែបញ្ចូល។',
             'course_offering_id.exists' => 'ការផ្តល់ជូនវគ្គសិក្សាមិនត្រឹមត្រូវទេ។',
         ]);
 // code 
@@ -72,10 +62,6 @@ class AnnouncementController extends Controller
         return redirect()->route('admin.announcements.index');
     }
     
-    /**
-     * Show the form for editing the specified announcement.
-     * កែសម្រួលដើម្បីរួមបញ្ចូល roles ទាំងអស់
-     */
     public function edit(Announcement $announcement)
     {
         $courseOfferings = CourseOffering::with('course', 'program')->get();
@@ -84,15 +70,11 @@ class AnnouncementController extends Controller
         return view('admin.announcements.edit', compact('announcement', 'courseOfferings', 'role'));
     }
     
-    /**
-     * Update the specified announcement in storage.
-     * កែសម្រួលការ Redirect បន្ទាប់ពីបានជោគជ័យ
-     */
+    
     public function update(Request $request, Announcement $announcement)
     {
         $request->validate([
             'title_km' => 'required|string|max:255',
-            // 'title_en' => 'required|string|max:255',
             'title_en' => 'nullable|string|max:255',
             'content_km' => 'required|string',
             'content_en' => 'nullable|string',
@@ -110,10 +92,6 @@ class AnnouncementController extends Controller
         return redirect()->route('admin.announcements.index');
     }
     
-    /**
-     * Remove the specified announcement from storage.
-     * កែសម្រួលដើម្បីដោះស្រាយបញ្ហា foreign key constraint
-     */
     public function destroy(Announcement $announcement)
     {
         try {

@@ -46,14 +46,11 @@ use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\Shared\Converter;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-// use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Cloudinary\Configuration\Configuration;
 
 
 class ProfessorController extends Controller
 {
-// storeGradesForAssessment
-// assessmentEdit
 public function dashboard()
 {
     $user = \Illuminate\Support\Facades\Auth::user();
@@ -67,21 +64,15 @@ public function dashboard()
         ->with('department')
         ->first();
 
-    // 2. Get Today's SCHEDULES (Sessions) 
-    // Instead of looping through CourseOfferings directly, we loop through Schedule
-    // This allows showing multiple sessions of the same course correctly.
-// ប្តូរពី courseOffering.course.program ទៅជា courseOffering.course.programs
 $todaySchedules = \App\Models\Schedule::whereHas('courseOffering', function ($query) use ($user) {
         $query->where('lecturer_user_id', $user->id);
     })
     ->where('day_of_week', $todayName)
-    ->with(['courseOffering.course.programs', 'room']) // ✅ កែត្រង់នេះ
+    ->with(['courseOffering.course.programs', 'room']) 
     ->orderBy('start_time', 'asc')
     ->get()
         ->map(function ($schedule) use ($todayDate) {
-            // Check if attendance has been taken for this Course Offering TODAY
-            // Note: If you want to track attendance per SESSION, you need a 'schedule_id' or 'time_slot' column in AttendanceRecord.
-            // For now, we check by 'course_offering_id' and 'date'.
+
             $hasRecord = \App\Models\AttendanceRecord::where('course_offering_id', $schedule->course_offering_id)
                             ->where('date', $todayDate)
                             ->exists();
@@ -135,9 +126,9 @@ $todaySchedules = \App\Models\Schedule::whereHas('courseOffering', function ($qu
     return view('professor.dashboard', compact(
         'user',
         'professor',
-        'todaySchedules', // ✅ Use this variable in your View loop
+        'todaySchedules', 
         'totalStudents',
-        'courseOfferingsCount', // Pass count for stats
+        'courseOfferingsCount', 
         'upcomingAssignments',
         'upcomingExams',
         'upcomingQuizzes',

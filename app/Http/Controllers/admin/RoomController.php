@@ -8,15 +8,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Kreait\Firebase\Factory;
 use Illuminate\Support\Facades\Http;
-// បន្ថែម Cloudinary Facade
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class RoomController extends Controller
 {
-    /**
-     * បង្កើតរោងចក្រ Firebase (Private Helper)
-     */
-    private function getFirebaseDatabase()
+
+private function getFirebaseDatabase()
     {
         $credentialPath = storage_path('app/firebase/classmanagementsystem.json');
 
@@ -30,9 +27,6 @@ class RoomController extends Controller
             ->createDatabase();
     }
 
-    /**
-     * ផ្ញើសញ្ញាទៅ Firebase
-     */
     private function syncWithFirebase($message = 'ទិន្នន័យបន្ទប់ត្រូវបានធ្វើបច្ចុប្បន្នភាព')
     {
         try {
@@ -78,7 +72,6 @@ $data = $request->except('wifi_qr_code');
 if ($request->hasFile('wifi_qr_code')) {
     $file = $request->file('wifi_qr_code');
     
-    // ផ្ញើរូបភាពទៅ ImageKit API
     $response = Http::withBasicAuth(env('IMAGEKIT_PRIVATE_KEY'), '') // ប្រើ Private Key ជា Username
         ->attach(
             'file', 
@@ -88,11 +81,10 @@ if ($request->hasFile('wifi_qr_code')) {
         ->post('https://upload.imagekit.io/api/v1/files/upload', [
             'fileName' => 'wifi_qr_' . time(),
             'useUniqueFileName' => 'true',
-            'folder' => '/room_wifi', // បែងចែក Folder សម្រាប់ QR Code
+            'folder' => '/room_wifi', 
         ]);
 
     if ($response->successful()) {
-        // រក្សាទុក URL ពេញលេញដែលទទួលបានពី ImageKit
         $data['wifi_qr_code'] = $response->json()['url'];
     } else {
         return back()->withErrors(['wifi_qr_code' => 'ការ Upload ទៅ ImageKit បរាជ័យ៖ ' . $response->body()]);
@@ -116,13 +108,11 @@ if ($request->hasFile('wifi_qr_code')) {
     }
 
 
-    // App\Http\Controllers\admin\RoomController.php
 
-public function edit(Room $room)
-{
-    // បង្ហាញទំព័រ Form សម្រាប់កែប្រែទិន្នន័យបន្ទប់
-    return view('admin.rooms.edit', compact('room'));
-}
+    public function edit(Room $room)
+    {
+        return view('admin.rooms.edit', compact('room'));
+    }
 
     public function update(Request $request, Room $room)
     {
@@ -134,13 +124,12 @@ public function edit(Room $room)
             'type_of_room'     => 'nullable|string|max:255',
         ]);
 
-$data = $request->except('wifi_qr_code');
+    $data = $request->except('wifi_qr_code');
 
-if ($request->hasFile('wifi_qr_code')) {
-    $file = $request->file('wifi_qr_code');
+    if ($request->hasFile('wifi_qr_code')) {
+        $file = $request->file('wifi_qr_code');
     
-    // ផ្ញើរូបភាពទៅ ImageKit API
-    $response = Http::withBasicAuth(env('IMAGEKIT_PRIVATE_KEY'), '') // ប្រើ Private Key ជា Username
+    $response = Http::withBasicAuth(env('IMAGEKIT_PRIVATE_KEY'), '') 
         ->attach(
             'file', 
             file_get_contents($file->getRealPath()), 
@@ -149,11 +138,11 @@ if ($request->hasFile('wifi_qr_code')) {
         ->post('https://upload.imagekit.io/api/v1/files/upload', [
             'fileName' => 'wifi_qr_' . time(),
             'useUniqueFileName' => 'true',
-            'folder' => '/room_wifi', // បែងចែក Folder សម្រាប់ QR Code
+            'folder' => '/room_wifi', 
         ]);
 
     if ($response->successful()) {
-        // រក្សាទុក URL ពេញលេញដែលទទួលបានពី ImageKit
+        
         $data['wifi_qr_code'] = $response->json()['url'];
     } else {
         return back()->withErrors(['wifi_qr_code' => 'ការ Upload ទៅ ImageKit បរាជ័យ៖ ' . $response->body()]);
@@ -181,7 +170,7 @@ if ($request->hasFile('wifi_qr_code')) {
         $roomNumber = $room->room_number;
         $roomId = $room->id;
 
-        // ចំណាំ៖ ការលុបលើ Cloudinary ត្រូវការ Public ID ប្រសិនបើអ្នកចង់សម្អាត Storage
+        
         $room->delete();
 
         try {

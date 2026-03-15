@@ -14,15 +14,11 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
-// use Illuminate\Support\Facades\Storage; 
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Intervention\Image\ImageManagerStatic as Image;
 
 class AdminController extends Controller
 {
-    /**
-     * Display the admin dashboard.
-     */
     public function dashboard()
     {
         // Fetch some statistics for the dashboard

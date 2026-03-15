@@ -8,7 +8,6 @@ use App\Models\Course;
 use App\Models\Program;
 use App\Models\User;
 use App\Models\Room;
-
 use App\Exports\CourseStudentsExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\DB;
@@ -22,12 +21,10 @@ class CourseOfferingController extends Controller
 
 public function index(Request $request)
 {
-    // ១. ចាប់ផ្ដើម Query ជាមួយ Relationship
     $query = CourseOffering::query()
         ->with(['course', 'targetPrograms', 'lecturer', 'schedules.room']) 
         ->withCount('studentCourseEnrollments');
 
-    // ២. Filter ស្វែងរកតាមអត្ថបទ (Search)
     if ($request->filled('search')) {
         $search = $request->input('search');
         $query->where(function($q) use ($search) {
@@ -40,40 +37,31 @@ public function index(Request $request)
         });
     }
 
-    // ៣. Filter តាមសាស្ត្រាចារ្យ
     if ($request->filled('lecturer_id')) {
         $query->where('lecturer_user_id', $request->input('lecturer_id'));
     }
 
-    // ៤. Filter តាមកម្មវិធីសិក្សា (Pivot Table)
     if ($request->filled('program_id')) {
         $query->whereHas('targetPrograms', function($q) use ($request) {
             $q->where('program_id', $request->input('program_id'));
         });
     }
 
-    // ៥. Filter តាមជំនាន់ (Generation) ក្នុង Pivot Table
     if ($request->filled('generation')) {
         $query->whereHas('targetPrograms', function($q) use ($request) {
-            // ប្រើឈ្មោះតារាងឱ្យចំដើម្បីកុំឱ្យ Error
             $q->where('course_offering_program.generation', '=', $request->input('generation'));
         });
     }
 
-    // ៦. Filter តាមឆមាស
     if ($request->filled('semester')) {
         $query->where('semester', '=', $request->input('semester'));
     }
- // 🔥🔥🔥 2. បន្ថែម Logic សម្រាប់ SHIFT នៅត្រង់នេះ 🔥🔥🔥
     if ($request->filled('shift')) {
         $shift = $request->shift;
-        // ប្រើ whereHas ដើម្បីឆែកចូលទៅក្នុង table 'schedules'
         $query->whereHas('schedules', function ($q) use ($shift) {
             if ($shift === 'weekend') {
-                // បើ user រើស Weekend, យកតែ record ណាដែលមានថ្ងៃ សៅរ៍ ឬ អាទិត្យ
                 $q->whereIn('day_of_week', ['Saturday', 'Sunday']);
             } elseif ($shift === 'weekday') {
-                // បើ user រើស Weekday, យកតែ record ណាដែលមានថ្ងៃ ចន្ទ-សុក្រ
                 $q->whereIn('day_of_week', ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']);
             }
         });
@@ -83,18 +71,12 @@ public function index(Request $request)
     ->paginate(50)
     ->appends($request->query());
 
-// Add the "is_active" status to each item
 $courseOfferings->getCollection()->transform(function ($offering) {
-    // Logic: Active if current date is between start and end date
     $offering->is_active = now()->between($offering->start_date, $offering->end_date);
     return $offering;
 });
 
-// $courseOfferings = $query->orderBy('academic_year', 'desc')
-//                          ->orderBy('semester', 'desc')
-//                          ->paginate(50)
-//                          ->appends($request->query());
-    // ៨. រៀបចំទិន្នន័យសម្រាប់ Dropdowns
+
     $programs = Program::orderBy('name_km')->get();
     
     $academicYears = CourseOffering::select('academic_year')
@@ -108,7 +90,6 @@ $courseOfferings->getCollection()->transform(function ($offering) {
         ->orderBy('name')
         ->get(['id', 'name']);
 
-    // ៩. បញ្ជូនទិន្នន័យទៅកាន់ View
     return view('admin.course-offerings.index', compact(
         'courseOfferings', 
         'programs', 
@@ -119,12 +100,10 @@ $courseOfferings->getCollection()->transform(function ($offering) {
 
 public function create()
     {
-        // $courses = Course::all();
         $courses = Course::with('programs')->get();
         $professors = User::where('role', 'professor')->get();
         $programs = Program::all();
         $rooms = Room::all();
-        // $generations អាចនឹងមិនត្រូវការនៅទីនេះទេ ព្រោះយើងនឹងបញ្ចូលតាម Program នីមួយៗ
         
         return view('admin.course-offerings.create', compact('courses', 'professors', 'programs', 'rooms'));
     }
@@ -172,7 +151,6 @@ public function store(Request $request)
 
             if (!$day || !$start || !$end) continue;
 
-            // --- CHECK 0: Internal Conflict (Check ជាន់គ្នាឯងក្នុង Request) ---
             foreach ($schedules as $innerIndex => $compare) {
                 if ($index === $innerIndex) continue;
                 if ($day === ($compare['day_of_week'] ?? '') && 
@@ -182,7 +160,6 @@ public function store(Request $request)
                 }
             }
 
-            // Standard Overlap Query Logic (កែសម្រួលឱ្យមិនទើសនាទីគ្នា)
             $overlapQuery = function ($q) use ($start, $end) {
                 $q->where(function ($query) use ($start, $end) {
                     $query->where('start_time', '<', $end)
@@ -190,10 +167,8 @@ public function store(Request $request)
                 });
             };
 
-            // --- CHECK A: Room Conflict ---
             $roomConflict = \App\Models\Schedule::where('day_of_week', $day)
                 ->where('room_id', $roomId)
-                // ក្នុង store() មិនចាំបាច់ប្រើ where('id', '!=', ...) ទេ ព្រោះជាការបង្កើតថ្មី
                 ->whereHas('courseOffering', function ($q) use ($academicYear, $semester) {
                     $q->where('academic_year', $academicYear)
                       ->where('semester', $semester);
@@ -317,12 +292,9 @@ public function update(Request $request, CourseOffering $courseOffering)
         'is_open_for_self_enrollment' => 'boolean',
         'start_date' => 'required|date',
         'end_date' => 'required|date|after_or_equal:start_date',
-
-        // បន្ថែម distinct ដើម្បីកុំឱ្យបញ្ចូល Program ជាន់គ្នា
         'target_programs' => 'required|array|min:1',
         'target_programs.*.program_id' => 'required|exists:programs,id|distinct',
         'target_programs.*.generation' => 'required|string|max:255',
-
         'schedules' => 'required|array|min:1',
         'schedules.*.day_of_week' => 'required|string|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
         'schedules.*.room_id' => 'required|exists:rooms,id',
@@ -447,7 +419,6 @@ public function update(Request $request, CourseOffering $courseOffering)
     {
         try {
             DB::beginTransaction();
-            // Detach programs first (optional due to cascade, but good practice)
             $courseOffering->targetPrograms()->detach();
             $courseOffering->schedules()->delete();
             $courseOffering->studentCourseEnrollments()->delete();
@@ -466,7 +437,7 @@ public function update(Request $request, CourseOffering $courseOffering)
     {
         $courseOffering->load([
             'course', 
-            'targetPrograms', // Load Programs
+            'targetPrograms', 
             'lecturer.profile', 
             'schedules.room', 
             'studentCourseEnrollments.student.profile'
@@ -479,12 +450,10 @@ public function update(Request $request, CourseOffering $courseOffering)
 
     public function enrollStudentForm()
     {
-        // Fetch all students (users with 'student' role)
         $students = User::where('role', 'student')->orderBy('name')->get();
 
-        // Fetch all available course offerings
         $courseOfferings = CourseOffering::with('course', 'lecturer')
-            ->where('end_date', '>=', now()) // Only show courses that haven't ended
+             ->where('end_date', '>=', now()) 
             ->orderBy('academic_year', 'desc')
             ->orderBy('semester', 'desc')
             ->get();
@@ -509,7 +478,6 @@ public function update(Request $request, CourseOffering $courseOffering)
         $studentUserId = $request->input('student_user_id');
         $courseOfferingId = $request->input('course_offering_id');
 
-        // Check if student is already enrolled in this course offering
         $existingEnrollment = StudentCourseEnrollment::where('student_user_id', $studentUserId)
             ->where('course_offering_id', $courseOfferingId)
             ->first();
@@ -524,7 +492,7 @@ public function update(Request $request, CourseOffering $courseOffering)
                 'student_user_id' => $studentUserId,
                 'course_offering_id' => $courseOfferingId,
                 'enrollment_date' => now(),
-                'status' => 'enrolled', // Default status for admin enrollment
+                'status' => 'enrolled', 
             ]);
             Session::flash('success', 'ការចុះឈ្មោះសិស្សដោយជោគជ័យ!');
         } catch (\Exception $e) {
@@ -534,7 +502,7 @@ public function update(Request $request, CourseOffering $courseOffering)
     }
     public function getCoursesByProgram(Program $program)
 {
-    // Eager load the program's courses and select only necessary fields
+
     $courses = $program->courses()->select('id', 'code', 'title_km')->get();
     
     return response()->json($courses);
@@ -542,7 +510,6 @@ public function update(Request $request, CourseOffering $courseOffering)
 
 public function exportStudents($offering_id)
 {
-    // ឈ្មោះ File ដែលនឹងធ្លាក់មក៖ students_list_course_123.xlsx
     return Excel::download(new CourseStudentsExport($offering_id), 'students_list_course_' . $offering_id . '.xlsx');
 }
 }

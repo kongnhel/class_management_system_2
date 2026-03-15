@@ -4,27 +4,20 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-// use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Http\RedirectResponse; // Added for update/destroy return types
+use Illuminate\Http\RedirectResponse; 
 use App\Models\UserProfile;
 use Illuminate\View\View;
-use Illuminate\Validation\Rule; // Added for email validation
+use Illuminate\Validation\Rule; 
 use Illuminate\Support\Facades\Http;
 
 class ProfileController extends Controller
 {
-    /**
-     * Show the user's profile edit form.
-     */
 public function edit(Request $request): View
 {
     $user = Auth::user();
 
-    // ទាញយក Profile របស់ User មិនថាគេជា Admin, Professor ឬ Student ឡើយ
     $userProfile = UserProfile::where('user_id', $user->id)->first();
-    
-    // URL ពី ImgBB គឺជា Direct Link ស្រាប់
     $profilePictureUrl = $userProfile?->profile_picture_url;
 
     return view('profile.edit', [
@@ -33,9 +26,6 @@ public function edit(Request $request): View
     ]);
 }
 
-/**
- * ធ្វើបច្ចុប្បន្នភាពរូបភាព Profile តាមរយៈ ImgBB
- */
 public function updateProfilePicture(Request $request)
 {
     $request->validate([
@@ -52,7 +42,6 @@ public function updateProfilePicture(Request $request)
         try {
             $image = $request->file('profile_picture');
             
-            // បញ្ជូនរូបភាពទៅកាន់ ImgBB API
             $response = Http::asMultipart()->post('https://api.imgbb.com/1/upload', [
                 'key' => env('IMGBB_API_KEY'), 
                 'image' => base64_encode(file_get_contents($image->getRealPath())),
@@ -61,7 +50,6 @@ public function updateProfilePicture(Request $request)
             if ($response->successful()) {
                 $imageUrl = $response->json()['data']['url'];
 
-                // រក្សាទុកក្នុង Table user_profiles តែមួយគត់
                 UserProfile::updateOrCreate(
                     ['user_id' => $user->id],
                     ['profile_picture_url' => $imageUrl]
@@ -76,15 +64,6 @@ public function updateProfilePicture(Request $request)
 
     return redirect()->back();
 }
-    /**
-     * Update the user's profile information.
-     */
-
-
-    // New method: Delete the user's account
-    /**
-     * Delete the user's account.
-     */
   public function destroy(Request $request): RedirectResponse
 {
     $request->validateWithBag('userDeletion', [
@@ -94,7 +73,6 @@ public function updateProfilePicture(Request $request)
     $user = $request->user();
     Auth::logout();
 
-    // លុប Profile ពី Table user_profiles
     if ($user->userProfile) {
         $user->userProfile->delete();
     }

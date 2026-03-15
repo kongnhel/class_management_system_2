@@ -7,13 +7,12 @@ use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
-use App\Http\Controllers\Auth\RegisteredUserController; // Keep this if other routes still use it, otherwise can remove
-use App\Http\Controllers\StudentRegistrationController; // <<<--- Import your new custom controller!
-use App\Http\Controllers\Auth\VerifyEmailController; // <<<--- Add this line!
+use App\Http\Controllers\Auth\RegisteredUserController; 
+use App\Http\Controllers\StudentRegistrationController; 
+use App\Http\Controllers\Auth\VerifyEmailController; 
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
-    // --- Existing Login/Password Reset Routes ---
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
                 ->name('login');
 
@@ -31,19 +30,17 @@ Route::middleware('guest')->group(function () {
     Route::post('reset-password', [NewPasswordController::class, 'store'])
                 ->name('password.store');
 
-    // --- CUSTOM STUDENT REGISTRATION ROUTES ---
-    // Comment out or remove the default Breeze registration routes
-    Route::get('register', [StudentRegistrationController::class, 'create']) // Custom student registration form
-                ->name('register'); // We will reuse the 'register' name for our custom form
+    Route::get('register', [StudentRegistrationController::class, 'create']) 
+                ->name('register'); 
 
-    Route::post('register', [StudentRegistrationController::class, 'store']); // Handle custom student registration submission
+    Route::post('register', [StudentRegistrationController::class, 'store']); 
 });
 
 Route::middleware('auth')->group(function () {
     Route::get('verify-email', EmailVerificationPromptController::class)
                 ->name('verification.notice');
 
-    Route::get('verify-email/{id}/{hash}', VerifyEmailController::class) // This line is correct, no need for extra import if already done
+    Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)
                 ->middleware(['signed', 'throttle:6,1'])
                 ->name('verification.verify');
 

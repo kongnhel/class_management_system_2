@@ -47,7 +47,6 @@ use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\Shared\Converter;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-// use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Cloudinary\Configuration\Configuration;
 
 class ProfessorNotificationController extends Controller
@@ -136,7 +135,7 @@ class ProfessorNotificationController extends Controller
             ->orderByDesc('created_at')
             ->get()
             ->groupBy(fn($item) => $item->data['batch_uuid'] ?? $item->id)
-            ->map(fn($group) => $group->first()); // lấy notification đầu tiênក្នុង batch
+            ->map(fn($group) => $group->first()); 
 
         return view('professor.notifications.index', [
             'sentNotifications' => $sentNotifications
@@ -170,7 +169,6 @@ class ProfessorNotificationController extends Controller
 {
     $user = Auth::user();
 
-    // ១. បន្ថែម Relationship 'studentProgramEnrollments.program' ដើម្បីបង្ហាញព័ត៌មាន Program និង Generation
     $courseOffering = CourseOffering::where('id', $offering_id)
         ->where('lecturer_user_id', $user->id)
         ->with([
@@ -180,7 +178,6 @@ class ProfessorNotificationController extends Controller
         ])
         ->firstOrFail();
 
-    // ២. រៀបចំបញ្ជីឈ្មោះនិស្សិត និងគណនាស្ថិតិ
     $stats = [
         'total' => $courseOffering->studentCourseEnrollments->count(),
         'male' => 0,
@@ -191,7 +188,6 @@ class ProfessorNotificationController extends Controller
     $students = $courseOffering->studentCourseEnrollments->map(function ($enrollment) use (&$stats) {
         $student = $enrollment->student;
         
-        // ឆែកភេទ (Gender) ពី Profile
         $gender = strtoupper($student->studentProfile->gender ?? '');
         if (in_array($gender, ['M', 'MALE', 'ប្រុស'])) {
             $stats['male']++;
@@ -199,7 +195,6 @@ class ProfessorNotificationController extends Controller
             $stats['female']++;
         }
 
-        // ឆែកប្រធានថ្នាក់
         if ($enrollment->is_class_leader) {
             $stats['leaders']++;
         }
@@ -207,7 +202,6 @@ class ProfessorNotificationController extends Controller
         return $student; 
     });
 
-    // ៣. រៀបចំ Pagination
     $perPage = 10;
     $currentPage = LengthAwarePaginator::resolveCurrentPage('studentsPage');
     $currentItems = $students->slice(($currentPage - 1) * $perPage, $perPage)->values()->all();

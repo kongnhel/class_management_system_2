@@ -57,7 +57,6 @@ class ProfessorAttendanceController extends Controller
             'course_offering_id' => 'required|exists:course_offerings,id',
             'student_user_id' => [
                 'required',
-                // បន្ថែម Rule ដើម្បីធានាថាការ Update ក៏មិនច្រឡំសិស្សក្រៅថ្នាក់ដែរ
                 Rule::exists('student_course_enrollments', 'student_user_id')
                     ->where('course_offering_id', $request->course_offering_id)
             ],
@@ -102,7 +101,6 @@ class ProfessorAttendanceController extends Controller
             'lng' => 'required|numeric|between:-180,180',
         ]);
 
-        // ប្រើ config ជំនួស env ផ្ទាល់ដើម្បីសុវត្ថិភាពពេល cache config
         $schoolLat = config('services.nmu.lat', env('NMU_LAT', 13.57952292)); 
         $schoolLng = config('services.nmu.lng', env('NMU_LNG', 102.92898894));
         $allowedRadius = config('services.nmu.radius', env('NMU_RADIUS', 100)); 
@@ -111,7 +109,6 @@ class ProfessorAttendanceController extends Controller
         $now = Carbon::now('Asia/Phnom_Penh');
         $today = $now->toDateString();
 
-        // ១. ឆែកមើលថាតើធ្លាប់ Check-in រួចហើយឬនៅ
         $exists = AttendanceProfessor::where([
             'professor_id' => $professorId,
             'course_offering_id' => $request->course_offering_id,
@@ -119,8 +116,6 @@ class ProfessorAttendanceController extends Controller
             'session_id' => $request->session_id,
         ])->exists();
 
-        // បើមានហើយ ត្រឡប់ Success ទៅវិញតែប្រាប់ថា already_checked_in = true
-        // ធ្វើបែបនេះ JS នឹងបើក Modal ឱ្យលោកគ្រូភ្លាម មិនបាច់ Scan នាំហត់
         if ($exists) {
             return response()->json([
                 'success' => true, 
@@ -129,10 +124,8 @@ class ProfessorAttendanceController extends Controller
             ]);
         }
 
-        // ២. គណនាចម្ងាយ
         $distance = $this->calculateDistance($request->lat, $request->lng, $schoolLat, $schoolLng);
 
-        // ៣. បើនៅឆ្ងាយពេក (លើស Radius)
         if ($distance > $allowedRadius) {
             return response()->json([
                 'success' => false,
@@ -140,7 +133,6 @@ class ProfessorAttendanceController extends Controller
             ], 403);
         }
 
-        // ៤. ចុះវត្តមានថ្មីចូល Database
         AttendanceProfessor::create([
             'professor_id' => $professorId,
             'course_offering_id' => $request->course_offering_id,
@@ -161,7 +153,7 @@ class ProfessorAttendanceController extends Controller
 
     private function calculateDistance($lat1, $lon1, $lat2, $lon2) 
     {
-        $earthRadius = 6371000; // ម៉ែត្រ
+        $earthRadius = 6371000; 
         $dLat = deg2rad($lat2 - $lat1);
         $dLon = deg2rad($lon2 - $lon1);
         $a = sin($dLat/2) * sin($dLat/2) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon/2) * sin($dLon/2);

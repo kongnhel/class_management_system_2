@@ -18,7 +18,7 @@ use App\Models\Course;
 use App\Models\StudentQuizResponse;
 use App\Models\CourseOffering;
 use App\Models\UserProfile;
-use App\Models\StudentProgramEnrollment; // ត្រូវប្រាកដថាបាន import StudentProgramEnrollment model
+use App\Models\StudentProgramEnrollment; 
 use Illuminate\Pagination\LengthAwarePaginator;
 
 use Illuminate\Http\Request;
@@ -35,7 +35,6 @@ class StudentGradeController extends Controller
 {
     $user = Auth::user();
     
-    // ១. ទាញយកពិន្ទុទាំងអស់ពី ExamResult
     $allExamResults = \App\Models\ExamResult::where('student_user_id', $user->id)
         ->get()
         ->map(function ($result) {
@@ -55,7 +54,6 @@ class StudentGradeController extends Controller
             $result->grade = $this->calculateGrade($result->score_obtained, $result->max_score);
 
 
-            // កំណត់ប្រភេទសម្រាប់ការឆែកលក្ខខណ្ឌ (Midterm=15, Final=50)
             if ($result->assessment_type === 'exam') {
                 $result->display_type = ($result->max_score == 15) ? 'midterm' : 'final';
             } else {
@@ -65,11 +63,9 @@ class StudentGradeController extends Controller
             return $result;
         })->filter();
 
-    // ២. គ្រុបពិន្ទុតាមមុខវិជ្ជា និងអនុវត្តលក្ខខណ្ឌ
     $courseGrades = $allExamResults->groupBy('course_id')->map(function ($items, $courseId) use ($user) {
         $attendanceScore = $user->getAttendanceScoreByCourse($courseId);
         
-        // រាប់ចំនួនវត្តមាន (ដើម្បីបាត់ Error ក្នុង Blade)
         $absCount = \App\Models\AttendanceRecord::where('student_user_id', $user->id)
             ->where('course_offering_id', $courseId)
             ->where('status', 'absent')->count();
@@ -84,10 +80,8 @@ class StudentGradeController extends Controller
         
         $totalObtained = $items->sum('score_obtained') + $attendanceScore;
 
-        // លក្ខខណ្ឌកំណត់ "ប្រឡងសង"
         $isFailed = ($finalExamScore < 24 || $midtermScore < 9 || $assignmentScore < 9 || $attendanceScore < 9);
 
-        // --- គណនា Course Rank ---
         $enrollments = \App\Models\StudentCourseEnrollment::where('course_offering_id', $courseId)->get();
         $rankings = $enrollments->map(function ($enrol) use ($courseId) {
             $student = \App\Models\User::find($enrol->student_user_id);
@@ -108,8 +102,8 @@ class StudentGradeController extends Controller
             'course_name_en'   => $items->first()->course_name_en,
             'course_name_km'   => $items->first()->course_name_km,
             'attendance_score' => $attendanceScore,
-            'absent_count'     => $absCount,      // បញ្ចូល Property នេះដើម្បីបាត់ Error
-            'permission_count' => $perCount,      // បញ្ចូល Property នេះដើម្បីបាត់ Error
+            'absent_count'     => $absCount,
+            'permission_count' => $perCount,      
             'total_score'      => $totalObtained,
             'grade'            => $isFailed ? 'F' : $this->calculateGrade($totalObtained, 100),
             'is_failed'        => $isFailed,
@@ -117,7 +111,6 @@ class StudentGradeController extends Controller
         ];
     })->values();
 
-    // ៣. គណនា Overall Rank (ចំណាត់ថ្នាក់រួម)
     $overallRank = 'មិនចាត់ថ្នាក់';
     if ($courseGrades->isNotEmpty()) {
         $firstOfferingId = $courseGrades->first()->course_id ?? \App\Models\StudentCourseEnrollment::where('student_user_id', $user->id)->first()->course_offering_id;
@@ -161,22 +154,15 @@ private function calculateGrade($score, $maxScore)
     if ($percentage >= 50) return 'E';
     return 'F';
 }
-    /**
-     * បង្ហាញកាលវិភាគរបស់សិស្ស។
-     * Display the student's schedule.
-     */
 public function mySchedule()
 {
     $user = Auth::user();
 
-    // ទាញយកព័ត៌មាន Program របស់និស្សិត
     $studentProgramEnrollment = StudentProgramEnrollment::where('student_user_id', $user->id)
         ->where('status', 'active')
         ->with('program')
         ->first();
     $studentProgram = $studentProgramEnrollment ? $studentProgramEnrollment->program : null;
-
-    // ទាញយកព័ត៌មានកាលវិភាគរបស់និស្សិត
     $schedules = Schedule::whereHas('courseOffering.studentCourseEnrollments', function ($query) use ($user) {
         $query->where('student_user_id', $user->id);
     })
@@ -188,7 +174,6 @@ public function mySchedule()
     return view('student.my-schedule', compact('user', 'schedules', 'studentProgram'));
 }
     /**
-     * បង្ហាញបញ្ជីមុខវិជ្ជាដែលបានចុះឈ្មោះសម្រាប់សិស្សជាក់លាក់។
      * Display the list of enrolled courses for a specific student.
      *
      * @param  string  $studentId
@@ -196,43 +181,29 @@ public function mySchedule()
      */
     public function enrolledCourses($studentId)
     {
-        // ស្វែងរកសិស្សតាម ID
-        // Find the student by ID
-        $student = User::with('studentEnrollments.courseOffering.course') // Eager load enrollments and course offerings
+        $student = User::with('studentEnrollments.courseOffering.course') 
                             ->where('id', $studentId)
                             ->whereHas('studentEnrollments', function ($query) {
-                                $query->where('status', 'enrolled'); // តែមុខវិជ្ជាដែលបានចុះឈ្មោះប៉ុណ្ណោះ
+                                $query->where('status', 'enrolled'); 
                             })
-                            ->firstOrFail(); // បង្ហាញ 404 ប្រសិនបើសិស្សមិនត្រូវបានរកឃើញ ឬគ្មានមុខវិជ្ជាដែលបានចុះឈ្មោះ
+                            ->firstOrFail(); 
 
-        // ការពិនិត្យការអនុញ្ញាត: មានតែសិស្សខ្លួនឯង ឬអ្នកគ្រប់គ្រងប៉ុណ្ណោះដែលអាចមើលការចុះឈ្មោះរបស់ពួកគេបាន
-        // Authorization check: Only the student themselves or an admin can view their enrollments
-        if (Auth::id() !== $student->id && !(Auth::user() && Auth::user()->isAdmin())) { // Use isAdmin() method
+        if (Auth::id() !== $student->id && !(Auth::user() && Auth::user()->isAdmin())) { 
             abort(403, 'Unauthorized action.');
         }
 
-        // ទាញយកការចុះឈ្មោះសម្រាប់សិស្សនេះជាមួយនឹងស្ថានភាព 'enrolled'
-        // Retrieve enrollments for this student with 'enrolled' status
-        // We have eager loaded them, so they are available in $student->studentEnrollments
         $enrollments = $student->studentEnrollments;
 
-        // បញ្ជូនទិន្នន័យទៅ View
-        // Pass data to the View
         return view('student.enrolled_courses', compact('student', 'enrollments'));
     }
 
-// myenroll
     /**
-     * បង្ហាញកិច្ចការរបស់សិស្ស។
-     * សន្មតថាមានតារាង 'assignments' និង 'assignment_submissions'។
      * Display the student's assignments.
      * Assumes an 'assignments' table and 'assignment_submissions' table.
      */
     public function myAssignments()
     {
         $user = Auth::user();
-        // ទាញយកកិច្ចការសម្រាប់មុខវិជ្ជាដែលសិស្សបានចុះឈ្មោះ
-        // Fetch assignments for the student's enrolled courses
         $assignments = Assignment::whereHas('courseOffering.studentCourseEnrollments', function ($query) use ($user) {
                                            $query->where('student_user_id', $user->id);
                                        })
@@ -252,8 +223,6 @@ public function mySchedule()
     }
 
     /**
-     * បង្ហាញការប្រឡងរបស់សិស្ស។
-     * សន្មតថាមានតារាង 'exams' និង 'exam_results'។
      * Display the student's exams.
      * Assumes an 'exams' table and 'exam_results' table.
      */
@@ -276,11 +245,6 @@ public function mySchedule()
 
         return view('student.my-exams', compact('user', 'exams'));
     }
-// studentProgram
-    /**
-     * បង្ហាញ Quiz របស់សិស្ស។
-     * Display the student's quizzes.
-     */
     public function myQuizzes()
     {
         $user = Auth::user();
@@ -315,30 +279,20 @@ public function mySchedule()
         return view('student.my-quizzes', compact('user', 'quizzes'));
     }
 
-    /**
-     * បង្ហាញកំណត់ត្រាចូលរួមរបស់សិស្ស។
-     * Display the student's attendance records.
-     */
 
-// image
     /**
-     * បង្ហាញមុខវិជ្ជាដែលមានសម្រាប់សិស្សចុះឈ្មោះ។
      * Display the available courses for student enrollment.
      */
     public function availablePrograms()
     {
         $user = Auth::user();
 
-        // ស្វែងរក Program IDs ដែលសិស្សបានចុះឈ្មោះរួចហើយ
-        // Find Program IDs the student is already enrolled in
         $enrolledProgramIds = StudentProgramEnrollment::where('student_user_id', $user->id)
                                                       ->where('status', 'active')
                                                       ->pluck('program_id');
 
-        // ទាញយក Programs ដែលសិស្សមិនទាន់បានចុះឈ្មោះ
-        // Fetch Programs that the student is NOT already enrolled in
         $availablePrograms = Program::whereNotIn('id', $enrolledProgramIds)
-                                    ->with('faculty', 'department') // ផ្ទុកទំនាក់ទំនងដែលត្រូវការ
+                                    ->with('faculty', 'department') 
                                     ->paginate(10);
 
         return view('student.available-programs', compact('user', 'availablePrograms'));
@@ -353,7 +307,6 @@ public function enrollSelf(Request $request)
     $user = Auth::user();
     $courseOfferingId = $request->input('course_offering_id');
 
-    // ១. ពិនិត្យមើលថាធ្លាប់ចុះឈ្មោះរួចហើយឬនៅ
     $existingEnrollment = StudentCourseEnrollment::where('student_user_id', $user->id)
         ->where('course_offering_id', $courseOfferingId)
         ->first();
@@ -364,10 +317,9 @@ public function enrollSelf(Request $request)
     }
 
     try {
-        // ២. បង្កើត Record ថ្មី (បញ្ជូនទាំង student_user_id និង student_id)
         StudentCourseEnrollment::create([
             'student_user_id'    => $user->id,
-            'student_id'         => $user->id, // 💡 បន្ថែមនេះដើម្បីដោះស្រាយបញ្ហា SQL Error
+            'student_id'         => $user->id, 
             'course_offering_id' => $courseOfferingId,
             'enrollment_date'    => now(),
             'status'             => 'enrolled',
@@ -375,15 +327,12 @@ public function enrollSelf(Request $request)
 
         Session::flash('success', 'ការចុះឈ្មោះដោយជោគជ័យ!');
     } catch (\Exception $e) {
-        // បើមាន Error វានឹងបង្ហាញប្រាប់ថា Error អ្វី
         Session::flash('error', 'មានបញ្ហាក្នុងការចុះឈ្មោះ៖ ' . $e->getMessage());
     }
 
-    // ៣. Redirect ទៅកាន់ Dashboard (ប្រើ student.dashboard តាម Route name របស់អ្នក)
     return redirect()->route('student.dashboard');
 }
     /**
-     * គ្រប់គ្រងការចុះឈ្មោះកម្មវិធីសិក្សារបស់សិស្ស។
      * Handles the student's program enrollment request.
      *
      * @param \Illuminate\Http\Request $request
@@ -398,8 +347,6 @@ public function enrollSelf(Request $request)
         $user = Auth::user();
         $programId = $request->input('program_id');
 
-        // ពិនិត្យមើលថាតើសិស្សបានចុះឈ្មោះក្នុង Program នេះរួចហើយឬនៅ
-        // Check if student is already enrolled in this Program
         $existingProgramEnrollment = StudentProgramEnrollment::where('student_user_id', $user->id)
                                                               ->where('program_id', $programId)
                                                               ->first();
@@ -410,8 +357,6 @@ public function enrollSelf(Request $request)
         }
 
         DB::transaction(function () use ($user, $programId) {
-            // បង្កើតការចុះឈ្មោះ Program
-            // Create the Program enrollment
             StudentProgramEnrollment::create([
                 'student_user_id' => $user->id,
                 'program_id' => $programId,
@@ -419,8 +364,6 @@ public function enrollSelf(Request $request)
                 'status' => 'active',
             ]);
 
-            // ចុះឈ្មោះដោយស្វ័យប្រវត្តិក្នុង Course Offerings ទាំងអស់នៃ Program នេះ
-            // Auto-enroll in all relevant Course Offerings of this Program
             $programCourseOfferings = CourseOffering::whereHas('course', function ($query) use ($programId) {
                                                     $query->where('program_id', $programId);
                                                 })
@@ -439,13 +382,12 @@ public function enrollSelf(Request $request)
         });
 
         Session::flash('success', 'ការចុះឈ្មោះកម្មវិធីសិក្សា និងមុខវិជ្ជាបានជោគជ័យ!');
-        return redirect()->route('student.available_programs'); // បញ្ជូនត្រឡប់ទៅទំព័រកម្មវិធីសិក្សាដែលមាន
+        return redirect()->route('student.available_programs'); 
     }
 public function myEnrolledCourses()
 {
     $user = Auth::user();
 
-    // ១. ស្វែងរក Program ដែលសិស្សបានចុះឈ្មោះ (Active)
     $studentProgramEnrollment = \App\Models\StudentProgramEnrollment::where('student_user_id', $user->id)
         ->where('status', 'active')
         ->with('program')
@@ -453,16 +395,12 @@ public function myEnrolledCourses()
 
     $studentProgram = $studentProgramEnrollment ? $studentProgramEnrollment->program : null;
 
-    // ២. ទាញយកមុខវិជ្ជាដែលបានចុះឈ្មោះ
     $enrollments = \App\Models\StudentCourseEnrollment::where('student_user_id', $user->id)
         ->with([
             'courseOffering.course', 
-            'courseOffering.lecturer.userProfile', // សម្រាប់រូប Profile គ្រូ
-            
-            // ✅ បន្ថែមថ្មី៖ Load កាលវិភាគ និងបន្ទប់ មកជាមួយ ដើម្បីបង្ហាញក្នុង Card
+            'courseOffering.lecturer.userProfile', 
             'courseOffering.schedules.room'        
         ])
-        // រៀបតាមលំដាប់ចុះឈ្មោះចុងក្រោយនៅខាងលើ
         ->orderBy('created_at', 'desc') 
         ->paginate(10);
 
