@@ -22,7 +22,7 @@
     "env": {
         "APP_ENV": "production",
         "APP_DEBUG": "true",
-        "APP_URL": "https://your-app-name.vercel.app",
+        "APP_URL": "https://class-management-system-olive.vercel.app/",
         "APP_KEY": "base64:qSLmGKQX3TiuH/fDCr9+MQf7Hc61sopdMOg2E+ViUmk=",
         "APP_CONFIG_CACHE": "/tmp/config.php",
         "APP_EVENTS_CACHE": "/tmp/events.php",
