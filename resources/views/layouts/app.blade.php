@@ -20,7 +20,7 @@
         <title>{{ config('', 'Class Management System') }}</title>
         @livewireStyles
         
-        {{-- <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script> --}}
+        <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
 
         <link rel="preconnect" href="https://fonts.bunny.net">
