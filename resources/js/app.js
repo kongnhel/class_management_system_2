@@ -5,9 +5,13 @@
 // window.Alpine = Alpine;
 
 // Alpine.start();
-import "./bootstrap";
+import './bootstrap';
+import Alpine from 'alpinejs';
+import persist from '@alpinejs/persist';
+import collapse from '@alpinejs/collapse';
 
-import Alpine from "alpinejs";
+Alpine.plugin(persist);
+Alpine.plugin(collapse);
 
 window.Alpine = Alpine;
 
