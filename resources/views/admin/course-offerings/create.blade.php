@@ -56,12 +56,19 @@
                                     <select id="course_id" name="course_id" class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50 transition duration-200" required>
                                         <option value="">{{ __('ជ្រើសរើសមុខវិជ្ជា') }}</option>
                                         @foreach ($courses as $course)
-                                            <option value="{{ $course->id }}" 
+                                            {{-- <option value="{{ $course->id }}" 
                                                     data-programs="{{ json_encode($course->programs) }}"
                                                     data-generation="{{ $course->generation }}"
                                                     {{ old('course_id') == $course->id ? 'selected' : '' }}>
                                                 {{ $course->title_km }} (Gen: {{ $course->generation ?? 'N/A' }})
-                                            </option>
+                                            </option> --}}
+                                            {{-- Replace the option tag inside your @foreach --}}
+<option value="{{ $course->id }}" 
+        data-programs='@json($course->programs)'
+        data-generation="{{ $course->generation }}"
+        {{ old('course_id') == $course->id ? 'selected' : '' }}>
+    {{ $course->title_km }} (Gen: {{ $course->generation ?? 'N/A' }})
+</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -192,43 +199,95 @@
             // ============================================
             // 1. AUTO-POPULATE PROGRAM & GENERATION
             // ============================================
-            courseSelect.addEventListener('change', function() {
-                const selectedOption = this.options[this.selectedIndex];
-                const programsData = JSON.parse(selectedOption.getAttribute('data-programs') || '[]');
-                const courseGen = selectedOption.getAttribute('data-generation') || '';
+            // courseSelect.addEventListener('change', function() {
+            //     const selectedOption = this.options[this.selectedIndex];
+            //     const programsData = JSON.parse(selectedOption.getAttribute('data-programs') || '[]');
+            //     const courseGen = selectedOption.getAttribute('data-generation') || '';
                 
-                programsContainer.innerHTML = '';
+            //     programsContainer.innerHTML = '';
 
-                if (programsData.length === 0) {
-                    programsContainer.innerHTML = `<div class="text-center py-6 text-gray-400 italic">{{ __('មិនមានកម្មវិធីសិក្សាសម្រាប់មុខវិជ្ជានេះទេ') }}</div>`;
-                    return;
-                }
+            //     if (programsData.length === 0) {
+            //         programsContainer.innerHTML = `<div class="text-center py-6 text-gray-400 italic">{{ __('មិនមានកម្មវិធីសិក្សាសម្រាប់មុខវិជ្ជានេះទេ') }}</div>`;
+            //         return;
+            //     }
 
-                programsData.forEach((prog, index) => {
-                    const row = document.createElement('div');
-                    row.className = 'flex items-center gap-4 bg-white p-4 rounded-xl border border-blue-100 shadow-sm animate-fadeIn mb-3';
+            //     programsData.forEach((prog, index) => {
+            //         const row = document.createElement('div');
+            //         row.className = 'flex items-center gap-4 bg-white p-4 rounded-xl border border-blue-100 shadow-sm animate-fadeIn mb-3';
                     
-                    row.innerHTML = `
-                        <div class="flex-grow grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">{{ __('កម្មវិធីសិក្សា') }}</label>
-                                <div class="w-full py-2 px-3 bg-gray-50 rounded-lg text-sm font-semibold text-gray-700 border border-gray-200">
-                                    ${prog.name_km ?? prog.name}
-                                </div>
-                                <input type="hidden" name="target_programs[${index}][program_id]" value="${prog.id}">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">{{ __('ជំនាន់ (Generation)') }}</label>
-                                <div class="w-full py-2 px-3 bg-blue-50 rounded-lg text-sm font-bold text-blue-700 border border-blue-200">
-                                    ${courseGen ? 'ជំនាន់ទី ' + courseGen : '{{ __("មិនទាន់កំណត់") }}'}
-                                </div>
-                                <input type="hidden" name="target_programs[${index}][generation]" value="${courseGen}">
-                            </div>
+            //         row.innerHTML = `
+            //             <div class="flex-grow grid grid-cols-2 gap-4">
+            //                 <div>
+            //                     <label class="block text-xs font-bold text-gray-400 uppercase mb-1">{{ __('កម្មវិធីសិក្សា') }}</label>
+            //                     <div class="w-full py-2 px-3 bg-gray-50 rounded-lg text-sm font-semibold text-gray-700 border border-gray-200">
+            //                         ${prog.name_km ?? prog.name}
+            //                     </div>
+            //                     <input type="hidden" name="target_programs[${index}][program_id]" value="${prog.id}">
+            //                 </div>
+            //                 <div>
+            //                     <label class="block text-xs font-bold text-gray-400 uppercase mb-1">{{ __('ជំនាន់ (Generation)') }}</label>
+            //                     <div class="w-full py-2 px-3 bg-blue-50 rounded-lg text-sm font-bold text-blue-700 border border-blue-200">
+            //                         ${courseGen ? 'ជំនាន់ទី ' + courseGen : '{{ __("មិនទាន់កំណត់") }}'}
+            //                     </div>
+            //                     <input type="hidden" name="target_programs[${index}][generation]" value="${courseGen}">
+            //                 </div>
+            //             </div>
+            //         `;
+            //         programsContainer.appendChild(row);
+            //     });
+            // });
+            courseSelect.addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    
+    // Safety check: if no course is selected, show the placeholder
+    if (!this.value) {
+        programsContainer.innerHTML = `<div id="program-placeholder" class="text-center py-6 text-gray-400 italic">{{ __('សូមជ្រើសរើសមុខវិជ្ជាដើម្បីបង្ហាញកម្មវិធីសិក្សា និងជំនាន់ដោយស្វ័យប្រវត្តិ') }}</div>`;
+        return;
+    }
+
+    try {
+        const rawData = selectedOption.getAttribute('data-programs');
+        console.log("Raw Data:", rawData); // Check your browser console!
+
+        const programsData = JSON.parse(rawData || '[]');
+        const courseGen = selectedOption.getAttribute('data-generation') || '';
+        
+        programsContainer.innerHTML = '';
+
+        if (programsData.length === 0) {
+            programsContainer.innerHTML = `<div class="text-center py-6 text-gray-400 italic">{{ __('មិនមានកម្មវិធីសិក្សាសម្រាប់មុខវិជ្ជានេះទេ') }}</div>`;
+            return;
+        }
+
+        programsData.forEach((prog, index) => {
+            const row = document.createElement('div');
+            row.className = 'flex items-center gap-4 bg-white p-4 rounded-xl border border-blue-100 shadow-sm animate-fadeIn mb-3';
+            
+            row.innerHTML = `
+                <div class="flex-grow grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-1">{{ __('កម្មវិធីសិក្សា') }}</label>
+                        <div class="w-full py-2 px-3 bg-gray-50 rounded-lg text-sm font-semibold text-gray-700 border border-gray-200">
+                            ${prog.name_km || prog.name}
                         </div>
-                    `;
-                    programsContainer.appendChild(row);
-                });
-            });
+                        <input type="hidden" name="target_programs[${index}][program_id]" value="${prog.id}">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-1">{{ __('ជំនាន់ (Generation)') }}</label>
+                        <div class="w-full py-2 px-3 bg-blue-50 rounded-lg text-sm font-bold text-blue-700 border border-blue-200">
+                            ${courseGen ? 'ជំនាន់ទី ' + courseGen : '{{ __("មិនទាន់កំណត់") }}'}
+                        </div>
+                        <input type="hidden" name="target_programs[${index}][generation]" value="${courseGen}">
+                    </div>
+                </div>
+            `;
+            programsContainer.appendChild(row);
+        });
+    } catch (e) {
+        console.error("Parsing Error:", e);
+        programsContainer.innerHTML = `<div class="text-center py-6 text-red-400">Error loading data. Check console.</div>`;
+    }
+});
 
             if (courseSelect.value) courseSelect.dispatchEvent(new Event('change'));
 

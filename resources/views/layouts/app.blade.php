@@ -59,6 +59,8 @@
             }
         </style>
     </head>
+    @livewireScripts
+
     <body class="font-sans antialiased text-gray-900">
 
     @auth
@@ -147,6 +149,6 @@
         </div>
     </div>
 
-    @livewireScripts
+    {{-- @livewireScripts --}}
 </body>
 </html>

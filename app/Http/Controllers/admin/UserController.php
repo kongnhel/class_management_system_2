@@ -249,16 +249,28 @@ public function searchUsers(Request $request)
         if ($request->hasFile('profile_picture')) {
             $image = $request->file('profile_picture');
             
-            $response = Http::withBasicAuth(env('IMAGEKIT_PRIVATE_KEY'), '') 
-                ->attach('file', file_get_contents($image), $image->getClientOriginalName())
-                ->post('https://upload.imagekit.io/api/v1/files/upload', [
-                    'fileName' => 'profile_' . time(),
-                    'useUniqueFileName' => 'true',
-                    'folder' => '/profiles',
-                ]);
+            $privateKey = env('IMAGEKIT_PRIVATE_KEY', '');
 
-            if ($response->successful()) {
-                $profile->profile_picture_url = $response->json()['url'];
+            if (!empty($privateKey)) {
+                $response = Http::withBasicAuth($privateKey, '') 
+                    ->attach(
+                        'file', 
+                        file_get_contents($image->getRealPath()), 
+                        $image->getClientOriginalName()
+                    )
+                    ->post('https://upload.imagekit.io/api/v1/files/upload', [
+                        'fileName'          => 'profile_' . time(),
+                        'useUniqueFileName' => 'true',
+                        'folder'            => '/profiles',
+                    ]);
+
+                if ($response->successful()) {
+                    $profile->profile_picture_url = $response->json()['url'];
+                } else {
+                    \Log::error('ImageKit Upload Failed: ' . $response->body());
+                }
+            } else {
+                \Log::warning('ImageKit upload skipped: IMAGEKIT_PRIVATE_KEY is not set in .env');
             }
         }
 

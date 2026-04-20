@@ -216,7 +216,7 @@
                                                     <td class="px-6 py-3 text-right font-bold space-x-3">
                                                         <a href="{{ route('admin.show-user', $admin->id) }}" class="text-green-600 hover:underline">{{ __('មើល') }}</a>
                                                         <a href="{{ route('admin.edit-user', $admin->id) }}" class="text-blue-600 hover:underline">{{ __('កែប្រែ') }}</a>
-                                                        <button type="button" @click="confirmDelete('delete-admin-{{ $admin->id }}', '{{ __('អ្នកគ្រប់គ្រង') }}')" class="text-red-500 hover:underline">{{ __('លុប') }}</button>
+                                                        <button type="button" @click.stop="confirmDelete('delete-admin-{{ $admin->id }}', '{{ __('អ្នកគ្រប់គ្រង') }}')" class="text-red-500 hover:underline">{{ __('លុប') }}</button>
                                                         <form id="delete-admin-{{ $admin->id }}" action="{{ route('admin.delete-user', $admin->id) }}" method="POST" class="hidden">@csrf @method('DELETE')</form>
                                                     </td>
                                                 </tr>
@@ -261,7 +261,7 @@
                                                     <a href="{{ route('admin.edit-user', $admin->id) }}" class="text-blue-600 flex items-center">
                                                         <i class="fas fa-edit mr-1 text-[10px]"></i> {{ __('កែ') }}
                                                     </a>
-                                                    <button @click="confirmDelete('del-adm-mob-{{ $admin->id }}', 'Admin')" class="text-red-500 flex items-center">
+                                                    <button @click.stop="confirmDelete('del-adm-mob-{{ $admin->id }}', 'Admin')" class="text-red-500 flex items-center">
                                                         <i class="fas fa-trash mr-1 text-[10px]"></i> {{ __('លុប') }}
                                                     </button>
                                                 </div>
@@ -343,7 +343,7 @@
                                                                         <a href="{{ route('admin.edit-user', $professor->id) }}" class="inline-flex items-center justify-center p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
                                                                             <i class="fas fa-edit text-sm"></i>
                                                                         </a>
-                                                                        <button type="button" @click="confirmDelete('del-prof-{{ $professor->id }}', '{{ __('លោកគ្រូអ្នកគ្រូ') }}')" class="inline-flex items-center justify-center p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all">
+                                                                        <button type="button" @click.stop="confirmDelete('del-prof-{{ $professor->id }}', '{{ __('លោកគ្រូអ្នកគ្រូ') }}')" class="inline-flex items-center justify-center p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all">
                                                                             <i class="fas fa-trash text-sm"></i>
                                                                         </button>
                                                                         <form id="del-prof-{{ $professor->id }}" action="{{ route('admin.delete-user', $professor->id) }}" method="POST" class="hidden">@csrf @method('DELETE')</form>
@@ -380,7 +380,7 @@
                                                                 <div class="flex space-x-4">
                                                                     <a href="{{ route('admin.show-user', $professor->id) }}" class="text-green-600 text-xs font-bold uppercase tracking-widest">{{ __('មើល') }}</a>
                                                                     <a href="{{ route('admin.edit-user', $professor->id) }}" class="text-blue-600 text-xs font-bold uppercase tracking-widest">{{ __('កែ') }}</a>
-                                                                    <button @click="confirmDelete('del-mob-prof-{{ $professor->id }}', 'Professor')" class="text-red-500 text-xs font-bold uppercase tracking-widest">{{ __('លុប') }}</button>
+                                                                    <button @click.stop="confirmDelete('del-mob-prof-{{ $professor->id }}', 'Professor')" class="text-red-500 text-xs font-bold uppercase tracking-widest">{{ __('លុប') }}</button>
                                                                 </div>
                                                             </div>
                                                             <form id="del-mob-prof-{{ $professor->id }}" action="{{ route('admin.delete-user', $professor->id) }}" method="POST" class="hidden">@csrf @method('DELETE')</form>
@@ -514,10 +514,11 @@
                                                                                 <a href="{{ route('admin.edit-user', $student->id) }}" class="inline-flex items-center justify-center p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="{{ __('កែប្រែ') }}">
                                                                                     <i class="fas fa-edit text-sm"></i>
                                                                                 </a>
-                                                                                <button type="button" @click="confirmDelete('del-std-{{ $student->id }}', '{{ __('និស្សិត') }}')" class="inline-flex items-center justify-center p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all" title="{{ __('លុប') }}">
+                                                                                <button type="button" @click.stop="confirmDelete('del-std-{{ $student->id }}', '{{ __('និស្សិត') }}')" class="inline-flex items-center justify-center p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all" title="{{ __('លុប') }}">
                                                                                     <i class="fas fa-trash text-sm"></i>
                                                                                 </button>
                                                                                 <form id="del-std-{{ $student->id }}" action="{{ route('admin.delete-user', $student->id) }}" method="POST" class="hidden">@csrf @method('DELETE')</form>
+                                                                                
                                                                             </td>
                                                                         </tr>
                                                                     @endforeach
@@ -567,64 +568,23 @@
                             @endif
                         </div>
                         
-                        <div x-show="showDeleteModal" 
-                             class="fixed inset-0 z-50 overflow-y-auto" 
-                             x-cloak>
-                            <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                                
-                                <div x-show="showDeleteModal"
-                                     x-transition:enter="ease-out duration-300" 
-                                     x-transition:enter-start="opacity-0" 
-                                     x-transition:enter-end="opacity-100"
-                                     x-transition:leave="ease-in duration-200" 
-                                     x-transition:leave-start="opacity-100" 
-                                     x-transition:leave-end="opacity-0"
-                                     class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm transition-opacity" 
-                                     @click="showDeleteModal = false"></div>
+{{-- Global Delete Modal --}}
+                        <div x-show="showDeleteModal" class="fixed inset-0 z-[9999] overflow-y-auto" x-cloak>
+                            <div class="flex items-center justify-center min-h-screen p-4 text-center">
+                                <div x-show="showDeleteModal" x-transition.opacity class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm" @click="showDeleteModal = false"></div>
 
-                                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-                                <div x-show="showDeleteModal"
-                                     x-transition:enter="ease-out duration-300" 
-                                     x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
-                                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-                                     x-transition:leave="ease-in duration-200" 
-                                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" 
-                                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                                     class="inline-block align-middle bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-md sm:w-full">
-                                    
-                                    <div class="bg-white px-6 pt-6 pb-4">
-                                        <div class="sm:flex sm:items-start">
-                                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-50 sm:mx-0 sm:h-10 sm:w-10">
-                                                <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.876c1.54 0 2.585-1.745 1.74-3.134L13.435 4.31a2 2 0 00-3.47 0L4.312 15.866C3.467 17.255 4.512 19 6.05 19z" />
-                                                </svg>
-                                            </div>
-                                            
-                                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                                                <h3 class="text-lg leading-6 font-bold text-gray-900">
-                                                    {{ __('បញ្ជាក់ការលុប') }}
-                                                </h3>
-                                                <div class="mt-2">
-                                                    <p class="text-sm text-gray-500 leading-relaxed">
-                                                        {{ __('តើអ្នកពិតជាចង់លុប') }} <span class="font-bold text-red-600" x-text="deletingUserType"></span> {{ __('នេះមែនទេ? ទិន្នន័យនឹងត្រូវបាត់បង់ជារៀងរហូត។') }}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
+                                <div x-show="showDeleteModal" @click.away="showDeleteModal = false" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                                     class="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-2xl rounded-2xl z-50">
+                                    <div class="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full">
+                                        <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
                                     </div>
-
-                                    <div class="bg-gray-50 px-6 py-4 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-                                        <button type="button" 
-                                                @click="showDeleteModal = false"
-                                                class="w-full sm:w-auto inline-flex justify-center rounded-xl border border-gray-300 shadow-sm px-5 py-2 bg-white text-sm font-bold text-gray-700 hover:bg-gray-100 focus:outline-none transition-all">
-                                            {{ __('បោះបង់') }}
-                                        </button>
-                                        <button type="button" 
-                                                @click="document.getElementById(deletingUserId).submit()"
-                                                class="w-full sm:w-auto inline-flex justify-center rounded-xl border border-transparent shadow-sm px-5 py-2 bg-red-600 text-sm font-bold text-white hover:bg-red-700 focus:outline-none transition-all shadow-red-200 shadow-lg">
-                                            {{ __('លុបចេញ') }}
-                                        </button>
+                                    <h3 class="text-lg font-bold text-center text-gray-900">{{ __('បញ្ជាក់ការលុប') }}</h3>
+                                    <p class="mt-2 text-sm text-center text-gray-500">
+                                        {{ __('តើអ្នកពិតជាចង់លុប') }} <span class="font-black text-red-600" x-text="deletingUserType"></span> {{ __('នេះមែនទេ? ទិន្នន័យនឹងបាត់បង់ជារៀងរហូត។') }}
+                                    </p>
+                                    <div class="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+                                        <button type="button" @click="showDeleteModal = false" class="px-5 py-2 text-sm font-bold text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all">{{ __('បោះបង់') }}</button>
+                                        <button type="button" @click="document.getElementById(deletingUserId).submit()" class="px-5 py-2 text-sm font-bold text-white bg-red-600 rounded-xl hover:bg-red-700 shadow-lg shadow-red-200 transition-all">{{ __('លុបចេញ') }}</button>
                                     </div>
                                 </div>
                             </div>
