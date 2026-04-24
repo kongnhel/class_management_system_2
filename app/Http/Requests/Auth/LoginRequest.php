@@ -57,24 +57,44 @@ class LoginRequest extends FormRequest
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function ensureIsNotRateLimited(): void
-    {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
-            return;
-        }
+    // public function ensureIsNotRateLimited(): void
+    // {
+    //     if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+    //         return;
+    //     }
 
-        event(new Lockout($this));
+    //     event(new Lockout($this));
 
-        $seconds = RateLimiter::availableIn($this->throttleKey());
+    //     $seconds = RateLimiter::availableIn($this->throttleKey());
 
-        throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
-                'seconds' => $seconds,
-                'minutes' => ceil($seconds / 60),
-            ]),
-        ]);
+    //     throw ValidationException::withMessages([
+    //         'email' => trans('auth.throttle', [
+    //             'seconds' => $seconds,
+    //             'minutes' => ceil($seconds / 60),
+    //         ]),
+    //     ]);
+    // }
+public function ensureIsNotRateLimited(): void
+{
+    if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        return;
     }
 
+    event(new Lockout($this));
+
+    // កំណត់ឱ្យវា Lock ១៥ នាទី (៩០០ វិនាទី) នៅត្រង់នេះ
+    $seconds = RateLimiter::availableIn($this->throttleKey());
+    
+    // ប្រសិនបើចង់ឱ្យវា Lock ១៥ នាទីភ្លាមៗពេលគ្រប់ ៥ ដង
+    // អ្នកអាចប្រើ RateLimiter::hit($this->throttleKey(), 900); នៅត្រង់នេះក៏បាន
+    
+    throw ValidationException::withMessages([
+        'email' => trans('auth.throttle', [
+            'seconds' => $seconds,
+            'minutes' => ceil($seconds / 60),
+        ]),
+    ]);
+}
     /**
      * Get the rate limiting throttle key for the request.
      */
