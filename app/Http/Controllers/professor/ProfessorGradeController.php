@@ -265,6 +265,7 @@ public function showGradeEntryForm(Request $request, $assessment_id)
 }
 public function storeGradesForAssessment(Request $request, $assessment_id)
 {
+    
     $request->validate([
         'grades' => 'required|array',
         'assessment_type' => 'required|in:assignment,exam,quiz',
