@@ -1,4 +1,7 @@
+        <link rel="icon" type="image/png" href="{{ asset('assets/image/nmu_Logo.png') }}">
+        <title>{{ config('', 'Class Management System') }}</title>
 <x-guest-layout>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kantumruy+Pro:wght@300;400;700&display=swap');
 

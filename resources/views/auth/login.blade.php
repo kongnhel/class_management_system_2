@@ -1,5 +1,8 @@
+            <link rel="icon" type="image/png" href="{{ asset('assets/image/nmu_Logo.png') }}">
+        <title>{{ config('', 'Class Management System') }}</title>
 <x-guest-layout>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <style>
