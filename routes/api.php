@@ -26,3 +26,24 @@ Route::get('/debug', function () {
         },
     ]);
 });
+
+Route::get('/debug-test', function () {
+    $dbStatus = 'failed';
+    $dbError = null;
+    
+    try {
+        DB::connection()->getPdo();
+        $dbStatus = 'connected';
+    } catch (\Exception $e) {
+        $dbError = $e->getMessage();
+    }
+
+    return response()->json([
+        'app_env'   => env('APP_ENV'),
+        'app_key'   => env('APP_KEY') ? 'SET' : 'NOT SET',
+        'db_host'   => env('DB_HOST'),
+        'db_port'   => env('DB_PORT'),
+        'db_status' => $dbStatus,
+        'db_error'  => $dbError,
+    ]);
+});
