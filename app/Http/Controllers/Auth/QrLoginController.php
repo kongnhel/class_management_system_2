@@ -48,29 +48,33 @@ class QrLoginController extends Controller
 public function handleScan(Request $request)
 {
     try {
-        $token = $request->token;
         $user = Auth::user();
 
-        // ១. ឆែកមើលថាមាន Token ក្នុង Cache អត់
+        // ✅ Fix #2 — ពិនិត្យ auth ជាមុន
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized'
+            ], 401);
+        }
+
+        $token = $request->token;
+
         if (Cache::has('login_token_' . $token)) {
             Cache::put('authorized_user_' . $token, $user->id, now()->addMinute());
-            
-            // បាញ់ Event ទៅ Pusher
             broadcast(new QrLoginSuccessful($token, $user->id));
-
             return response()->json(['status' => 'success']);
         }
 
-        // ២. បើអត់មាន Token ទេ ត្រូវបោះ JSON ប្រាប់គេផង (កុំឱ្យ Response ទទេ)
         return response()->json([
-            'status' => 'error', 
+            'status' => 'error',
             'message' => 'QR Code នេះផុតកំណត់ ឬមិនត្រឹមត្រូវឡើយ!'
         ], 400);
 
     } catch (\Exception $e) {
         Log::error("QR Scan Error: " . $e->getMessage());
         return response()->json([
-            'status' => 'error', 
+            'status' => 'error',
             'message' => 'មានបញ្ហាម៉ាស៊ីនបម្រើ (Server Error)'
         ], 500);
     }
@@ -91,18 +95,19 @@ public function handleScan(Request $request)
         return redirect()->route('login')->with('error', 'ការចូលប្រើប្រាស់ផុតកំណត់។');
     }
 
-    public function refreshQr()
+public function refreshQr()
 {
-    $token = (string) \Illuminate\Support\Str::uuid();
-    \Illuminate\Support\Facades\Cache::put('login_token_' . $token, true, now()->addMinutes(2));
+    $token = (string) Str::uuid();
+    Cache::put('login_token_' . $token, true, now()->addMinutes(2));
 
-    $qrCode = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(200)
+    $qrCode = QrCode::size(200)
         ->color(16, 185, 129)
         ->margin(1)
         ->generate($token);
 
+    // ✅ Fix #1 — cast ជា string ត្រឹមត្រូវ
     return response()->json([
-        'qrCode' => $qrCode->toHtml(),
+        'qrCode' => (string) $qrCode,
         'token' => $token
     ]);
 }

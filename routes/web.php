@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\QrLoginController;
 
+
 use App\Http\Controllers\admin\AdminController;
 use App\Http\Controllers\admin\UserController;
 use App\Http\Controllers\admin\FacultyController;
@@ -74,6 +75,25 @@ use Illuminate\Http\Request;
     });
 
 
+// Desktop ទទួល QR Code — Public
+Route::get('/qr-login', [QrLoginController::class, 'showQrForm'])->name('qr.login');
+
+// Desktop ហៅ finalize — Public (web middleware ស្វ័យប្រវត្តិ), គ្មាន auth
+Route::get('/qr-login/finalize/{token}', [QrLoginController::class, 'finalizeLogin'])
+    ->name('qr.finalize');
+
+// Mobile refresh QR — Public
+Route::get('/qr-refresh', [QrLoginController::class, 'refreshQr'])->name('qr.refresh');
+
+// Mobile ស្កែន — ត្រូវការ auth (user login នៅ mobile)
+Route::middleware(['auth'])->group(function () {
+    Route::post('/qr-authorize', [QrLoginController::class, 'handleScan'])
+        ->name('qr.authorize');
+    
+    Route::get('/qr-scanner', function () {
+        return view('qr-scanner');
+    })->name('qr.scanner');
+});
 
     Route::get('/qr-login', [QrLoginController::class, 'showQrForm'])->name('qr.login');
     Route::get('/qr-login/finalize/{token}', [QrLoginController::class, 'finalizeLogin'])->name('qr.finalize');
@@ -109,8 +129,10 @@ use Illuminate\Http\Request;
     });
 
 
-    Route::middleware(['auth'])->post('/qr-authorize', [App\Http\Controllers\Auth\QrLoginController::class, 'handleScan'])
-        ->name('qr.authorize');
+    // Route::middleware(['auth'])->post('/qr-authorize', [App\Http\Controllers\Auth\QrLoginController::class, 'handleScan'])
+    //     ->name('qr.authorize');
+    Route::middleware(['auth'])->post('/qr-authorize', [QrLoginController::class, 'handleScan'])
+    ->name('qr.authorize');
      Route::get('/qr-refresh', [App\Http\Controllers\Auth\QrLoginController::class, 'refreshQr'])->name('qr.refresh');
     /*
     |--------------------------------------------------------------------------

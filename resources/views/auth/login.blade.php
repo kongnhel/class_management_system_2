@@ -208,12 +208,7 @@
                     </button>
                 </form>
             </div>
-                        <div class="text-center mt-12">
-                <p class="text-sm text-gray-400 font-medium">
-                    {{ __('មិនទាន់មានគណនីមែនទេ?') }} 
-                    <a href="{{ route('register') }}" class="text-emerald-400 hover:text-emerald-300 font-black ml-2 underline underline-offset-8 decoration-2">{{ __('ចុះឈ្មោះទីនេះ') }}</a>
-                </p>
-            </div>
+
 
             {{-- ផ្នែក Login តាម QR Code --}}
             <div id="qrSection" class="hidden text-center">
@@ -222,6 +217,12 @@
                     {!! $qrCode ?? '<div class="w-48 h-48 flex items-center justify-center">QR Loading...</div>' !!}
                 </div>
                 <p class="text-emerald-400 text-[11px] font-black mt-8 uppercase tracking-widest" id="qr-status">រង់ចាំការស្កែន...</p>
+            </div>
+                                    <div class="text-center mt-12">
+                <p class="text-sm text-gray-400 font-medium">
+                    {{ __('មិនទាន់មានគណនីមែនទេ?') }} 
+                    <a href="{{ route('register') }}" class="text-emerald-400 hover:text-emerald-300 font-black ml-2 underline underline-offset-8 decoration-2">{{ __('ចុះឈ្មោះទីនេះ') }}</a>
+                </p>
             </div>
         </div>
     </div>
