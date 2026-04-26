@@ -78,48 +78,39 @@
 
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script>
-        function onScanSuccess(decodedText, decodedResult) {
-            const statusText = document.getElementById('status-text');
-            statusText.innerText = "កំពុងបញ្ជាក់អត្តសញ្ញាណ...";
-            statusText.classList.add('animate-pulse');
+   function onScanSuccess(decodedText, decodedResult) {
+    console.log(`Code matched = ${decodedText}`);
+    document.getElementById('status-text').innerText = "កំពុងផ្ទៀងផ្ទាត់...";
 
-            // បញ្ឈប់កាមេរ៉ាសិនក្រោយស្កែនជាប់
-            html5QrcodeScanner.clear();
-
-            // ផ្ញើទិន្នន័យទៅ API ក្នុង Laravel
-            fetch('/qr-authorize', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({ token: decodedText })
-            })
-            .then(response => {
-                if (response.status === 401) {
-                    alert("Session ផុតកំណត់! សូម Login លើទូរស័ព្ទម្ដងទៀត។");
-                    window.location.reload();
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.status === 'success') {
-                    statusText.innerText = "បញ្ជាក់អត្តសញ្ញាណជោគជ័យ!";
-                    statusText.classList.remove('animate-pulse');
-                    
-                    // បង្ហាញ Success Alert ស្អាតៗ ឬ Redirect ភ្លាម
-                    setTimeout(() => {
-                        window.location.href = "{{ route('dashboard') }}";
-                    }, 1000);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                statusText.innerText = "មានបញ្ហាបច្ចេកទេស!";
-            });
+    fetch('/verify-qr-login', { // ផ្លូវ API របស់បង
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({ qr_code: decodedText })
+    })
+    .then(response => {
+        // បើ Response មិនមែន 200 OK ទេ កុំអាល Parse JSON
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
         }
-
+        return response.text().then(text => text ? JSON.parse(text) : {}); 
+        // ជួរខាងលើជួយការពារ បើ Server បោះមកទទេ ក៏មិន Error ដែរ
+    })
+    .then(data => {
+        if (data.success) {
+            document.getElementById('status-text').innerText = "ជោគជ័យ! កំពុងចូលប្រព័ន្ធ...";
+            window.location.href = "/dashboard";
+        } else {
+            document.getElementById('status-text').innerText = data.message || "QR មិនត្រឹមត្រូវ";
+        }
+    })
+    .catch(err => {
+        console.error("Scan Error:", err);
+        document.getElementById('status-text').innerText = "មានបញ្ហាបច្ចេកទេស!";
+    });
+}
         // ការកំណត់ Scanner ឱ្យដើររលូន
         let html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
             fps: 15, 

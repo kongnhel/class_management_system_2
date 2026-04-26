@@ -27,22 +27,52 @@ class QrLoginController extends Controller
         return view('auth.login', compact('qrCode', 'token'));
     }
 
+// public function handleScan(Request $request)
+// {
+//     try {
+//         $token = $request->token;
+//         $user = Auth::user();
+
+//         if (Cache::has('login_token_' . $token)) {
+//             Cache::put('authorized_user_' . $token, $user->id, now()->addMinute());
+            
+//             broadcast(new QrLoginSuccessful($token, $user->id));
+
+//             return response()->json(['status' => 'success']);
+//         }
+//     } catch (\Exception $e) {
+//         Log::error("QR Scan Error: " . $e->getMessage());
+//         return response()->json(['status' => 'error', 'message' => 'Server Error'], 500);
+//     }
+// }
 public function handleScan(Request $request)
 {
     try {
         $token = $request->token;
         $user = Auth::user();
 
+        // ១. ឆែកមើលថាមាន Token ក្នុង Cache អត់
         if (Cache::has('login_token_' . $token)) {
             Cache::put('authorized_user_' . $token, $user->id, now()->addMinute());
             
+            // បាញ់ Event ទៅ Pusher
             broadcast(new QrLoginSuccessful($token, $user->id));
 
             return response()->json(['status' => 'success']);
         }
+
+        // ២. បើអត់មាន Token ទេ ត្រូវបោះ JSON ប្រាប់គេផង (កុំឱ្យ Response ទទេ)
+        return response()->json([
+            'status' => 'error', 
+            'message' => 'QR Code នេះផុតកំណត់ ឬមិនត្រឹមត្រូវឡើយ!'
+        ], 400);
+
     } catch (\Exception $e) {
         Log::error("QR Scan Error: " . $e->getMessage());
-        return response()->json(['status' => 'error', 'message' => 'Server Error'], 500);
+        return response()->json([
+            'status' => 'error', 
+            'message' => 'មានបញ្ហាម៉ាស៊ីនបម្រើ (Server Error)'
+        ], 500);
     }
 }
 

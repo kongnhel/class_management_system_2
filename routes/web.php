@@ -45,7 +45,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Http\Request;
 
 
-
+// /verify-qr-login
     Route::get('/run-scheduler/scheduler-secret-key', function () {
         Artisan::call('schedule:run');
         return "Scheduler is running!";
@@ -73,7 +73,9 @@ use Illuminate\Http\Request;
         return redirect()->route('login');
     });
 
-
+// ឧទាហរណ៍៖ មានតែ Admin និង Student ទើបអាចស្កែនបាន
+Route::post('/verify-qr-login', [QrLoginController::class, 'handleScan'])
+    ->middleware(['auth', 'role:admin,student']);
 
     Route::get('/qr-login', [QrLoginController::class, 'showQrForm'])->name('qr.login');
     Route::get('/qr-login/finalize/{token}', [QrLoginController::class, 'finalizeLogin'])->name('qr.finalize');
