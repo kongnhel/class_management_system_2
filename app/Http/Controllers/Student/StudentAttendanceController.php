@@ -78,17 +78,18 @@ public function storeLeaderAttendance(Request $request, $courseOfferingId)
     $date = now()->format('Y-m-d');
 
     foreach ($attendances as $studentUserId => $status) {
-        DB::table('attendances')->updateOrInsert(
-            [
-                'course_offering_id' => $courseOfferingId,
-                'student_user_id' => $studentUserId,
-                'date' => $date
-            ],
-            [
-                'status' => $status,
-                'updated_at' => now()
-            ]
-        );
+       DB::table('attendances')->updateOrInsert(
+    [
+        'course_offering_id' => $courseOfferingId,
+        'student_user_id' => $studentUserId, // អាហ្នឹងប្រហែលជា ID សិស្ស
+        'user_id' => $studentUserId,         // បន្ថែម field ដែលវាទាមទារនេះចូលមក!
+        'date' => $date
+    ],
+    [
+        'status' => $status,
+        'updated_at' => now()
+    ]
+);
     }
 
     return redirect()->back()->with('success', 'រក្សាទុកវត្តមានបានជោគជ័យ!');
