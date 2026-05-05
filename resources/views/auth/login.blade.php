@@ -268,13 +268,18 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+// const firebaseConfig = {
+//     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+//     authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+//     projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+//     storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+//     messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+//     appId: import.meta.env.VITE_FIREBASE_APP_ID
+// };
 const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-    appId: import.meta.env.VITE_FIREBASE_APP_ID
+    apiKey: "{{ config('services.firebase.api_key') }}", // បង្កើត config ក្នុង services.php
+    authDomain: "{{ env('VITE_FIREBASE_AUTH_DOMAIN') }}",
+    projectId: "{{ env('VITE_FIREBASE_PROJECT_ID') }}",
 };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -309,6 +314,7 @@ const firebaseConfig = {
     cluster: '{{ config('broadcasting.connections.pusher.options.cluster') }}',
     forceTLS: true
 });
+
 
     // បង្កើត Function សម្រាប់ប្តូរទំព័រពេលស្កែនជាប់
     function bindChannelEvents(channel) {
