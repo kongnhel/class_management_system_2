@@ -241,40 +241,86 @@
                 <div class="space-y-10">
                     
                     {{-- Announcements --}}
-                    <div class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm transition-all hover:shadow-xl">
-                        <div class="flex items-center justify-between mb-8">
-                            <h4 class="text-xl font-black text-slate-800 flex items-center gap-3">
-                                <div class="bg-amber-50 p-2.5 rounded-xl">
-                                    <i class="fas fa-bullhorn text-amber-500"></i>
-                                </div>
-                                {{ __('សេចក្តីប្រកាស') }}
-                            </h4>
-                        </div>
+<div class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.02)] transition-all">
+    {{-- Header --}}
+    <div class="flex items-center justify-between mb-8">
+        <h4 class="text-xl font-black text-slate-800 flex items-center gap-4">
+            <div class="relative">
+                <div class="absolute inset-0 bg-amber-400 blur-lg opacity-20 animate-pulse"></div>
+                <div class="relative bg-gradient-to-br from-amber-400 to-orange-500 p-3 rounded-2xl shadow-lg shadow-amber-200/50">
+                    <i class="fas fa-bullhorn text-white text-sm"></i>
+                </div>
+            </div>
+            <span class="tracking-tight">{{ __('សេចក្តីប្រកាស') }}</span>
+        </h4>
+        <div class="h-2 w-2 rounded-full bg-amber-400 animate-ping"></div>
+    </div>
 
-                        <div class="space-y-5">
-                            @forelse ($announcements as $announcement)
-                                <div class="p-5 bg-slate-50 rounded-[1.8rem] border border-slate-100 relative group transition-all hover:bg-white hover:shadow-lg hover:border-amber-100">
-                                    <h5 class="font-black text-slate-800 text-sm leading-snug mb-2 line-clamp-1 group-hover:text-amber-600 transition-colors">
-                                        {{ $announcement->title_km ?? ($announcement->title_en ?? 'គ្មានចំណងជើង') }}
-                                    </h5>
-                                    <p class="text-xs text-slate-500 line-clamp-2 mb-4 leading-relaxed">{{ $announcement->content_km ?? ($announcement->content_en ?? 'គ្មានខ្លឹមសារ') }}</p>
-                                    <div class="flex items-center justify-between border-t border-slate-200/60 pt-4">
-                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-tighter bg-white px-2 py-1 rounded-md shadow-sm border border-slate-100">
-                                            <i class="far fa-clock mr-1"></i> {{ \Carbon\Carbon::parse($announcement->created_at)->diffForHumans() }}
-                                        </span>
-                                        <i class="fas fa-arrow-right text-[10px] text-slate-300 group-hover:translate-x-1 transition-transform"></i>
-                                    </div>
+    {{-- Announcements List with Modern Scroll --}}
+    <div class="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-modern-scroll">
+        @forelse ($announcements as $announcement)
+            <div class="group p-5 rounded-[2rem] border border-transparent bg-slate-50/50 hover:bg-white hover:border-amber-100 hover:shadow-[0_15px_30px_rgba(245,158,11,0.08)] transition-all duration-500 relative overflow-hidden">
+                {{-- Hover Decorative Element --}}
+                <div class="absolute top-0 right-0 w-24 h-24 bg-amber-50 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-150 duration-700 opacity-50"></div>
+                
+                <div class="relative">
+                    <h5 class="font-black text-slate-800 text-[15px] leading-snug mb-2 group-hover:text-amber-600 transition-colors duration-300">
+                        {{ $announcement->title_km ?? ($announcement->title_en ?? 'គ្មានចំណងជើង') }}
+                    </h5>
+                    
+                    <p class="text-[13px] text-slate-500 line-clamp-2 mb-4 leading-relaxed font-medium">
+                        {{ $announcement->content_km ?? ($announcement->content_en ?? 'គ្មានខ្លឹមសារ') }}
+                    </p>
+
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-200/50">
+                        <div class="flex items-center gap-2">
+                            <div class="flex -space-x-2">
+                                <div class="w-6 h-6 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center">
+                                    <i class="fas fa-user text-[8px] text-slate-400"></i>
                                 </div>
-                            @empty
-                                <div class="text-center py-10">
-                                    <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-200">
-                                        <i class="fas fa-inbox text-2xl"></i>
-                                    </div>
-                                    <p class="text-sm text-slate-400 font-bold italic">{{ __('មិនមានសេចក្តីប្រកាសថ្មី') }}</p>
-                                </div>
-                            @endforelse
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                {{ \Carbon\Carbon::parse($announcement->created_at)->diffForHumans() }}
+                            </span>
+                        </div>
+                        
+                        <div class="flex items-center gap-2 text-amber-500 font-bold text-[10px] opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
+                            <span>{{ __('មើលលម្អិត') }}</span>
+                            <i class="fas fa-chevron-right text-[8px]"></i>
                         </div>
                     </div>
+                </div>
+            </div>
+        @empty
+            <div class="text-center py-16">
+                <div class="relative inline-block mb-4">
+                    <div class="absolute inset-0 bg-slate-100 blur-2xl rounded-full"></div>
+                    <div class="relative w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm border border-slate-50">
+                        <i class="fas fa-inbox text-3xl text-slate-200"></i>
+                    </div>
+                </div>
+                <p class="text-sm text-slate-400 font-bold italic">{{ __('មិនទាន់មានអ្វីថ្មីនៅឡើយទេ') }}</p>
+            </div>
+        @endforelse
+    </div>
+</div>
+
+<style>
+    /* Modern & Subtle Scrollbar */
+    .custom-modern-scroll::-webkit-scrollbar {
+        width: 5px;
+    }
+    .custom-modern-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .custom-modern-scroll::-webkit-scrollbar-thumb {
+        background: #f1f5f9; /* slate-100 */
+        border-radius: 20px;
+    }
+    .custom-modern-scroll:hover::-webkit-scrollbar-thumb {
+        background: #fde68a; /* amber-200 */
+    }
+</style>
 
                     {{-- Upcoming Tasks --}}
                     {{-- <div class="bg-slate-900 text-white p-8 rounded-[2.8rem] shadow-2xl relative overflow-hidden group">

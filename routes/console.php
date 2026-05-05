@@ -51,4 +51,5 @@ Schedule::call(function () {
         }
     }
 })->dailyAt('07:00') 
-  ->timezone('Asia/Phnom_Penh');
+  ->timezone('Asia/Phnom_Penh')
+  ->withoutOverlapping();

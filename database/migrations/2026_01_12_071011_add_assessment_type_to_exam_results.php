@@ -11,11 +11,8 @@ return new class extends Migration
      */
 public function up(): void
 {
-    Schema::table('exam_results', function (Blueprint $table) {
-        // បន្ថែមតែ type មួយបានហើយ ទុក exam_id នៅដដែល
-        if (!Schema::hasColumn('exam_results', 'assessment_type')) {
-            $table->string('assessment_type')->after('exam_id')->nullable();
-        }
+ Schema::table('exam_results', function (Blueprint $table) {
+        $table->string('assessment_type')->nullable(); 
     });
 }
 

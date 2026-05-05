@@ -1,5 +1,6 @@
 <?php
 
+
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\QrLoginController;
 
@@ -51,6 +52,7 @@ use Illuminate\Http\Request;
         Artisan::call('schedule:run');
         return "Scheduler is running!";
     });
+    
     /*
     |--------------------------------------------------------------------------
     | Public Routes

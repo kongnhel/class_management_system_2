@@ -86,21 +86,21 @@ return [
             //     'odbc' => true,
             //     'odbc_datasource_name' => 'Driver={ODBC Driver 17 for SQL Server};Server=localhost;Database=class_management_db;Trusted_Connection=yes;',
             // ],
-            'sqlsrv' => [
-                'driver' => 'sqlsrv',
-                'url' => env('DB_URL'),
-                'host' => env('DB_HOST', 'localhost'),
-                'port' => env('DB_PORT', '1433'),
-                'database' => env('DB_DATABASE', 'class_management_db'),
-                'username' => env('DB_USERNAME', 'laravel_user'),   // or WHATTHEFUXK\kong if using Windows Auth
-                'password' => env('DB_PASSWORD', ''),     // leave empty for Windows Auth
-                'charset' => env('DB_CHARSET', 'utf8'),
-                'prefix' => '',
-                'prefix_indexes' => true,
-                'trust_server_certificate' => true,
-                'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'yes'),
+            // 'sqlsrv' => [
+            //     'driver' => 'sqlsrv',
+            //     'url' => env('DB_URL'),
+            //     'host' => env('DB_HOST', 'localhost'),
+            //     'port' => env('DB_PORT', '1433'),
+            //     'database' => env('DB_DATABASE', 'class_management_db'),
+            //     'username' => env('DB_USERNAME', 'laravel_user'),   // or WHATTHEFUXK\kong if using Windows Auth
+            //     'password' => env('DB_PASSWORD', ''),     // leave empty for Windows Auth
+            //     'charset' => env('DB_CHARSET', 'utf8'),
+            //     'prefix' => '',
+            //     'prefix_indexes' => true,
+            //     'trust_server_certificate' => true,
+            //     'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'yes'),
 
-            ],
+            // ],
 
 
         ],
