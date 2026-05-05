@@ -268,11 +268,14 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        const firebaseConfig = {
-            apiKey: "AIzaSyC5QgFzC-Kuudj7mWxLPf58xmoe_feXF3o",
-            authDomain: "classmanagementsystem-cd57f.firebaseapp.com",
-            projectId: "classmanagementsystem-cd57f",
-        };
+const firebaseConfig = {
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID
+};
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
@@ -298,10 +301,14 @@
     let currentToken = "{{ $token }}";
 
     // ការកំណត់ Pusher
-    var pusher = new Pusher('{{ env('PUSHER_APP_KEY') }}', { 
-        cluster: '{{ env('PUSHER_APP_CLUSTER') }}',
-        forceTLS: true
-    });
+    // var pusher = new Pusher('{{ env('PUSHER_APP_KEY') }}', { 
+    //     cluster: '{{ env('PUSHER_APP_CLUSTER') }}',
+    //     forceTLS: true
+    // });
+    var pusher = new Pusher('{{ config('broadcasting.connections.pusher.key') }}', { 
+    cluster: '{{ config('broadcasting.connections.pusher.options.cluster') }}',
+    forceTLS: true
+});
 
     // បង្កើត Function សម្រាប់ប្តូរទំព័រពេលស្កែនជាប់
     function bindChannelEvents(channel) {
